@@ -82,7 +82,9 @@ class CorreccionNITs:
     
     def corregir_formato_nit(self, nit_original, tipo_doc):
         """
-        Corrige el formato de un NIT agregando el guión y dígito verificador
+        Corrige el formato de un NIT agregando el guión entre el número y el dígito verificador.
+        El formato correcto es: últimos 8 o 9 dígitos del NIT, guión, último dígito.
+        Ejemplo: 900310074 → 90031007-4 (no 900310074-1)
         """
         if tipo_doc != 'NIT' or pd.isna(nit_original):
             return nit_original, False
@@ -99,26 +101,17 @@ class CorreccionNITs:
         if not nit_numeros:
             return nit_original, False
         
-        # Si el NIT ya tiene dígito verificador al final pero sin guión
-        # Verificar si el último dígito es correcto
+        # El último dígito siempre es el dígito verificador
+        # Separar: todos los dígitos menos el último - último dígito
         if len(nit_numeros) >= 2:
-            posible_nit = nit_numeros[:-1]
-            posible_dv = nit_numeros[-1]
+            nit_base = nit_numeros[:-1]  # Todos menos el último
+            dv = nit_numeros[-1]         # El último dígito
             
-            dv_calculado = self.calcular_digito_verificacion(posible_nit)
-            
-            if dv_calculado == posible_dv:
-                # El DV es correcto, solo agregar el guión
-                nit_corregido = f"{posible_nit}-{posible_dv}"
-                return nit_corregido, True
-        
-        # Si no tiene DV o es incorrecto, calcularlo
-        dv = self.calcular_digito_verificacion(nit_numeros)
-        
-        if dv is not None:
-            nit_corregido = f"{nit_numeros}-{dv}"
+            # Formato correcto: BASE-DV
+            nit_corregido = f"{nit_base}-{dv}"
             return nit_corregido, True
         else:
+            # NIT muy corto, no se puede formatear
             return nit_original, False
     
     def procesar_correcciones(self):
