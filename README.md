@@ -1,42 +1,50 @@
 # Migración SoftSeguros
 
-Sistema de migración y validación de datos para clientes de seguros, con énfasis en procesamiento de archivos Excel, limpieza de datos y generación de reportes automatizados.
+Sistema completo de migración y validación de datos para clientes de seguros, especializado en procesamiento de archivos Excel, limpieza de datos, sincronización entre sistemas y generación de reportes automatizados.
 
 ## 📋 Descripción del Proyecto
 
-Este proyecto automatiza la migración de datos de clientes entre el sistema legacy **SoftSeguros** y el nuevo sistema **Celer**. Incluye validaciones de calidad de datos, corrección automática de formatos y generación de reportes detallados.
+Este proyecto automatiza la migración de datos de clientes entre el sistema legacy **SoftSeguros** y el nuevo sistema **Celer**. Implementa un flujo completo de ETL (Extract, Transform, Load) con validaciones de calidad, corrección automática de formatos y sincronización de datos usando **CELER como fuente de verdad**.
 
 ## 🎯 Características Principales
 
-- ✅ Análisis y validación de números de identificación (NIT, Cédulas)
-- ✅ Corrección automática de formato de NITs con dígito verificador
-- ✅ Validación de coincidencia nombre-documento entre bases de datos
-- ✅ Detección de duplicados y inconsistencias
-- ✅ Generación de reportes profesionales en Excel con formato
-- ✅ Algoritmos de similitud de texto para detectar errores de escritura
+- ✅ **Análisis de calidad de datos**: Identificación de duplicados, IDs inválidos y problemas de formato
+- ✅ **Corrección automática de NITs**: Cálculo y aplicación de dígito verificador según algoritmo DIAN
+- ✅ **Validación nombre-documento**: Algoritmo de similitud de texto para detectar inconsistencias
+- ✅ **Sincronización de datos**: Actualización automática desde CELER (fuente confiable)
+- ✅ **Trazabilidad completa**: Reportes detallados de cada cambio con valor anterior/nuevo
+- ✅ **Organización profesional**: Estructura de carpetas por etapas del proceso
+- ✅ **Documentación exhaustiva**: README en cada carpeta explicando contenido y resultados
 
 ## 📁 Estructura del Proyecto
 
 ```
 migracion-softseguros/
 ├── src/
-│   ├── validators/           # Scripts de validación de datos
-│   │   ├── analisis_ids.py              # Análisis de identificaciones
-│   │   └── validar_nombres_documentos.py # Validación nombre-documento
-│   ├── transformers/         # Scripts de transformación de datos
-│   │   └── corregir_nits.py             # Corrección de NITs
-│   ├── extractors/           # Lectores de datos fuente
-│   ├── loaders/              # Exportadores de datos
-│   └── utils/                # Utilidades compartidas
+│   ├── validators/              # Scripts de validación de datos
+│   │   ├── analisis_ids.py                 # Análisis de identificaciones
+│   │   └── validar_nombres_documentos.py   # Validación nombre-documento
+│   ├── transformers/            # Scripts de transformación de datos
+│   │   ├── corregir_nits.py                # Corrección de NITs
+│   │   └── actualizar_desde_celer.py       # Sincronización con CELER ⭐
+│   ├── extractors/              # Lectores de datos fuente
+│   ├── loaders/                 # Exportadores de datos
+│   └── utils/                   # Utilidades compartidas
 ├── data/
-│   ├── input/                # Archivos Excel de entrada (gitignored)
-│   ├── output/               # Reportes y archivos generados (gitignored)
-│   ├── samples/              # Datos de prueba
-│   └── templates/            # Plantillas Excel
-├── config/                   # Configuraciones
-├── logs/                     # Logs de ejecución (gitignored)
-├── docs/                     # Documentación adicional
-└── tests/                    # Tests unitarios
+│   ├── input/                   # Archivos Excel de entrada (gitignored)
+│   └── output/                  # Estructura organizada por etapas ⭐
+│       ├── INDEX.md                 # Índice general de archivos
+│       ├── 01_analisis/             # Reportes de análisis inicial
+│       ├── 02_correcciones/         # NITs corregidos
+│       ├── 03_validaciones/         # Validaciones de calidad
+│       ├── 04_actualizaciones/      # Actualizaciones desde CELER
+│       └── 05_finales/              # Archivo final listo ✅
+├── .github/
+│   └── copilot-instructions.md  # Guía para agentes de IA
+├── config/                      # Configuraciones
+├── logs/                        # Logs de ejecución (gitignored)
+├── docs/                        # Documentación adicional
+└── tests/                       # Tests unitarios
 ```
 
 ## 🚀 Instalación
@@ -95,7 +103,7 @@ Total: 19 columnas, ~1,370 registros
 
 ## 🔧 Scripts Disponibles
 
-### 1. Análisis de Identificaciones
+### 1️⃣ Análisis de Identificaciones
 
 **Archivo:** `src/validators/analisis_ids.py`
 
@@ -106,49 +114,62 @@ Total: 19 columnas, ~1,370 registros
 python src\validators\analisis_ids.py
 ```
 
-**Resultados:**
-- ✅ Detecta identificaciones vacías o nulas
-- ✅ Identifica duplicados
-- ✅ Valida formatos por tipo de documento
-- ✅ Compara IDs entre ambas bases
-- ✅ Genera reporte: `data/output/analisis_ids_YYYYMMDD_HHMMSS.xlsx`
+**Salida:** `data/output/01_analisis/analisis_ids_YYYYMMDD_HHMMSS.xlsx`
 
-**Hallazgos típicos:**
-- 1 NIT duplicado (`900437270-3`)
-- 217 NITs sin formato correcto
-- 99.3% de coincidencia entre bases
+**Resultados obtenidos:**
+- ✅ Detecta identificaciones vacías o nulas: **0 encontradas**
+- ✅ Identifica duplicados: **1 NIT duplicado** (`900437270-3`)
+- ✅ Valida formatos: **217 NITs sin formato correcto**
+- ✅ Compara IDs entre bases: **99.3% de coincidencia** (1,360 de 1,369)
+- ✅ Distribución por tipo de documento (Cédulas: 1,132, NITs: 227, etc.)
+
+**Hojas del reporte:**
+- Resumen general
+- Duplicados SoftSeguros
+- Duplicados Celer
+- Problemas de formato
+- Registros sin ID
 
 ---
 
-### 2. Corrección de NITs
+### 2️⃣ Corrección de NITs
 
 **Archivo:** `src/transformers/corregir_nits.py`
 
-**Descripción:** Corrige automáticamente el formato de NITs agregando guión y dígito verificador según algoritmo DIAN.
+**Descripción:** Corrige automáticamente el formato de NITs agregando guión y dígito verificador según algoritmo oficial DIAN.
 
 **Ejecutar:**
 ```powershell
 python src\transformers\corregir_nits.py
 ```
 
-**Funcionalidad:**
-- ✅ Calcula dígito verificador usando algoritmo oficial DIAN
-- ✅ Convierte `900310074` → `900310074-1`
-- ✅ Mantiene NITs ya correctos sin cambios
-- ✅ Preserva estructura original del Excel
-- ✅ Aplica formato profesional a encabezados
+**Salida:** `data/output/02_correcciones/`
+- `CLIENTES_SOFTSEGUROS_CORREGIDO_YYYYMMDD_HHMMSS.xlsx` - Archivo completo
+- `REPORTE_CORRECCIONES_NITS_YYYYMMDD_HHMMSS.xlsx` - Detalle de cambios
 
-**Archivos generados:**
-1. `CLIENTES_SOFTSEGUROS_CORREGIDO_YYYYMMDD_HHMMSS.xlsx` - Archivo completo corregido
-2. `REPORTE_CORRECCIONES_NITS_YYYYMMDD_HHMMSS.xlsx` - Detalle de 217 correcciones
+**Resultados obtenidos:**
+- ✅ **217 NITs corregidos** con formato `XXXXXXXXX-X`
+- ✅ **10 NITs sin corrección** (ya tenían formato correcto)
+- ✅ Dígito verificador calculado según algoritmo DIAN
+- ✅ Preserva estructura original de 41 columnas
+- ✅ Formato profesional aplicado
 
-**Ejemplo de algoritmo:**
+**Ejemplos de correcciones:**
+```
+900310074   → 900310074-1
+900438817   → 900438817-6
+900771432   → 900771432-0
+900004949   → 900004949-7
+811030395   → 811030395-4
+```
+
+**Algoritmo DIAN:**
 ```python
 # NIT: 900310074
 # Multiplicadores: [71, 67, 59, 53, 47, 43, 41, 37, 29]
 # Suma: 9×71 + 0×67 + 0×59 + 3×53 + 1×47 + 0×43 + 0×41 + 7×37 + 4×29
-# Dígito verificador: 1
-# Resultado: 900310074-1
+# Residuo: suma % 11
+# DV: si residuo ≤ 1 → residuo, sino → 11 - residuo
 ```
 
 ---
