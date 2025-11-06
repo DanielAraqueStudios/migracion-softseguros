@@ -383,6 +383,7 @@ def main():
     # Cargar datos
     actualizador.cargar_datos()
     
+    
     # Preparar datos
     actualizador.preparar_datos()
     
