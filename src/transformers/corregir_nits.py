@@ -253,7 +253,7 @@ class CorreccionNITs:
 
 def main():
     """Función principal"""
-    archivo_entrada = 'CLIENTES SOFTSEGUROS.xlsx'
+    archivo_entrada = 'CLIENTES SOFTSEGUROSv2.xlsx'
     
     logger.info("="*60)
     logger.info("CORRECCIÓN DE FORMATO DE NITs")

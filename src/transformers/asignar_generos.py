@@ -296,7 +296,7 @@ class AsignadorGenero:
 def main():
     """Función principal"""
     # Archivo de entrada (el último actualizado)
-    archivo_entrada = 'data/output/04_actualizaciones/CLIENTES_SOFTSEGUROS_ACTUALIZADO_20251106_161522.xlsx'
+    archivo_entrada = 'data/output/CLIENTES_SOFTSEGUROS_ACTUALIZADO_20251107_155237.xlsx'
     
     logger.info("="*60)
     logger.info("ASIGNACIÓN AUTOMÁTICA DE GÉNERO")

@@ -387,7 +387,7 @@ class ActualizadorDatos:
 def main():
     """Función principal"""
     # Archivos de entrada
-    archivo_softseguros = 'data/output/02_correcciones/CLIENTES_SOFTSEGUROS_CORREGIDO_20251104_175717.xlsx'
+    archivo_softseguros = 'data/output/CLIENTES_SOFTSEGUROS_CORREGIDO_20251107_155219.xlsx'
     archivo_celer = 'CLIENTES VIGENTES CELER.xlsx'
     
     logger.info("="*60)
