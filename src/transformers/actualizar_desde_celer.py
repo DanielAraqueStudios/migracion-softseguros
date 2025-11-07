@@ -94,6 +94,19 @@ class ActualizadorDatos:
             apellidos = ' '.join(partes[2:])
             return nombres, apellidos
     
+    def limpiar_telefono(self, telefono):
+        """Limpia número de teléfono eliminando .0 y convirtiendo a entero"""
+        if pd.isna(telefono) or telefono == '':
+            return ''
+        
+        try:
+            # Convertir a float primero, luego a int para eliminar decimales
+            telefono_limpio = int(float(telefono))
+            return str(telefono_limpio)
+        except (ValueError, TypeError):
+            # Si no se puede convertir, devolver como string sin espacios
+            return str(telefono).strip()
+    
     def valores_diferentes(self, valor_soft, valor_celer):
         """Compara si dos valores son diferentes (considerando normalización)"""
         # Si CELER está vacío, no actualizar
@@ -198,8 +211,8 @@ class ActualizadorDatos:
                 self.estadisticas['fecha_nacimiento'] += 1
             
             # 3. ACTUALIZAR TELÉFONO MÓVIL
-            telefono_celer = self.normalizar_texto(row_celer['Celular_Pers'])
-            telefono_soft = self.normalizar_texto(row_soft['TELÉFONO MÓVIL'])
+            telefono_celer = self.limpiar_telefono(row_celer['Celular_Pers'])
+            telefono_soft = self.limpiar_telefono(row_soft['TELÉFONO MÓVIL'])
             
             if telefono_celer and self.valores_diferentes(telefono_soft, telefono_celer):
                 self.df_soft.at[idx, 'TELÉFONO MÓVIL'] = telefono_celer
@@ -286,6 +299,10 @@ class ActualizadorDatos:
         
         # Eliminar columnas auxiliares
         df_final = self.df_soft.drop(columns=['ID_LIMPIO'], errors='ignore')
+        
+        # Limpiar todos los teléfonos antes de exportar (eliminar .0)
+        if 'TELÉFONO MÓVIL' in df_final.columns:
+            df_final['TELÉFONO MÓVIL'] = df_final['TELÉFONO MÓVIL'].apply(self.limpiar_telefono)
         
         # Guardar Excel con formato
         with pd.ExcelWriter(archivo_salida, engine='openpyxl') as writer:
