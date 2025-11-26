@@ -163,7 +163,7 @@ class CorreccionNITs:
         
         return nits_corregidos
     
-    def generar_archivo_corregido(self, ruta_salida='./data/output'):
+    def generar_archivo_corregido(self, ruta_salida='data/output'):
         """Genera el archivo Excel corregido manteniendo el formato original"""
         logger.info("\n=== GENERANDO ARCHIVO CORREGIDO ===")
         
@@ -190,7 +190,7 @@ class CorreccionNITs:
         logger.info(f"✅ Archivo generado: {archivo_salida}")
         return archivo_salida
     
-    def generar_reporte_correcciones(self, ruta_salida='./data/output'):
+    def generar_reporte_correcciones(self, ruta_salida='data/output'):
         """Genera un reporte detallado de las correcciones realizadas"""
         if not self.correcciones:
             logger.info("No hay correcciones para reportar")

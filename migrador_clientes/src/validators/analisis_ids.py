@@ -230,7 +230,7 @@ class AnalizadorIdentificaciones:
             'solo_celer': solo_celer
         }
     
-    def generar_reporte(self, ruta_salida='./data/output'):
+    def generar_reporte(self, ruta_salida='data/output'):
         """Genera reportes en Excel de los problemas encontrados"""
         logger.info("\n=== GENERANDO REPORTES ===")
         

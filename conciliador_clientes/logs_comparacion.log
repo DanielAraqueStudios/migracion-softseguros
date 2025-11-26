@@ -1,0 +1,911 @@
+2025-11-25 15:33:42,739 INFO: Archivo leído: C:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\data_celer\InformedePersonas CELER.xlsx
+2025-11-25 15:33:42,739 INFO: Columnas: ['Unnamed: 0', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', '0', 'F', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8', 0, '0.1', 'No', 'Unnamed: 12', 'Unnamed: 13', 'Unnamed: 14', 'Unnamed: 15', 'Unnamed: 16', 'Unnamed: 17', 'Unnamed: 18', 'MEDELLIN', 'Unnamed: 20', 'MEDELLIN.1', 'Unnamed: 22', 'Unnamed: 23', 'Unnamed: 24', 'Unnamed: 25', '19/10/2023 2:54 p.\xa0m.', 'Unnamed: 27', 'Unnamed: 28', 'Unnamed: 29', 'Unnamed: 30', 'Unnamed: 31', 'Unnamed: 32', 'Unnamed: 33', 'Unnamed: 34']
+2025-11-25 15:33:42,740 INFO: Tipos: Unnamed: 0                object
+Unnamed: 1                object
+Unnamed: 2                object
+Unnamed: 3                object
+0                          int64
+F                         object
+Unnamed: 6                object
+Unnamed: 7                object
+Unnamed: 8               float64
+0                          int64
+0.1                      float64
+No                        object
+Unnamed: 12               object
+Unnamed: 13               object
+Unnamed: 14               object
+Unnamed: 15               object
+Unnamed: 16               object
+Unnamed: 17               object
+Unnamed: 18               object
+MEDELLIN                  object
+Unnamed: 20               object
+MEDELLIN.1                object
+Unnamed: 22               object
+Unnamed: 23               object
+Unnamed: 24               object
+Unnamed: 25               object
+19/10/2023 2:54 p. m.     object
+Unnamed: 27               object
+Unnamed: 28              float64
+Unnamed: 29               object
+Unnamed: 30               object
+Unnamed: 31               object
+Unnamed: 32               object
+Unnamed: 33              float64
+Unnamed: 34              float64
+dtype: object
+2025-11-25 15:34:40,072 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\data_celer\InformedePersonas CELER.xlsx
+2025-11-25 15:34:40,072 INFO: Columnas: ['Unnamed: 0', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', '0', 'F', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8', 0, '0.1', 'No', 'Unnamed: 12', 'Unnamed: 13', 'Unnamed: 14', 'Unnamed: 15', 'Unnamed: 16', 'Unnamed: 17', 'Unnamed: 18', 'MEDELLIN', 'Unnamed: 20', 'MEDELLIN.1', 'Unnamed: 22', 'Unnamed: 23', 'Unnamed: 24', 'Unnamed: 25', '19/10/2023 2:54 p.\xa0m.', 'Unnamed: 27', 'Unnamed: 28', 'Unnamed: 29', 'Unnamed: 30', 'Unnamed: 31', 'Unnamed: 32', 'Unnamed: 33', 'Unnamed: 34']
+2025-11-25 15:34:40,073 INFO: Tipos: Unnamed: 0                object
+Unnamed: 1                object
+Unnamed: 2                object
+Unnamed: 3                object
+0                          int64
+F                         object
+Unnamed: 6                object
+Unnamed: 7                object
+Unnamed: 8               float64
+0                          int64
+0.1                      float64
+No                        object
+Unnamed: 12               object
+Unnamed: 13               object
+Unnamed: 14               object
+Unnamed: 15               object
+Unnamed: 16               object
+Unnamed: 17               object
+Unnamed: 18               object
+MEDELLIN                  object
+Unnamed: 20               object
+MEDELLIN.1                object
+Unnamed: 22               object
+Unnamed: 23               object
+Unnamed: 24               object
+Unnamed: 25               object
+19/10/2023 2:54 p. m.     object
+Unnamed: 27               object
+Unnamed: 28              float64
+Unnamed: 29               object
+Unnamed: 30               object
+Unnamed: 31               object
+Unnamed: 32               object
+Unnamed: 33              float64
+Unnamed: 34              float64
+dtype: object
+2025-11-25 15:34:40,075 ERROR: No se encontraron las columnas necesarias. tipo_doc: None, tomador: None, asegurado: None
+2025-11-25 15:35:17,717 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\data_celer\InformedePersonas CELER.xlsx
+2025-11-25 15:35:17,717 INFO: Columnas: ['Nombre', 'Tipo_Doc', 'Identificacion', 'F_Nacimiento', 'Edad', 'Genero', 'Prefijo', 'Estado_civil', 'Estrato_social', 'Peso', 'Estatura', 'Fallecido', 'Profesion', 'Ocupacion', 'Tel_Personal', 'Celular_Personal', 'Tel_Laboral', 'Celular_Laboral', 'Direccion_Personal', 'Ciudad_Personal', 'Direccion_Laboral', 'Ciudad_Laboral', 'Mail_Personal', 'Mail_Laboral', 'F_Exp_Iden', 'Unidad', 'F_Creacion', 'F_Modificacion', 'Apartado_Aereo', 'Lugar_Exp_Iden', 'Lugar_Nacimiento', 'Calidades_Activas', 'Ejecutivo_Principal', 'Info_Confidencial', 'Observaciones']
+2025-11-25 15:35:17,718 INFO: Tipos: Nombre                  object
+Tipo_Doc                object
+Identificacion          object
+F_Nacimiento            object
+Edad                     int64
+Genero                  object
+Prefijo                 object
+Estado_civil            object
+Estrato_social         float64
+Peso                     int64
+Estatura               float64
+Fallecido               object
+Profesion               object
+Ocupacion               object
+Tel_Personal            object
+Celular_Personal        object
+Tel_Laboral             object
+Celular_Laboral         object
+Direccion_Personal      object
+Ciudad_Personal         object
+Direccion_Laboral       object
+Ciudad_Laboral          object
+Mail_Personal           object
+Mail_Laboral            object
+F_Exp_Iden              object
+Unidad                  object
+F_Creacion              object
+F_Modificacion          object
+Apartado_Aereo         float64
+Lugar_Exp_Iden          object
+Lugar_Nacimiento        object
+Calidades_Activas       object
+Ejecutivo_Principal     object
+Info_Confidencial      float64
+Observaciones          float64
+dtype: object
+2025-11-25 15:35:17,720 ERROR: No se encontraron las columnas necesarias. tipo_doc: None, tomador: None, asegurado: None
+2025-11-25 15:37:28,716 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\data_celer\InformedePersonas CELER.xlsx
+2025-11-25 15:37:28,716 INFO: Columnas: ['Nombre', 'Tipo_Doc', 'Identificacion', 'F_Nacimiento', 'Edad', 'Genero', 'Prefijo', 'Estado_civil', 'Estrato_social', 'Peso', 'Estatura', 'Fallecido', 'Profesion', 'Ocupacion', 'Tel_Personal', 'Celular_Personal', 'Tel_Laboral', 'Celular_Laboral', 'Direccion_Personal', 'Ciudad_Personal', 'Direccion_Laboral', 'Ciudad_Laboral', 'Mail_Personal', 'Mail_Laboral', 'F_Exp_Iden', 'Unidad', 'F_Creacion', 'F_Modificacion', 'Apartado_Aereo', 'Lugar_Exp_Iden', 'Lugar_Nacimiento', 'Calidades_Activas', 'Ejecutivo_Principal', 'Info_Confidencial', 'Observaciones']
+2025-11-25 15:37:28,717 INFO: Tipos: Nombre                  object
+Tipo_Doc                object
+Identificacion          object
+F_Nacimiento            object
+Edad                     int64
+Genero                  object
+Prefijo                 object
+Estado_civil            object
+Estrato_social         float64
+Peso                     int64
+Estatura               float64
+Fallecido               object
+Profesion               object
+Ocupacion               object
+Tel_Personal            object
+Celular_Personal        object
+Tel_Laboral             object
+Celular_Laboral         object
+Direccion_Personal      object
+Ciudad_Personal         object
+Direccion_Laboral       object
+Ciudad_Laboral          object
+Mail_Personal           object
+Mail_Laboral            object
+F_Exp_Iden              object
+Unidad                  object
+F_Creacion              object
+F_Modificacion          object
+Apartado_Aereo         float64
+Lugar_Exp_Iden          object
+Lugar_Nacimiento        object
+Calidades_Activas       object
+Ejecutivo_Principal     object
+Info_Confidencial      float64
+Observaciones          float64
+dtype: object
+2025-11-25 15:37:28,718 ERROR: No se encontró la columna: Tomador
+2025-11-25 15:39:21,735 INFO: Archivo leído: C:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:39:21,735 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:39:21,736 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:39:21,744 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:39:21,749 INFO: Registros con tomador distinto a asegurado: 1059
+2025-11-25 15:39:21,765 INFO: Archivo JSON exportado: C:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado.json
+2025-11-25 15:39:33,136 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:39:33,136 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:39:33,138 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:39:33,142 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:39:33,145 INFO: Registros con tomador distinto a asegurado: 1059
+2025-11-25 15:39:33,160 INFO: Archivo JSON exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado.json
+2025-11-25 15:42:30,422 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:42:30,422 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:42:30,423 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:42:30,427 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:42:50,144 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:42:50,145 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:42:50,146 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:42:50,151 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:43:07,369 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:43:07,370 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:43:07,371 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:43:07,376 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:43:35,971 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:43:35,972 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:43:35,973 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:43:35,977 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:44:35,189 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:44:35,190 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:44:35,191 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:44:35,197 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:44:43,396 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:44:43,397 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:44:43,398 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:44:43,403 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:45:16,733 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 15:45:16,733 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 15:45:16,734 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 15:45:16,981 INFO: Registros con tipo NIT: 1671
+2025-11-25 15:45:16,995 INFO: Registros con tomador distinto a asegurado y ambos no vacíos: 811
+2025-11-25 15:45:17,008 INFO: Archivo JSON exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado.json
+2025-11-25 16:56:16,487 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 16:56:16,487 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 16:56:16,488 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 16:56:16,493 INFO: Registros con tipo NIT: 1671
+2025-11-25 16:56:16,508 INFO: Registros con tomador distinto a asegurado y ambos no vacíos: 811
+2025-11-25 16:56:16,588 INFO: Archivo JSON exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado_con_dv.json
+2025-11-25 16:57:45,212 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 16:57:45,212 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 16:57:45,213 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 16:57:45,218 INFO: Registros con tipo NIT: 1671
+2025-11-25 16:57:45,233 INFO: Registros con tomador distinto a asegurado y ambos no vacíos: 811
+2025-11-25 16:57:45,312 INFO: Archivo JSON exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado_con_dv.json
+2025-11-25 17:00:10,844 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-25 17:00:10,844 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-25 17:00:10,846 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-25 17:00:10,850 INFO: Registros con tipo NIT: 1671
+2025-11-25 17:00:10,866 INFO: Registros con tomador distinto a asegurado y ambos no vacíos: 811
+2025-11-25 17:00:10,954 INFO: Archivo JSON exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado_con_dv.json

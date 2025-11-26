@@ -289,7 +289,7 @@ class ActualizadorDatos:
                 logger.info(f"  Anterior: {str(cambio['valor_anterior'])[:50]}")
                 logger.info(f"  Nuevo: {str(cambio['valor_nuevo'])[:50]}")
     
-    def generar_archivo_actualizado(self, ruta_salida='./data/output'):
+    def generar_archivo_actualizado(self, ruta_salida='../data/output'):
         """Genera el archivo Excel actualizado"""
         logger.info("\n=== GENERANDO ARCHIVO ACTUALIZADO ===")
         
@@ -315,7 +315,7 @@ class ActualizadorDatos:
         logger.info(f"✅ Archivo actualizado: {archivo_salida}")
         return archivo_salida
     
-    def generar_reporte_cambios(self, ruta_salida='./data/output'):
+    def generar_reporte_cambios(self, ruta_salida='../data/output'):
         """Genera reporte detallado de cambios realizados"""
         logger.info("\n=== GENERANDO REPORTE DE CAMBIOS ===")
         
@@ -387,7 +387,7 @@ class ActualizadorDatos:
 def main():
     """Función principal"""
     # Archivos de entrada
-    archivo_softseguros = './data/output/CLIENTES_SOFTSEGUROS_CORREGIDO_20251107_155219.xlsx'
+    archivo_softseguros = 'data/output/CLIENTES_SOFTSEGUROS_CORREGIDO_20251107_155219.xlsx'
     archivo_celer = 'CLIENTES VIGENTES CELER.xlsx'
     
     logger.info("="*60)

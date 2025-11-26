@@ -16,10 +16,11 @@ Este proyecto automatiza la migración de datos de clientes entre el sistema leg
 - ✅ **Organización profesional**: Estructura de carpetas por etapas del proceso
 - ✅ **Documentación exhaustiva**: README en cada carpeta explicando contenido y resultados
 
-## 📁 Estructura del Proyecto
+
+## 📁 Estructura del Proyecto (actualizada)
 
 ```
-migracion-softseguros/
+migrador_clientes/
 ├── src/
 │   ├── validators/              # Scripts de validación de datos
 │   │   ├── analisis_ids.py                 # Análisis de identificaciones
@@ -46,6 +47,8 @@ migracion-softseguros/
 ├── docs/                        # Documentación adicional
 └── tests/                       # Tests unitarios
 ```
+
+> **Nota:** Todos los scripts, archivos de entrada y reportes ahora se encuentran bajo la carpeta `migrador_clientes/` siguiendo la misma estructura profesional y rutas relativas. Ejecuta los scripts desde esa carpeta para asegurar que los outputs y logs se generen correctamente.
 
 ## 🚀 Instalación
 

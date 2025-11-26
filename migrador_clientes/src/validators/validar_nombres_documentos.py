@@ -235,7 +235,7 @@ class ValidadorNombresDocumentos:
         else:
             logger.info("✅ CELER: No hay IDs con múltiples nombres (correcto)")
     
-    def generar_reporte(self, ruta_salida='./data/output'):
+    def generar_reporte(self, ruta_salida='../data/output'):
         """Genera reporte detallado de inconsistencias"""
         logger.info("\n=== GENERANDO REPORTE ===")
         
@@ -317,7 +317,7 @@ class ValidadorNombresDocumentos:
 def main():
     """Función principal"""
     # Usar el archivo corregido de SOFTSEGUROS
-    archivo_softseguros = './data/output/CLIENTES_SOFTSEGUROS_CORREGIDO_20251104_130714.xlsx'
+    archivo_softseguros = 'data/output/CLIENTES_SOFTSEGUROS_CORREGIDO_20251104_130714.xlsx'
     archivo_celer = 'CLIENTES VIGENTES CELER.xlsx'
     
     logger.info("="*60)

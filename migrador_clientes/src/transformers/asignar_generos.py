@@ -186,7 +186,7 @@ class AsignadorGenero:
         
         return casos_revisar
     
-    def generar_archivo_con_generos(self, ruta_salida='./data/output/04_actualizaciones'):
+    def generar_archivo_con_generos(self, ruta_salida='data/output/04_actualizaciones'):
         """Genera el archivo Excel con géneros asignados"""
         logger.info("\n=== GENERANDO ARCHIVO CON GÉNEROS ===")
         
@@ -206,7 +206,7 @@ class AsignadorGenero:
         logger.info(f"✅ Archivo generado: {archivo_salida}")
         return archivo_salida
     
-    def generar_reporte_generos(self, casos_revisar, ruta_salida='./data/output/04_actualizaciones'):
+    def generar_reporte_generos(self, casos_revisar, ruta_salida='data/output/04_actualizaciones'):
         """Genera reporte detallado de asignación de géneros"""
         logger.info("\n=== GENERANDO REPORTE DE GÉNEROS ===")
         
@@ -296,7 +296,7 @@ class AsignadorGenero:
 def main():
     """Función principal"""
     # Archivo de entrada (el último actualizado)
-    archivo_entrada = './data/output/CLIENTES_SOFTSEGUROS_ACTUALIZADO_20251107_155237.xlsx'
+    archivo_entrada = 'data/output/CLIENTES_SOFTSEGUROS_ACTUALIZADO_20251107_155237.xlsx'
     
     logger.info("="*60)
     logger.info("ASIGNACIÓN AUTOMÁTICA DE GÉNERO")
