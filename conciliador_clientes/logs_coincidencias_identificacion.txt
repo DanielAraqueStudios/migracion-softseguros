@@ -1,0 +1,16 @@
+import pandas as pd
+import os
+
+# Leer el archivo de comparación
+comparacion_path = os.path.join(os.path.dirname(__file__), 'data_celer', 'informe_comparado_con_json.xlsx')
+df = pd.read_excel(comparacion_path)
+
+# Filtrar los que coinciden
+coinciden = df[df['Coincide_JSON'] == True]
+
+# Tomar los primeros 10 identificadores
+primeros_10 = coinciden['NÚMERO DE DOCUMENTO'].head(10)
+
+print('Primeros 10 identificadores que coinciden:')
+for identificador in primeros_10:
+    print(identificador)

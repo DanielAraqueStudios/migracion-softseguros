@@ -79,31 +79,9 @@ logging.info(f'Registros con tomador distinto a asegurado y ambos no vacíos: {l
 
 # Agregar dígito de verificación DIAN si corresponde
 data = diferentes.to_dict(orient='records')
-for registro in data:
-    # Identificacion principal
-    nit = registro.get('Identificacion')
-    tipo_doc = registro.get('Tipo_Doc', '').upper()
-    if tipo_doc == 'NIT' and nit and str(nit).isdigit():
-        dv = calcular_digito_verificacion(str(nit))
-        if dv is not None:
-            registro['Identificacion'] = f"{nit}-{dv}"
 
-    # Iden_Asegurado
-    nit_aseg = registro.get('Iden_Asegurado')
-    if nit_aseg and str(nit_aseg).isdigit():
-        dv_aseg = calcular_digito_verificacion(str(nit_aseg))
-        if dv_aseg is not None:
-            registro['Iden_Asegurado'] = f"{nit_aseg}-{dv_aseg}"
-
-    # Iden_Beneficiario
-    nit_bene = registro.get('Iden_Beneficiario')
-    if nit_bene and str(nit_bene).isdigit():
-        dv_bene = calcular_digito_verificacion(str(nit_bene))
-        if dv_bene is not None:
-            registro['Iden_Beneficiario'] = f"{nit_bene}-{dv_bene}"
-
-# Exportar a JSON con dígito de verificación
-output_json = CARPETA_CLIENTES_ACTIVOS / 'diferencias_tomador_asegurado_con_dv.json'
+# Exportar solo el JSON con los diferentes (sin filtrar por tipo de persona ni NIT)
+output_json = CARPETA_CLIENTES_ACTIVOS / 'diferencias_tomador_asegurado.json'
 try:
     with open(output_json, 'w', encoding='utf-8') as f:
         import json

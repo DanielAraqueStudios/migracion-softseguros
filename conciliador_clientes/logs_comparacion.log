@@ -909,3 +909,132 @@ dtype: object
 2025-11-25 17:00:10,850 INFO: Registros con tipo NIT: 1671
 2025-11-25 17:00:10,866 INFO: Registros con tomador distinto a asegurado y ambos no vacíos: 811
 2025-11-25 17:00:10,954 INFO: Archivo JSON exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado_con_dv.json
+2025-11-26 11:33:54,024 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-26 11:33:54,024 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-26 11:33:54,027 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-26 11:33:54,049 INFO: Registros con tipo NIT: 1671
+2025-11-26 11:33:54,064 INFO: Registros con tomador distinto a asegurado y ambos no vacíos: 811
+2025-11-26 11:33:54,093 INFO: Archivo JSON exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado_sin_nit.json
+2025-11-26 11:33:54,122 INFO: Archivo CSV exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado_con_nit.csv
+2025-11-26 12:13:29,667 INFO: Archivo leído: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\CLIENTES ACTIVOS.xlsx
+2025-11-26 12:13:29,667 INFO: Columnas: ['Tipo_Persona', 'Tomador', 'Identificacion', 'Tipo_Doc', 'Telefono_Lab', 'Telefono_Pers', 'Celular_Lab', 'Celular_Pers', 'Mail_Lab', 'Mail_Pers', 'Direccion_Lab', 'Ciudad_Lab', 'Cod_Aseguradora', 'Aseguradora', 'Ramo', 'Cod_Ramo', 'Póliza', 'F_Inicio_Primera_Vig', 'F_Inicio', 'F_Fin', 'Plan_Cod', 'Plan', 'Modalidad', 'Forma_Pago', 'Cuotas', 'Dsc_Riesgo', 'Placa', 'Modelo_Vehiculo', 'Marca_Vehiculo', 'Tipo_Vehiculo', 'Linea', 'Servicio', 'Fasecolda', 'Motor', 'Chasis', 'Venci_TecnicoMecanica', 'Circulacion', 'V_Asegurado', 'Prima_Acumulada', 'Prima_Anualizada', 'Asegurado', 'Iden_Asegurado', 'F_Nac_Asegurado', 'Edad_Asegurado', 'Beneficiario', 'Iden_Beneficiario', 'F_Nac_Beneficiario', 'Edad_Beneficiario', 'Con_Bene_Oneroso', 'Bene_Oneroso', 'Sucursal', 'Unidad', 'Ejecutivos', 'F_Creacion', 'F_Modificacion', 'Digi_Veri_Tomador', 'Forma_Recaudo', 'Medio_Recaudo']
+2025-11-26 12:13:29,669 INFO: Tipos: Tipo_Persona              object
+Tomador                   object
+Identificacion            object
+Tipo_Doc                  object
+Telefono_Lab              object
+Telefono_Pers             object
+Celular_Lab               object
+Celular_Pers             float64
+Mail_Lab                  object
+Mail_Pers                 object
+Direccion_Lab             object
+Ciudad_Lab                object
+Cod_Aseguradora            int64
+Aseguradora               object
+Ramo                      object
+Cod_Ramo                   int64
+Póliza                    object
+F_Inicio_Primera_Vig      object
+F_Inicio                  object
+F_Fin                     object
+Plan_Cod                  object
+Plan                      object
+Modalidad                 object
+Forma_Pago                object
+Cuotas                     int64
+Dsc_Riesgo                object
+Placa                     object
+Modelo_Vehiculo           object
+Marca_Vehiculo            object
+Tipo_Vehiculo             object
+Linea                     object
+Servicio                  object
+Fasecolda                 object
+Motor                     object
+Chasis                    object
+Venci_TecnicoMecanica     object
+Circulacion               object
+V_Asegurado                int64
+Prima_Acumulada          float64
+Prima_Anualizada         float64
+Asegurado                 object
+Iden_Asegurado            object
+F_Nac_Asegurado           object
+Edad_Asegurado           float64
+Beneficiario              object
+Iden_Beneficiario         object
+F_Nac_Beneficiario        object
+Edad_Beneficiario        float64
+Con_Bene_Oneroso          object
+Bene_Oneroso              object
+Sucursal                  object
+Unidad                    object
+Ejecutivos                object
+F_Creacion                object
+F_Modificacion            object
+Digi_Veri_Tomador        float64
+Forma_Recaudo             object
+Medio_Recaudo             object
+dtype: object
+2025-11-26 12:13:29,674 INFO: Registros con tipo NIT: 1671
+2025-11-26 12:13:29,690 INFO: Registros con tomador distinto a asegurado y ambos no vacíos: 811
+2025-11-26 12:13:29,771 INFO: Archivo JSON exportado: c:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\conciliador_clientes\clientes_activos\diferencias_tomador_asegurado.json
