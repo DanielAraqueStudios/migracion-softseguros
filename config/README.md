@@ -1,15 +1,52 @@
-# config - Configuración de Migración
+# Configuraciones
 
-Este directorio contiene archivos de configuración para rutas, mapeos de campos, validaciones y parámetros de migración.
+Archivos de configuración para parámetros del sistema de migración.
 
-## Archivos Clave
-- `config.yaml` : Configuración principal de rutas, formatos y reglas de validación.
-- Otros archivos JSON/YAML para mapeos de campos y parámetros específicos.
+## 📋 Descripción
 
-## Recomendaciones
-- Mantén la configuración actualizada según los cambios en los scripts y flujos de trabajo.
-- Documenta cada parámetro y mapeo para facilitar futuras migraciones.
-- No incluyas credenciales sensibles en los archivos de configuración; usa variables de entorno.
+Esta carpeta contiene configuraciones JSON/YAML que controlan:
+- Mapeos de campos entre sistemas
+- Reglas de validación
+- Parámetros de conexión
+- Configuraciones de procesamiento
 
----
-Actualizado: 25/11/2025
+## 📁 Archivos
+
+### Configuraciones Principales
+- `mapeos.json` - Mapeo de campos entre fuentes
+- `validaciones.yaml` - Reglas de validación
+- `conexion.yaml` - Parámetros de conexión a BD
+
+### Ejemplos
+- `config.example.yaml` - Template de configuración
+
+## 🚀 Uso
+
+```python
+import yaml
+with open('config/validaciones.yaml') as f:
+    config = yaml.safe_load(f)
+```
+
+## 📊 Estructura Típica
+
+```yaml
+# validaciones.yaml
+nit:
+  formato: '^\d+-\d$'
+  algoritmo: 'dian'
+
+campos:
+  nombre_completo: 'NOMBRE_DEL_CLIENTE'
+  documento: 'DOCUMENTO_DEL_CLIENTE'
+
+reglas:
+  persona_max_palabras: 4
+  empresa_terminos: ['S.A.', 'LTDA.', 'COOPERATIVA']
+```
+
+## ⚠️ Notas Importantes
+
+- No incluir credenciales reales
+- Usar variables de entorno para datos sensibles
+- Mantener versionado para trazabilidad

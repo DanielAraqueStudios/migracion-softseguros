@@ -1,40 +1,63 @@
-# Conciliador de Clientes - Migración SoftSeguros
+# Conciliador de Clientes
 
-Este módulo automatiza la conciliación y migración de datos de clientes entre sistemas de seguros, con enfoque en validación, limpieza y generación de plantillas para importación.
+Scripts para conciliación y matching de datos de clientes entre diferentes fuentes.
 
-## ¿Cómo funciona?
+## 📋 Descripción
 
-1. **Input principal:**
-   - `data_celer/InformedePersonas CELER.xlsx`: Base de datos de personas (CELER).
-   - `clientes_activos/diferencias_tomador_asegurado.json`: Registros a comparar (campo `Iden_Beneficiario`).
+Esta carpeta contiene los scripts principales para:
+- Comparación de datos entre TOMADOR y ASEGURADO
+- Generación de reportes de diferencias en formato JSON
+- Estadísticas de coincidencias y discrepancias
+- Exportación de plantillas con datos validados
 
-2. **Comparación y filtrado:**
-   - Se buscan coincidencias por número de documento (`Identificacion`) y por nombre (`Nombre_Beneficiario`).
-   - Solo se exportan los datos que aparecen en ambos archivos.
+## 📁 Archivos
 
-3. **Transformación y mapeo:**
-   - Nombres y apellidos se separan y se asignan a columnas A y B de la plantilla.
-   - Tipo de documento se normaliza: "CC", "C.C", "IND" → "Cédula"; "NIT" → "NIT"; "PSP", "CE" → "Cédula de Extranjería".
-   - Teléfonos móviles y tipos se extraen de columnas personales/laborales y se asignan en la plantilla, permitiendo múltiples valores.
-   - Email y tipo de email se extraen de columnas personales/laborales y se asignan en la plantilla.
-   - Dirección principal se toma de la columna S del informe.
-   - Si el tipo de documento es NIT, se calcula y agrega el dígito de verificación en la columna Z.
+### Scripts Principales
+- `exportar_plantilla_coincidentes.py` - Genera template Excel con datos validados y NIT corregidos
+- `comparar_tomador_asegurado.py` - Compara columnas y exporta diferencias JSON
 
-4. **Exportación:**
-   - El archivo final se genera en `plantilla/PLANTILLA_COINCIDEN.xlsx` listo para importación o revisión.
+### Archivos de Salida
+- `PLANTILLA_COINCIDEN.xlsx` - Template final con datos limpios
+- `diferencias_tomador_asegurado.json` - Reporte de diferencias
+- `estadisticas_conciliacion.json` - Estadísticas del proceso
 
-## Scripts principales
-- `exportar_plantilla_coincidentes.py`: Genera la plantilla con todos los mapeos y validaciones.
-- `comparar_identificaciones_informe_json.py`: Estadísticas y comparación por identificaciones.
-- `llenar_plantilla_nombres_apellidos.py`: Ejemplo de llenado básico de plantilla.
+## 🚀 Uso
 
-## Personalización
-- Puedes modificar los scripts para agregar más campos, cambiar reglas de mapeo o ajustar la lógica de validación según tus necesidades.
+```bash
+# Ejecutar conciliación completa
+python comparar_tomador_asegurado.py
 
-## Recomendaciones
-- Mantén los archivos Excel cerrados antes de ejecutar los scripts para evitar errores de escritura.
-- Revisa los logs generados para validar el proceso y depurar posibles inconsistencias.
+# Generar template validado
+python exportar_plantilla_coincidentes.py
+```
 
----
+## 📊 Funcionalidades
 
-Para más detalles, consulta el README general en la raíz del proyecto.
+### Comparación TOMADOR vs ASEGURADO
+- Análisis de similitud entre nombres
+- Validación cruzada de documentos
+- Detección de inconsistencias
+
+### Validación de NIT
+- Cálculo automático de dígito de verificación
+- Corrección de formatos inválidos
+- Reporte de errores encontrados
+
+### Generación de Templates
+- Mapeo de campos estandarizados
+- Inclusión de campos calculados (género, teléfonos, etc.)
+- Formato Excel profesional
+
+## 📝 Logs
+
+Los procesos generan logs detallados en `../logs/` con:
+- Cambios realizados por fila
+- Errores encontrados
+- Estadísticas de procesamiento
+
+## 🔗 Dependencias
+
+Requiere acceso a:
+- Archivo fuente de datos
+- Scripts de utilidad compartidos
+- Configuraciones de validación

@@ -1,15 +1,55 @@
-# logs - Registro de Ejecución
+# Logs de Ejecución
 
-Este directorio almacena los archivos de log generados durante la ejecución de los scripts de migración, validación y transformación de datos.
+Archivos de log generados durante la ejecución de los scripts de migración.
 
-## Uso
-- Los logs permiten auditar el proceso, identificar errores y depurar inconsistencias.
-- Se recomienda revisar los logs después de cada ejecución para validar el éxito del proceso y detectar posibles problemas.
+## 📋 Descripción
 
-## Recomendaciones
-- No versionar los archivos de log en git.
-- Mantener los logs organizados por fecha y tipo de proceso.
-- Eliminar logs antiguos periódicamente para evitar acumulación innecesaria.
+Esta carpeta contiene todos los logs de ejecución con:
+- Trazabilidad completa de procesos
+- Errores y warnings encontrados
+- Estadísticas de procesamiento
+- Cambios realizados por fila
 
----
-Actualizado: 25/11/2025
+## 📁 Archivos
+
+### Logs Principales
+- `clasificacion_tomador.log` - Log del procesamiento de pólizas
+- `exportar_plantilla.log` - Log de generación de templates
+- `comparacion_tomador.log` - Log de conciliación
+
+### Formato
+```
+2025-11-27 15:45:31,225 - INFO - Fila 7: Asegurado='RUBER ALBERTO ESCUDERO RINCON' -> Tipo=PERSONA, Documento='98571752.0' -> '98571752.0'
+```
+
+## 🚀 Uso
+
+```bash
+# Revisar logs recientes
+tail -f logs/clasificacion_tomador.log
+
+# Buscar errores
+grep "ERROR" logs/*.log
+
+# Contar procesamientos
+grep "Fila" logs/clasificacion_tomador.log | wc -l
+```
+
+## 📊 Información Registrada
+
+### Por Script
+- **clasificar_tomador.py**: Clasificaciones y ajustes de documentos
+- **exportar_plantilla.py**: Mapeos y validaciones realizadas
+- **comparar_tomador.py**: Comparaciones y diferencias encontradas
+
+### Niveles de Log
+- **INFO**: Procesos normales y cambios realizados
+- **WARNING**: Situaciones que requieren atención
+- **ERROR**: Errores que impiden el procesamiento
+
+## ⚠️ Notas Importantes
+
+- Los logs se rotan automáticamente
+- No contienen datos sensibles
+- Útiles para debugging y auditoría
+- Mantener histórico para trazabilidad

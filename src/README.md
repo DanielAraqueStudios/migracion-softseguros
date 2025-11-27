@@ -1,25 +1,54 @@
-# src - Scripts y Módulos de Migración
+# Código Fuente Principal
 
-Este directorio contiene el código fuente principal para la migración, transformación y validación de datos de seguros en SoftSeguros.
+Scripts y módulos principales del sistema de migración.
 
-## Subcarpetas
-- `extractors/` : Lectores de archivos Excel (.xlsx, .xls, .xlsm) usando pandas y openpyxl.
-- `transformers/` : Pipelines de transformación de datos con pandas.
-- `validators/` : Reglas de validación y chequeo de calidad de datos.
-- `loaders/` : Exportación de datos a formatos destino (Excel, CSV, DB).
-- `formatters/` : Scripts para formateo profesional de reportes y archivos Excel.
-- `utils/` : Utilidades compartidas (manejo de archivos, logging, helpers).
+## 📋 Descripción
 
-## Estándares de Desarrollo
-- Scripts en Python 3.x siguiendo patrones ETL.
-- Uso de pandas para manipulación masiva de datos.
-- openpyxl para formato avanzado de Excel.
-- Validaciones y logs detallados para trazabilidad.
+Esta carpeta contiene el código fuente organizado por funcionalidad:
+- Extractors: Lectores de datos desde diferentes fuentes
+- Transformers: Scripts de transformación y limpieza
+- Validators: Validaciones de calidad de datos
+- Loaders: Exportadores a diferentes formatos
+- Utils: Utilidades compartidas
 
-## Recomendaciones
-- Mantener los scripts organizados por función.
-- Documentar cada módulo con docstrings y comentarios en español para lógica de negocio.
-- Usar los templates de Excel desde `data/templates/` para reportes.
+## 📁 Estructura
 
----
-Actualizado: 25/11/2025
+```
+src/
+├── extractors/     # Lectores de archivos Excel, JSON, etc.
+├── transformers/   # Scripts de transformación de datos
+├── validators/     # Validaciones de formato y calidad
+├── loaders/        # Exportadores Excel, CSV, DB
+└── utils/          # Funciones auxiliares compartidas
+```
+
+## 🚀 Uso
+
+Los scripts en `src/` son módulos reutilizables que pueden ser importados por los scripts principales en otras carpetas.
+
+## 📊 Funcionalidades
+
+### Extractors
+- Lectura de archivos Excel (.xlsx, .xls)
+- Parsing de archivos JSON
+- Conexión a bases de datos
+
+### Transformers
+- Limpieza de datos
+- Normalización de formatos
+- Cálculos automáticos (NIT, fechas)
+
+### Validators
+- Validación de NIT/CC
+- Chequeo de formatos
+- Reglas de negocio
+
+### Loaders
+- Exportación Excel con formato
+- Generación CSV
+- Inserción en bases de datos
+
+### Utils
+- Funciones de logging
+- Helpers de string
+- Utilidades de fecha

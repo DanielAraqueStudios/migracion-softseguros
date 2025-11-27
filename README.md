@@ -1,52 +1,139 @@
 # Migración SoftSeguros
 
-Sistema completo de migración y validación de datos para clientes de seguros, especializado en procesamiento de archivos Excel, limpieza de datos, sincronización entre sistemas y generación de reportes automatizados.
+Sistema de migración de datos para Seguros Unión, especializado en procesamiento ETL de datos de seguros desde archivos Excel heredados.
 
-## 📋 Descripción del Proyecto
+## 📋 Descripción
 
-Este proyecto automatiza la migración de datos de clientes entre el sistema legacy **SoftSeguros** y el nuevo sistema **Celer**. Implementa un flujo completo de ETL (Extract, Transform, Load) con validaciones de calidad, corrección automática de formatos y sincronización de datos usando **CELER como fuente de verdad**.
+Este proyecto automatiza la migración y validación de datos de pólizas de seguros, incluyendo:
+- Extracción de datos desde archivos Excel (.xlsx, .xls)
+- Transformación y limpieza de datos
+- Validación de documentos NIT/CC con cálculo de dígito de verificación
+- Generación de reportes y plantillas estandarizadas
+- Conciliación entre diferentes fuentes de datos
 
-## 🎯 Características Principales
-
-- ✅ **Análisis de calidad de datos**: Identificación de duplicados, IDs inválidos y problemas de formato
-- ✅ **Corrección automática de NITs**: Cálculo y aplicación de dígito verificador según algoritmo DIAN
-- ✅ **Validación nombre-documento**: Algoritmo de similitud de texto para detectar inconsistencias
-- ✅ **Sincronización de datos**: Actualización automática desde CELER (fuente confiable)
-- ✅ **Trazabilidad completa**: Reportes detallados de cada cambio con valor anterior/nuevo
-- ✅ **Organización profesional**: Estructura de carpetas por etapas del proceso
-- ✅ **Documentación exhaustiva**: README en cada carpeta explicando contenido y resultados
-
-
-## 📁 Estructura del Proyecto (actualizada)
+## 🏗️ Arquitectura
 
 ```
-migrador_clientes/
-├── src/
-│   ├── validators/              # Scripts de validación de datos
-│   │   ├── analisis_ids.py                 # Análisis de identificaciones
-│   │   └── validar_nombres_documentos.py   # Validación nombre-documento
-│   ├── transformers/            # Scripts de transformación de datos
-│   │   ├── corregir_nits.py                # Corrección de NITs
-│   │   └── actualizar_desde_celer.py       # Sincronización con CELER ⭐
-│   ├── extractors/              # Lectores de datos fuente
-│   ├── loaders/                 # Exportadores de datos
-│   └── utils/                   # Utilidades compartidas
-├── data/
-│   ├── input/                   # Archivos Excel de entrada (gitignored)
-│   └── output/                  # Estructura organizada por etapas ⭐
-│       ├── INDEX.md                 # Índice general de archivos
-│       ├── 01_analisis/             # Reportes de análisis inicial
-│       ├── 02_correcciones/         # NITs corregidos
-│       ├── 03_validaciones/         # Validaciones de calidad
-│       ├── 04_actualizaciones/      # Actualizaciones desde CELER
-│       └── 05_finales/              # Archivo final listo ✅
-├── .github/
-│   └── copilot-instructions.md  # Guía para agentes de IA
-├── config/                      # Configuraciones
-├── logs/                        # Logs de ejecución (gitignored)
-├── docs/                        # Documentación adicional
-└── tests/                       # Tests unitarios
+migracion-softseguros/
+├── conciliador_clientes/     # Scripts de conciliación y matching
+├── NEW_ARCHIVE_TO_BE_SENT/   # Procesamiento de archivos de pólizas
+├── src/                      # Código fuente principal
+├── data/                     # Archivos de datos (input/output/samples)
+├── config/                   # Configuraciones JSON/YAML
+├── logs/                     # Logs de ejecución
+├── docs/                     # Documentación y especificaciones
+└── tests/                    # Pruebas unitarias e integración
 ```
+
+## 🚀 Inicio Rápido
+
+### Prerrequisitos
+- Python 3.8+
+- pip para gestión de dependencias
+
+### Instalación
+```bash
+# Clonar repositorio
+git clone <url-del-repo>
+cd migracion-softseguros
+
+# Crear entorno virtual
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# o
+.venv\Scripts\activate     # Windows
+
+# Instalar dependencias
+pip install -r requirements.txt
+```
+
+### Uso Básico
+```bash
+# Ejecutar conciliación de clientes
+cd conciliador_clientes
+python exportar_plantilla_coincidentes.py
+
+# Procesar archivo de pólizas
+cd ../NEW_ARCHIVE_TO_BE_SENT
+python clasificar_tomador.py
+```
+
+## 📊 Funcionalidades Principales
+
+### 1. Conciliación de Clientes
+- Comparación entre TOMADOR y ASEGURADO
+- Generación de reportes JSON con diferencias
+- Estadísticas de matching
+
+### 2. Clasificación de Entidades
+- Automatización PERSONA vs EMPRESA basada en nombres
+- Ajuste automático de documentos NIT/CC
+- Cálculo de dígito de verificación DIAN
+
+### 3. Procesamiento de Pólizas
+- Limpieza y estandarización de datos
+- Validación de formatos
+- Generación de plantillas Excel
+
+## 🛠️ Tecnologías
+
+- **Python 3.x** - Lenguaje principal
+- **pandas** - Manipulación de datos
+- **openpyxl** - Procesamiento Excel avanzado
+- **xlrd** - Lectura archivos .xls legacy
+- **logging** - Sistema de logs
+
+## 📁 Estructura de Datos
+
+### Archivos de Entrada
+- `Plantilla POLIZAS Actulizada.xlsx` - Archivo principal de pólizas
+- Archivos JSON de conciliación
+- Templates Excel para reportes
+
+### Archivos de Salida
+- `PLANTILLA_COINCIDEN.xlsx` - Template con datos validados
+- `clasificacion_tomador.log` - Log de procesamiento
+- Archivos Excel clasificados por tipo de entidad
+
+## 🔧 Configuración
+
+Los archivos de configuración están en `config/`:
+- Mapeos de campos
+- Reglas de validación
+- Parámetros de conexión
+
+## 📝 Documentación
+
+Ver carpeta `docs/` para:
+- Especificaciones de campos
+- Diagramas de flujo
+- Manuales de usuario
+
+## 🧪 Testing
+
+```bash
+# Ejecutar pruebas
+python -m pytest tests/
+
+# Ejecutar pruebas específicas
+python -m pytest tests/test_validaciones.py
+```
+
+## 🤝 Contribución
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📞 Soporte
+
+Para soporte técnico contactar al equipo de desarrollo.
+
+## 📄 Licencia
+
+Este proyecto es propiedad de Seguros Unión.
 
 > **Nota:** Todos los scripts, archivos de entrada y reportes ahora se encuentran bajo la carpeta `migrador_clientes/` siguiendo la misma estructura profesional y rutas relativas. Ejecuta los scripts desde esa carpeta para asegurar que los outputs y logs se generen correctamente.
 
