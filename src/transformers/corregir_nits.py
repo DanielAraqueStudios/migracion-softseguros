@@ -43,28 +43,30 @@ class CorreccionNITs:
         """
         Calcula el dígito de verificación de un NIT colombiano
         usando el algoritmo oficial de la DIAN
+
+        Algoritmo DIAN para NITs:
+        1. Tomar NIT sin dígito verificador
+        2. Multiplicar cada dígito por pesos [71,67,59,53,47,43,41,37,29,23,19,17,13,7,3]
+           de izquierda a derecha
+        3. Sumar productos
+        4. Calcular módulo 11 de la suma
+        5. Si residuo 0 o 1 → DV = residuo; sino DV = 11 - residuo
         """
         try:
             # Remover caracteres no numéricos
             nit_str = re.sub(r'\D', '', str(nit_sin_dv))
             
-            if not nit_str:
+            if not nit_str or len(nit_str) > 15:
                 return None
             
-            # Secuencia de multiplicadores
-            multiplicadores = [71, 67, 59, 53, 47, 43, 41, 37, 29, 23, 19, 17, 13, 7, 3]
+            # Pesos DIAN oficiales aplicados de izquierda a derecha
+            pesos = [71, 67, 59, 53, 47, 43, 41, 37, 29, 23, 19, 17, 13, 7, 3]
             
-            # Tomar los multiplicadores necesarios (de derecha a izquierda)
-            nit_len = len(nit_str)
-            if nit_len > len(multiplicadores):
-                return None
-            
-            multiplicadores_usar = multiplicadores[-nit_len:]
-            
-            # Calcular suma
+            # Calcular suma multiplicando de izquierda a derecha
             suma = 0
             for i, digito in enumerate(nit_str):
-                suma += int(digito) * multiplicadores_usar[i]
+                if i < len(pesos):
+                    suma += int(digito) * pesos[i]
             
             # Calcular dígito de verificación
             residuo = suma % 11
@@ -79,44 +81,74 @@ class CorreccionNITs:
         except Exception as e:
             logger.warning(f"Error calculando DV para {nit_sin_dv}: {e}")
             return None
-    
+
     def corregir_formato_nit(self, nit_original, tipo_doc):
         """
-        Corrige el formato de un NIT agregando el guión entre el número y el dígito verificador.
-        El formato correcto es: últimos 8 o 9 dígitos del NIT, guión, último dígito.
-        Ejemplo: 900310074 → 90031007-4 (no 900310074-1)
+        Corrige el formato y valida el dígito verificador de un NIT usando algoritmo DIAN.
+        Si el DV actual es incorrecto, lo calcula correctamente.
+        Formato final: NIT_BASE-DV_CORRECTO
         """
         if tipo_doc != 'NIT' or pd.isna(nit_original):
             return nit_original, False
-        
+
         nit_str = str(nit_original).strip()
-        
-        # Si ya tiene el formato correcto (números-dígito), no hacer nada
+
+        # Si ya tiene el formato correcto (números-dígito), validar el DV
         if re.match(r'^\d+-\d$', nit_str):
-            return nit_str, False
-        
+            partes = nit_str.split('-')
+            nit_base = partes[0]
+            dv_actual = partes[1]
+
+            # Calcular DV correcto
+            dv_correcto = self.calcular_digito_verificacion(nit_base)
+
+            if dv_correcto and dv_actual == dv_correcto:
+                # DV correcto, mantener formato
+                return nit_str, False
+            elif dv_correcto:
+                # DV incorrecto, corregir
+                nit_corregido = f"{nit_base}-{dv_correcto}"
+                return nit_corregido, True
+            else:
+                # Error calculando DV
+                return nit_str, False
+
         # Extraer solo números del NIT
         nit_numeros = re.sub(r'\D', '', nit_str)
-        
-        if not nit_numeros:
+
+        if not nit_numeros or len(nit_numeros) < 2:
             return nit_original, False
-        
-        # El último dígito siempre es el dígito verificador
-        # Separar: todos los dígitos menos el último - último dígito
-        if len(nit_numeros) >= 2:
-            nit_base = nit_numeros[:-1]  # Todos menos el último
-            dv = nit_numeros[-1]         # El último dígito
-            
-            # Formato correcto: BASE-DV
-            nit_corregido = f"{nit_base}-{dv}"
+
+        # Si tiene más de 16 dígitos, tomar los últimos 15 + DV
+        if len(nit_numeros) > 16:
+            nit_numeros = nit_numeros[-16:]
+
+        # Asumir que el último dígito es el DV actual
+        nit_base = nit_numeros[:-1]
+        dv_actual = nit_numeros[-1]
+
+        # Calcular DV correcto
+        dv_correcto = self.calcular_digito_verificacion(nit_base)
+
+        if dv_correcto is None:
+            # Error calculando DV, mantener original
+            return nit_original, False
+
+        if dv_actual == dv_correcto:
+            # DV correcto, solo formatear
+            nit_corregido = f"{nit_base}-{dv_correcto}"
             return nit_corregido, True
         else:
-            # NIT muy corto, no se puede formatear
-            return nit_original, False
+            # DV incorrecto, corregir
+            nit_corregido = f"{nit_base}-{dv_correcto}"
+            return nit_corregido, True
     
     def procesar_correcciones(self):
         """Procesa todas las correcciones de NITs"""
         logger.info("\n=== PROCESANDO CORRECCIONES DE NITs ===")
+        
+        if self.df is None:
+            raise ValueError("Los datos no han sido cargados. Llame a cargar_datos() primero.")
         
         col_id = 'NÚMERO DE DOCUMENTO'
         col_tipo = 'TIPO DE DOCUMENTO'
@@ -129,7 +161,7 @@ class CorreccionNITs:
         nits_corregidos = 0
         nits_sin_correccion = 0
         
-        for idx, row in self.df.iterrows():
+        for i, (idx, row) in enumerate(self.df.iterrows()):
             if row[col_tipo] == 'NIT':
                 nit_corregido, fue_modificado = self.corregir_formato_nit(
                     row[col_id], 
@@ -137,12 +169,12 @@ class CorreccionNITs:
                 )
                 
                 if fue_modificado:
-                    self.df.at[idx, 'NIT_CORREGIDO'] = nit_corregido
-                    self.df.at[idx, 'FUE_CORREGIDO'] = True
+                    self.df.iloc[i, self.df.columns.get_loc('NIT_CORREGIDO')] = nit_corregido
+                    self.df.iloc[i, self.df.columns.get_loc('FUE_CORREGIDO')] = True
                     nits_corregidos += 1
                     
                     self.correcciones.append({
-                        'fila': idx + 2,
+                        'fila': i + 2,
                         'nombre': row[col_nombre],
                         'nit_original': row[col_id],
                         'nit_corregido': nit_corregido
@@ -166,6 +198,9 @@ class CorreccionNITs:
     def generar_archivo_corregido(self, ruta_salida='data/output'):
         """Genera el archivo Excel corregido manteniendo el formato original"""
         logger.info("\n=== GENERANDO ARCHIVO CORREGIDO ===")
+        
+        if self.df is None:
+            raise ValueError("Los datos no han sido procesados. Llame a procesar_correcciones() primero.")
         
         Path(ruta_salida).mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -192,6 +227,9 @@ class CorreccionNITs:
     
     def generar_reporte_correcciones(self, ruta_salida='data/output'):
         """Genera un reporte detallado de las correcciones realizadas"""
+        if self.df is None:
+            raise ValueError("Los datos no han sido procesados. Llame a procesar_correcciones() primero.")
+        
         if not self.correcciones:
             logger.info("No hay correcciones para reportar")
             return None
