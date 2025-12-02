@@ -1,0 +1,38 @@
+{
+    "name": "rmunate/dian-colombia",
+    "description": "Obtenga el dígito de verificación de cualquier cédula de acuerdo con la norma de la DIAN en Colombia. Una forma simple, rápida y confiable de obtener el dígito de verificación de cualquier NIT en Colombia, esto de acuerdo con la resolución expedida por la DIAN.",
+    "keywords": [
+        "DIAN",
+        "digito",
+        "verificacion",
+        "altum",
+        "rmunate"
+    ],
+    "homepage": "https://github.com/rmunate/DIAN",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Rmunate\\DianColombia\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Raul Mauricio Uñate Castro",
+            "email": "raulmauriciounate@gmail.com",
+            "homepage": "https://github.com/rmunate",
+            "role": "owner"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0"
+    },
+    "require-dev": {},
+    "extra" : {
+        "branch-alias" : {
+            "dev-main": "1.0.x-dev"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

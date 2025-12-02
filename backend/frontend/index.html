@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIAN Colombia - Dígito de Verificación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 18px;
+            transition: all 0.3s;
+            font-family: monospace;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            display: block;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            display: block;
+        }
+
+        .result-header {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .result-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            font-family: monospace;
+        }
+
+        .result-value.highlight {
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .examples {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .examples-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: monospace;
+            transition: all 0.2s;
+        }
+
+        .example-item:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .api-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .logs-container {
+            margin-top: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            display: none;
+        }
+
+        .logs-container.show {
+            display: block;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .logs-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .clear-logs-btn {
+            padding: 5px 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+
+        .clear-logs-btn:hover {
+            background: #c82333;
+        }
+
+        .log-entry {
+            padding: 8px 10px;
+            margin: 5px 0;
+            border-left: 3px solid #6c757d;
+            background: white;
+            border-radius: 3px;
+        }
+
+        .log-entry.info {
+            border-left-color: #17a2b8;
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+        }
+
+        .log-entry.error {
+            border-left-color: #dc3545;
+        }
+
+        .log-entry.warning {
+            border-left-color: #ffc107;
+        }
+
+        .log-timestamp {
+            color: #6c757d;
+            font-size: 10px;
+            margin-right: 10px;
+        }
+
+        .log-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 10px;
+            margin-right: 8px;
+        }
+
+        .log-type.info { background: #d1ecf1; color: #0c5460; }
+        .log-type.success { background: #d4edda; color: #155724; }
+        .log-type.error { background: #f8d7da; color: #721c24; }
+        .log-type.warning { background: #fff3cd; color: #856404; }
+
+        .log-message {
+            color: #333;
+        }
+
+        .toggle-logs-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-logs-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">DV</div>
+            <h1>Dígito de Verificación DIAN</h1>
+            <p>Calcula el dígito de verificación para NITs colombianos</p>
+        </div>
+
+        <form id="nitForm">
+            <div class="form-group">
+                <label for="nitInput">Ingrese el NIT (solo números)</label>
+                <input 
+                    type="text" 
+                    id="nitInput" 
+                    placeholder="Ej: 1003618585" 
+                    pattern="[0-9]*"
+                    maxlength="15"
+                    autocomplete="off"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+                Calcular Dígito de Verificación
+            </button>
+        </form>
+
+        <div id="result" class="result"></div>
+
+        <div class="examples">
+            <div class="examples-title">Ejemplos para probar:</div>
+            <span class="example-item" onclick="fillExample('1003618585')">1003618585</span>
+            <span class="example-item" onclick="fillExample('890903938')">890903938</span>
+            <span class="example-item" onclick="fillExample('800197268')">800197268</span>
+        </div>
+
+        <button type="button" class="toggle-logs-btn" onclick="toggleLogs()">
+            📋 Mostrar/Ocultar Logs de Depuración
+        </button>
+
+        <div id="logsContainer" class="logs-container">
+            <div class="logs-header">
+                <span class="logs-title">📋 Logs de Depuración</span>
+                <button class="clear-logs-btn" onclick="clearLogs()">Limpiar</button>
+            </div>
+            <div id="logsContent"></div>
+        </div>
+
+        <div class="footer">
+            <span class="api-status"></span>
+            API conectada a http://localhost:8000
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const form = document.getElementById('nitForm');
+        const nitInput = document.getElementById('nitInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultDiv = document.getElementById('result');
+        const logsContainer = document.getElementById('logsContainer');
+        const logsContent = document.getElementById('logsContent');
+
+        // Sistema de logs
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('es-CO', { hour12: false });
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-type ${type}">${type.toUpperCase()}</span>
+                <span class="log-message">${message}</span>
+            `;
+            logsContent.appendChild(logEntry);
+            logsContent.scrollTop = logsContent.scrollHeight;
+            
+            // Log también en la consola del navegador
+            console.log(`[${timestamp}] [${type.toUpperCase()}] ${message}`);
+        }
+
+        function clearLogs() {
+            logsContent.innerHTML = '';
+            addLog('Logs limpiados', 'info');
+        }
+
+        function toggleLogs() {
+            logsContainer.classList.toggle('show');
+        }
+
+        // Permitir solo números en el input
+        nitInput.addEventListener('input', function(e) {
+            const oldValue = this.value;
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (oldValue !== this.value) {
+                addLog(`Entrada limpiada: "${oldValue}" → "${this.value}"`, 'warning');
+            }
+        });
+
+        // Llenar con ejemplo
+        function fillExample(nit) {
+            nitInput.value = nit;
+            nitInput.focus();
+            addLog(`Ejemplo cargado: ${nit}`, 'info');
+        }
+
+        // Manejar el envío del formulario
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const nit = nitInput.value.trim();
+            
+            addLog('═══════════════════════════════════════════════', 'info');
+            addLog(`Iniciando cálculo para NIT: ${nit}`, 'info');
+            
+            if (!nit) {
+                addLog('Error: NIT vacío', 'error');
+                showError('Por favor ingrese un NIT válido');
+                return;
+            }
+
+            addLog(`Longitud del NIT: ${nit.length} dígitos`, 'info');
+
+            // Mostrar estado de carga
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Calculando<span class="loading"></span>';
+            resultDiv.style.display = 'none';
+
+            try {
+                addLog(`Enviando petición a: ${API_URL}/calcular`, 'info');
+                const requestBody = { nit: nit };
+                addLog(`Body de la petición: ${JSON.stringify(requestBody)}`, 'info');
+                
+                const startTime = performance.now();
+                
+                const response = await fetch(`${API_URL}/calcular`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const endTime = performance.now();
+                const responseTime = (endTime - startTime).toFixed(2);
+                
+                addLog(`Respuesta recibida en ${responseTime}ms`, 'success');
+                addLog(`Status HTTP: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+                addLog(`Datos recibidos: ${JSON.stringify(data, null, 2)}`, 'info');
+
+                if (response.ok) {
+                    addLog(`✓ Cálculo exitoso: NIT ${data.nit_original} → Dígito ${data.digito_verificacion}`, 'success');
+                    addLog(`✓ NIT completo: ${data.nit_completo}`, 'success');
+                    addLog(`✓ Formato DIAN: ${data.formato_display}`, 'success');
+                    showSuccess(data);
+                } else {
+                    const errorMsg = data.detail || 'Error al calcular el dígito de verificación';
+                    addLog(`✗ Error del servidor: ${errorMsg}`, 'error');
+                    if (data.detail && Array.isArray(data.detail)) {
+                        data.detail.forEach(err => {
+                            addLog(`  - ${err.msg || err}`, 'error');
+                        });
+                    }
+                    showError(errorMsg);
+                }
+            } catch (error) {
+                const errorMsg = 'Error de conexión. Asegúrate de que la API esté corriendo en ' + API_URL;
+                addLog(`✗ Error de conexión: ${error.message}`, 'error');
+                addLog(`✗ ${errorMsg}`, 'error');
+                showError(errorMsg);
+                console.error('Error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Calcular Dígito de Verificación';
+                addLog('Proceso finalizado', 'info');
+                addLog('═══════════════════════════════════════════════', 'info');
+            }
+        });
+
+        function showSuccess(data) {
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = `
+                <div class="result-header">✅ Cálculo exitoso</div>
+                <div class="result-item">
+                    <span class="result-label">NIT Original:</span>
+                    <span class="result-value">${data.nit_original}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Dígito de Verificación:</span>
+                    <span class="result-value highlight">${data.digito_verificacion}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">NIT Completo:</span>
+                    <span class="result-value">${data.nit_completo}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Formato DIAN:</span>
+                    <span class="result-value highlight">${data.formato_display}</span>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            resultDiv.className = 'result error';
+            resultDiv.innerHTML = `
+                <div class="result-header">❌ Error</div>
+                <div class="error-message">${message}</div>
+            `;
+        }
+
+        // Verificar conexión con la API al cargar
+        async function checkAPIConnection() {
+            addLog('Iniciando aplicación...', 'info');
+            addLog(`URL de la API: ${API_URL}`, 'info');
+            
+            try {
+                addLog('Verificando conexión con el backend...', 'info');
+                const response = await fetch(`${API_URL}/health`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addLog(`✓ API conectada correctamente: ${JSON.stringify(data)}`, 'success');
+                    console.log('✅ API conectada correctamente');
+                } else {
+                    addLog(`⚠ API respondió con status ${response.status}`, 'warning');
+                }
+            } catch (error) {
+                addLog(`✗ No se pudo conectar con la API: ${error.message}`, 'error');
+                console.warn('⚠️ No se pudo conectar con la API');
+                showError('No se puede conectar con la API. Asegúrate de que esté corriendo en ' + API_URL);
+            }
+            
+            addLog('Aplicación lista para usar', 'success');
+        }
+
+        // Verificar conexión al cargar la página
+        checkAPIConnection();
+    </script>
+</body>
+</html>
