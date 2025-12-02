@@ -7,14 +7,17 @@ Sistema de migración de datos para Seguros Unión, especializado en procesamien
 Este proyecto automatiza la migración y validación de datos de pólizas de seguros, incluyendo:
 - Extracción de datos desde archivos Excel (.xlsx, .xls)
 - Transformación y limpieza de datos
-- Validación de documentos NIT/CC con cálculo de dígito de verificación
+- Validación de documentos NIT/CC con cálculo de dígito de verificación (API DIAN)
 - Generación de reportes y plantillas estandarizadas
-- Conciliación entre diferentes fuentes de datos
+- Conciliación entre diferentes fuentes de datos (Celer → SoftSeguros)
 
 ## 🏗️ Arquitectura
 
 ```
 migracion-softseguros/
+├── backend/                  # API DIAN para cálculo de dígitos de verificación
+│   ├── app.py               # FastAPI server
+│   └── requirements.txt     # Dependencias del backend
 ├── conciliador_clientes/     # Scripts de conciliación y matching
 ├── NEW_ARCHIVE_TO_BE_SENT/   # Procesamiento de archivos de pólizas
 ├── src/                      # Código fuente principal
@@ -45,18 +48,54 @@ source .venv/bin/activate  # Linux/Mac
 
 # Instalar dependencias
 pip install -r requirements.txt
+pip install pandas openpyxl requests fastapi uvicorn
 ```
 
-### Uso Básico
+## 🔧 Herramientas de NITs
+
+### Calculador Interactivo de Dígitos de Verificación
+Calcula y corrige el dígito de verificación de NITs usando la API DIAN.
+
 ```bash
-# Ejecutar conciliación de clientes
-cd conciliador_clientes
-python exportar_plantilla_coincidentes.py
-
-# Procesar archivo de pólizas
-cd ../NEW_ARCHIVE_TO_BE_SENT
-python clasificar_tomador.py
+python calculador_nits_interactivo.py
 ```
+
+**Características:**
+- Selección interactiva de archivo Excel y columna
+- Solo procesa NITs con formato `número-dígito` (ej: 890981212-5)
+- Usa API DIAN para cálculo preciso
+- Genera archivo con NITs corregidos
+
+### Quitar Dígito de Verificación
+Convierte NITs con DV a solo el número base.
+
+```bash
+python quitar_dv_interactivo.py
+```
+
+**Ejemplo:** `890981212-5` → `890981212`
+
+### Llenar Plantilla SoftSeguros
+Busca NITs en Celer y llena la plantilla de SoftSeguros automáticamente.
+
+```bash
+python llenar_plantilla_softseguros.py
+```
+
+**Mapeo de campos Celer → SoftSeguros:**
+| CELER | SOFTSEGUROS |
+|-------|-------------|
+| Nombre | NOMBRES + APELLIDOS |
+| Identificacion | NÚMERO DE DOCUMENTO |
+| Tipo_Doc | TIPO DE DOCUMENTO |
+| Genero | GÉNERO |
+| Estado_civil | ESTADO CIVIL |
+| F_Nacimiento | FECHA DE NACIMIENTO |
+| Celular_Personal | TELÉFONO MÓVIL |
+| Mail_Personal | EMAIL |
+| Direccion_Personal | DIRECCIÓN PRINCIPAL |
+| Ciudad_Personal | CIUDAD |
+| Ocupacion | OCUPACIÓN |
 
 ## 📊 Funcionalidades Principales
 
@@ -81,19 +120,24 @@ python clasificar_tomador.py
 - **pandas** - Manipulación de datos
 - **openpyxl** - Procesamiento Excel avanzado
 - **xlrd** - Lectura archivos .xls legacy
+- **FastAPI** - API para cálculo DIAN
+- **requests** - Cliente HTTP
 - **logging** - Sistema de logs
 
 ## 📁 Estructura de Datos
 
 ### Archivos de Entrada
 - `Plantilla POLIZAS Actulizada.xlsx` - Archivo principal de pólizas
+- `InformedePersonas CELER.xlsx` - Datos de clientes desde Celer
 - Archivos JSON de conciliación
 - Templates Excel para reportes
 
 ### Archivos de Salida
 - `PLANTILLA_COINCIDEN.xlsx` - Template con datos validados
+- `PLANTILLA_LLENA_*.xlsx` - Plantilla SoftSeguros con datos de Celer
+- `*_nits_calculados_*.xlsx` - NITs con DV corregido
+- `*_sin_dv_*.xlsx` - NITs sin dígito de verificación
 - `clasificacion_tomador.log` - Log de procesamiento
-- Archivos Excel clasificados por tipo de entidad
 
 ## 🔧 Configuración
 
