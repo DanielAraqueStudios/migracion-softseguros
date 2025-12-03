@@ -29,6 +29,7 @@ class CalculadorNITsInteractivo:
         self.archivo_entrada = None
         self.columna_seleccionada = None
         self.api_proceso = None
+        self.modo_calcular_todos = False  # True = calcular DV para todos, False = solo corregir existentes
 
     def limpiar_pantalla(self):
         """Limpia la pantalla de la consola"""
@@ -90,16 +91,21 @@ class CalculadorNITsInteractivo:
         
         print("  Iniciando servidor API...")
         
-        # Ruta al directorio backend
-        backend_dir = os.path.join(os.path.dirname(__file__), 'backend')
+        # Ruta al directorio backend (usar ruta absoluta)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        backend_dir = os.path.join(script_dir, 'backend')
+        
+        if not os.path.exists(backend_dir):
+            print(f"  [ERROR] No se encuentra el directorio backend: {backend_dir}")
+            return False
         
         try:
             # Iniciar uvicorn en segundo plano
             self.api_proceso = subprocess.Popen(
                 [sys.executable, "-m", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "8000"],
                 cwd=backend_dir,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
             )
             
@@ -280,9 +286,52 @@ class CalculadorNITsInteractivo:
             except ValueError:
                 print("  [ERROR] Ingrese un numero valido")
 
+    def seleccionar_modo(self):
+        """Permite al usuario seleccionar el modo de procesamiento"""
+        print("\n[3] SELECCIONAR MODO DE PROCESAMIENTO")
+        print("-" * 40)
+        print()
+        print("  1. Solo CORREGIR NITs con formato numero-digito (ej: 890981212-5)")
+        print("     Solo procesa valores que ya tienen el guion y DV")
+        print()
+        print("  2. CALCULAR DV para TODOS los numeros")
+        print("     Agrega el DV a numeros sin formato (ej: 890981212 -> 890981212-1)")
+        print()
+        
+        while True:
+            opcion = input("Seleccione modo (1 o 2): ").strip()
+            
+            if opcion == '1':
+                self.modo_calcular_todos = False
+                print("\n  [OK] Modo: Solo corregir NITs con DV existente")
+                return True
+            elif opcion == '2':
+                self.modo_calcular_todos = True
+                print("\n  [OK] Modo: Calcular DV para todos los numeros")
+                return True
+            else:
+                print("  [ERROR] Ingrese 1 o 2")
+
+    def es_numero_valido(self, valor):
+        """Verifica si el valor es un número válido para calcular DV"""
+        if pd.isna(valor):
+            return False
+        
+        valor_str = str(valor).strip()
+        
+        # Quitar posibles decimales (.0)
+        if valor_str.endswith('.0'):
+            valor_str = valor_str[:-2]
+        
+        # Solo números, longitud razonable
+        if valor_str.isdigit() and 5 <= len(valor_str) <= 15:
+            return True
+        
+        return False
+
     def procesar_columna(self):
         """Procesa la columna seleccionada verificando y corrigiendo dígitos de verificación"""
-        print("\n[3] PROCESANDO NITs")
+        print("\n[4] PROCESANDO NITs")
         print("-" * 40)
         
         total = len(self.df)
@@ -290,61 +339,114 @@ class CalculadorNITsInteractivo:
         corregidos = 0
         correctos = 0
         ignorados = 0
+        agregados = 0  # NITs a los que se les agregó DV
         
         print(f"\nProcesando {total} filas...")
-        print("Solo se procesan NITs con formato numero-digito (ej: 890981212-5)")
+        if self.modo_calcular_todos:
+            print("Modo: Calcular DV para TODOS los numeros")
+        else:
+            print("Modo: Solo corregir NITs con formato numero-digito (ej: 890981212-5)")
         print()
         
         for idx in range(len(self.df)):
             valor_original = self.df.iloc[idx][self.columna_seleccionada]
             
-            # Solo procesar si tiene formato NIT-DV
-            if not self.es_nit_con_dv(valor_original):
-                ignorados += 1
-                continue
-            
-            nits_encontrados += 1
-            
-            # Extraer NIT base y DV actual
-            nit_base, dv_actual = self.extraer_nit_base(valor_original)
-            
-            if nit_base is None:
-                ignorados += 1
-                continue
-            
-            # Calcular dígito de verificación correcto
-            dv_correcto = self.calcular_digito_verificacion(nit_base)
-            
-            if dv_correcto is None:
-                ignorados += 1
-                continue
-            
-            # Verificar si el DV actual es correcto
-            if dv_actual == dv_correcto:
-                correctos += 1
-            else:
-                # Corregir el NIT
-                valor_nuevo = f"{nit_base}-{dv_correcto}"
-                self.df.at[idx, self.columna_seleccionada] = valor_nuevo
-                corregidos += 1
+            # MODO 1: Solo corregir NITs con DV existente
+            if not self.modo_calcular_todos:
+                if not self.es_nit_con_dv(valor_original):
+                    ignorados += 1
+                    continue
                 
-                # Mostrar correcciones
-                if corregidos <= 20 or corregidos % 50 == 0:
-                    print(f"  Fila {idx+2}: {valor_original} -> {valor_nuevo}")
+                nits_encontrados += 1
+                nit_base, dv_actual = self.extraer_nit_base(valor_original)
+                
+                if nit_base is None:
+                    ignorados += 1
+                    continue
+                
+                dv_correcto = self.calcular_digito_verificacion(nit_base)
+                
+                if dv_correcto is None:
+                    ignorados += 1
+                    continue
+                
+                if dv_actual == dv_correcto:
+                    correctos += 1
+                else:
+                    valor_nuevo = f"{nit_base}-{dv_correcto}"
+                    self.df.at[idx, self.columna_seleccionada] = valor_nuevo
+                    corregidos += 1
+                    
+                    if corregidos <= 20 or corregidos % 50 == 0:
+                        print(f"  Fila {idx+2}: {valor_original} -> {valor_nuevo}")
+            
+            # MODO 2: Calcular DV para todos los números
+            else:
+                # Si ya tiene formato NIT-DV, corregir si es necesario
+                if self.es_nit_con_dv(valor_original):
+                    nits_encontrados += 1
+                    nit_base, dv_actual = self.extraer_nit_base(valor_original)
+                    
+                    if nit_base is None:
+                        ignorados += 1
+                        continue
+                    
+                    dv_correcto = self.calcular_digito_verificacion(nit_base)
+                    
+                    if dv_correcto is None:
+                        ignorados += 1
+                        continue
+                    
+                    if dv_actual == dv_correcto:
+                        correctos += 1
+                    else:
+                        valor_nuevo = f"{nit_base}-{dv_correcto}"
+                        self.df.at[idx, self.columna_seleccionada] = valor_nuevo
+                        corregidos += 1
+                        
+                        if corregidos <= 20 or corregidos % 50 == 0:
+                            print(f"  Fila {idx+2}: {valor_original} -> {valor_nuevo}")
+                
+                # Si es un número sin DV, calcular y agregar
+                elif self.es_numero_valido(valor_original):
+                    nits_encontrados += 1
+                    
+                    # Limpiar el valor (quitar .0 si existe)
+                    nit_str = str(valor_original).strip()
+                    if nit_str.endswith('.0'):
+                        nit_str = nit_str[:-2]
+                    
+                    dv_correcto = self.calcular_digito_verificacion(nit_str)
+                    
+                    if dv_correcto is None:
+                        ignorados += 1
+                        continue
+                    
+                    valor_nuevo = f"{nit_str}-{dv_correcto}"
+                    self.df.at[idx, self.columna_seleccionada] = valor_nuevo
+                    agregados += 1
+                    
+                    if agregados <= 20 or agregados % 50 == 0:
+                        print(f"  Fila {idx+2}: {valor_original} -> {valor_nuevo}")
+                
+                else:
+                    ignorados += 1
             
             # Mostrar progreso general
-            if nits_encontrados % 100 == 0:
+            if nits_encontrados % 100 == 0 and nits_encontrados > 0:
                 print(f"  ... procesados {nits_encontrados} NITs")
         
         print()
         print("-" * 40)
         print(f"  Total filas:        {total}")
-        print(f"  Valores ignorados:  {ignorados} (sin formato NIT-DV)")
+        print(f"  Valores ignorados:  {ignorados} (no procesables)")
         print(f"  NITs encontrados:   {nits_encontrados}")
+        if self.modo_calcular_todos:
+            print(f"  NITs con DV agregado: {agregados}")
         print(f"  NITs correctos:     {correctos}")
         print(f"  NITs corregidos:    {corregidos}")
         
-        return corregidos
+        return corregidos + agregados
 
     def guardar_archivo(self):
         """Guarda el archivo modificado"""
@@ -382,7 +484,7 @@ class CalculadorNITsInteractivo:
         if not self.iniciar_api():
             print("\n[ERROR] No se puede continuar sin la API")
             print("  Por favor inicie la API manualmente:")
-            print("  cd backend && python -m uvicorn app:app --reload")
+            print("  cd backend; python -m uvicorn app:app --reload")
             return
         
         try:
@@ -396,10 +498,15 @@ class CalculadorNITsInteractivo:
                 print("\n[INFO] Programa terminado por el usuario")
                 return
             
-            # Paso 3: Procesar
+            # Paso 3: Seleccionar modo
+            if not self.seleccionar_modo():
+                print("\n[INFO] Programa terminado por el usuario")
+                return
+            
+            # Paso 4: Procesar
             modificados = self.procesar_columna()
             
-            # Paso 4: Guardar
+            # Paso 5: Guardar
             if modificados > 0:
                 self.guardar_archivo()
             else:
