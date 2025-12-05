@@ -28,6 +28,691 @@ migracion-softseguros/
 └── tests/                    # Pruebas unitarias e integración
 ```
 
+---
+
+## 🔢 Backend - API DIAN (Dígito de Verificación)
+
+El directorio `backend/` contiene una API REST en **FastAPI** para calcular el dígito de verificación de NITs colombianos según la normativa oficial de la DIAN.
+
+### Estructura del Backend
+
+```
+backend/
+├── app.py              # Aplicación FastAPI principal
+├── requirements.txt    # Dependencias Python (fastapi, uvicorn, pydantic)
+├── README.md           # Documentación específica del backend
+├── test_api.py         # Tests de la API
+├── verificar_calculo.py # Script de verificación del algoritmo
+├── src/                # Código fuente PHP original (referencia)
+├── frontend/           # Interfaz web opcional
+└── venv/               # Entorno virtual Python
+```
+
+### Iniciar el Servidor API
+
+```powershell
+# Desde la carpeta raíz del proyecto
+cd backend
+
+# Activar entorno virtual (si existe)
+.\venv\Scripts\Activate.ps1
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Iniciar servidor en modo desarrollo
+uvicorn app:app --reload
+
+# O ejecutar directamente
+python app.py
+```
+
+El servidor estará disponible en: `http://localhost:8000`
+
+### Endpoints Disponibles
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/` | GET | Información de la API |
+| `/health` | GET | Health check del servidor |
+| `/calcular` | POST | Calcula el DV de un NIT |
+| `/ejemplo` | GET | NITs de ejemplo con DV calculado |
+| `/docs` | GET | Documentación Swagger UI |
+| `/redoc` | GET | Documentación ReDoc |
+
+### Ejemplo de Uso
+
+**PowerShell:**
+```powershell
+$body = @{nit="890981212"} | ConvertTo-Json
+Invoke-RestMethod -Method POST -Uri "http://localhost:8000/calcular" -Body $body -ContentType "application/json"
+```
+
+**cURL:**
+```bash
+curl -X POST "http://localhost:8000/calcular" \
+     -H "Content-Type: application/json" \
+     -d '{"nit":"890981212"}'
+```
+
+**Response:**
+```json
+{
+  "nit_original": "890981212",
+  "digito_verificacion": 5,
+  "nit_completo": "8909812125",
+  "formato_display": "890981212-5"
+}
+```
+
+### Algoritmo DIAN Implementado
+
+El cálculo sigue la normativa oficial de la DIAN con los siguientes factores de ponderación:
+
+```
+Posición:  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+Factor:    3   7  13  17  19  23  29  37  41  43  47  53  59  67  71
+```
+
+**Fórmula:**
+1. Multiplicar cada dígito por su factor de posición (de derecha a izquierda)
+2. Sumar todos los productos
+3. Calcular `residuo = suma % 11`
+4. Si `residuo > 1`: DV = `11 - residuo`, sino: DV = `residuo`
+
+### Características de la API
+
+- ✅ Validación de entrada (solo números, máximo 15 dígitos)
+- ✅ Algoritmo DIAN oficial implementado
+- ✅ CORS habilitado para integraciones frontend
+- ✅ Documentación automática (Swagger/ReDoc)
+- ✅ Health check endpoint
+- ✅ Manejo de errores robusto
+- ✅ Formato de salida flexible (completo y con guión)
+
+### Integración con Scripts del Proyecto
+
+Los scripts interactivos (`calculador_nits_interactivo.py`) usan esta API automáticamente:
+
+1. El script verifica si el servidor está corriendo
+2. Si no está corriendo, lo inicia automáticamente en background
+3. Envía requests a `http://localhost:8000/calcular`
+4. Procesa las respuestas y genera los archivos Excel
+
+---
+
+## 🔄 Conciliador de Clientes
+
+El directorio `conciliador_clientes/` contiene scripts para la conciliación y matching de datos de clientes entre diferentes fuentes (CELER vs SoftSeguros).
+
+### Estructura del Conciliador
+
+```
+conciliador_clientes/
+├── comparar_tomador_asegurado.py       # Compara TOMADOR vs ASEGURADO y genera JSON de diferencias
+├── exportar_plantilla_coincidentes.py  # Genera template Excel con datos validados
+├── estadisticas_match_json_excel.py    # Estadísticas de coincidencias
+├── buscar_nit_sin_dv_y_cedula.py       # Detecta NITs sin dígito de verificación
+├── llenar_plantilla_nombres_apellidos.py # Rellena plantilla con nombres separados
+├── mostrar_columnas_informe.py         # Muestra estructura de columnas
+├── mostrar_columnas_informe_personas.py # Estructura del informe de personas
+├── comparar_identificaciones_informe_json.py # Compara IDs entre JSON e informe
+├── leer_estructura_plantilla.py        # Lee estructura de plantilla Excel
+│
+├── clientes_activos/                   # Archivos de clientes activos
+│   └── diferencias_tomador_asegurado.json  # Reporte de diferencias
+├── data_celer/                         # Datos exportados de CELER
+│   └── InformedePersonas CELER.xlsx   # Informe de personas
+├── plantilla/                          # Templates de salida
+│   └── PLANTILLA_COINCIDEN.xlsx       # Plantilla con coincidentes
+├── ERRORES/                            # Registros con errores
+│
+├── logs_comparacion.log                # Log de comparaciones
+└── logs_coincidencias_identificacion.txt # Log de coincidencias
+```
+
+### Scripts Principales
+
+#### 1. Comparar TOMADOR vs ASEGURADO
+Compara los campos TOMADOR y ASEGURADO en registros con tipo NIT, detectando inconsistencias.
+
+```powershell
+cd conciliador_clientes
+python comparar_tomador_asegurado.py
+```
+
+**Funcionalidades:**
+- Filtra registros con tipo documento NIT
+- Normaliza nombres (mayúsculas, sin espacios)
+- Detecta diferencias entre TOMADOR y ASEGURADO
+- Calcula dígito de verificación DIAN
+- Exporta diferencias a JSON
+
+**Salida:** `clientes_activos/diferencias_tomador_asegurado.json`
+
+#### 2. Exportar Plantilla de Coincidentes
+Genera una plantilla Excel con datos validados y formateados.
+
+```powershell
+python exportar_plantilla_coincidentes.py
+```
+
+**Funcionalidades:**
+- Lee identificaciones del JSON de diferencias
+- Busca coincidencias en el informe de personas CELER
+- Separa nombres y apellidos automáticamente
+- Mapea tipos de documento (CC → Cédula, NIT → NIT, etc.)
+- Calcula dígito de verificación para NITs
+- Genera teléfonos móviles con tipo
+
+**Salida:** `plantilla/PLANTILLA_COINCIDEN.xlsx`
+
+#### 3. Estadísticas de Match
+Muestra estadísticas de coincidencia entre el Excel y el JSON.
+
+```powershell
+python estadisticas_match_json_excel.py
+```
+
+**Salida en consola:**
+```
+--- Estadísticas de comparación Tomador vs Asegurado ---
+Total registros en Excel: 1,370
+Total registros con mismatch (JSON): 210
+Total registros coincidentes: 1,160
+Porcentaje de coincidencia: 84.67%
+```
+
+#### 4. Buscar NIT sin DV
+Detecta NITs que no tienen dígito de verificación en los registros.
+
+```powershell
+python buscar_nit_sin_dv_y_cedula.py
+```
+
+**Detecta:**
+- NITs con formato incompleto (7-10 dígitos sin DV)
+- Registros con cédula válida asociada
+
+### Mapeo de Tipos de Documento
+
+| Valor Original | Valor Mapeado |
+|----------------|---------------|
+| CC, C.C, CEDULA, IND | Cédula |
+| NIT | NIT |
+| PSP, CE | Cédula de Extranjería |
+| Vacío/NAN | (vacío) |
+
+### Flujo de Conciliación
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    FLUJO DE CONCILIACIÓN                        │
+└────────────────────────────────────────────────────────────────┘
+
+1️⃣ COMPARACIÓN INICIAL
+   └─> python comparar_tomador_asegurado.py
+       ├─> Lee: clientes_activos/*.xlsx
+       ├─> Filtra: Registros con tipo NIT
+       ├─> Compara: TOMADOR vs ASEGURADO
+       └─> Genera: diferencias_tomador_asegurado.json
+
+2️⃣ ESTADÍSTICAS
+   └─> python estadisticas_match_json_excel.py
+       └─> Muestra: % coincidencia, totales
+
+3️⃣ EXPORTAR PLANTILLA
+   └─> python exportar_plantilla_coincidentes.py
+       ├─> Lee: JSON de diferencias + Informe CELER
+       ├─> Busca: Coincidencias por ID y nombre
+       ├─> Procesa: Nombres, DV, teléfonos
+       └─> Genera: PLANTILLA_COINCIDEN.xlsx
+
+4️⃣ VALIDACIÓN ADICIONAL
+   └─> python buscar_nit_sin_dv_y_cedula.py
+       └─> Detecta: NITs incompletos para corrección
+```
+
+---
+
+## 📦 Migrador de Clientes
+
+El directorio `migrador_clientes/` contiene el pipeline completo para la migración y enriquecimiento de la base de clientes de SoftSeguros, usando CELER como fuente de verdad.
+
+### Estructura del Migrador
+
+```
+migrador_clientes/
+├── procesar_v2.py                     # Pipeline principal v2 (orquestador)
+├── analisis_ids.py                    # Wrapper: análisis de IDs
+├── corregir_nits.py                   # Wrapper: corrección de NITs
+├── validar_nombres_documentos.py      # Wrapper: validación nombres
+├── actualizar_desde_celer.py          # Wrapper: actualización desde CELER
+├── asignar_generos.py                 # Wrapper: asignación de género
+│
+├── src/                               # Código fuente modular
+│   ├── transformers/                  # Transformaciones de datos
+│   │   ├── actualizar_desde_celer.py  # Sincroniza datos con CELER
+│   │   ├── asignar_generos.py         # Asigna género por nombre
+│   │   └── corregir_nits.py           # Corrige formato NITs DIAN
+│   └── validators/                    # Validaciones
+│       ├── analisis_ids.py            # Análisis de documentos
+│       └── validar_nombres_documentos.py # Valida coincidencias
+│
+├── data/                              # Archivos de datos
+│   ├── input/                         # Archivos fuente
+│   ├── output/                        # Resultados por fase
+│   │   ├── 01_analisis/
+│   │   ├── 02_correcciones/
+│   │   ├── 03_validaciones/
+│   │   ├── 04_actualizaciones/
+│   │   └── 05_finales/
+│   ├── samples/                       # Datos de prueba
+│   └── templates/                     # Plantillas Excel
+│
+├── config/                            # Configuraciones YAML/JSON
+├── logs/                              # Logs de ejecución
+├── docs/                              # Documentación técnica
+├── tests/                             # Pruebas unitarias
+│
+├── CLIENTES SOFTSEGUROSv2.xlsx        # Base principal de clientes
+├── CLIENTES VIGENTES CELER.xlsx       # Clientes y pólizas CELER
+├── CLIENTES_SOFTSEGUROSv2_FINAL.xlsx  # ⭐ Archivo final migración
+│
+├── requirements.txt                   # Dependencias Python
+├── INDEX.md                           # Índice de archivos
+└── README.md                          # Documentación específica
+```
+
+### Scripts del Pipeline
+
+#### 1. Análisis de Identificaciones
+Analiza la calidad de números de documento en ambas bases.
+
+```powershell
+cd migrador_clientes
+python analisis_ids.py
+```
+
+**Funcionalidades:**
+- Detecta identificaciones vacías o nulas
+- Identifica duplicados en cada base
+- Valida formatos de NITs (con/sin DV)
+- Compara IDs entre SOFTSEGUROS y CELER
+- Genera distribución por tipo de documento
+
+**Salida:** `data/output/01_analisis/analisis_ids_*.xlsx`
+
+#### 2. Corrección de NITs
+Corrige automáticamente el formato de NITs según algoritmo DIAN.
+
+```powershell
+python corregir_nits.py
+```
+
+**Funcionalidades:**
+- Detecta NITs sin formato correcto
+- Calcula dígito de verificación DIAN
+- Aplica formato `XXXXXXXX-X`
+- Preserva estructura original de 41 columnas
+
+**Salida:** `data/output/02_correcciones/CLIENTES_SOFTSEGUROS_CORREGIDO_*.xlsx`
+
+#### 3. Validación de Nombres
+Valida coincidencia de nombres asociados a documentos entre bases.
+
+```powershell
+python validar_nombres_documentos.py
+```
+
+**Funcionalidades:**
+- Normaliza texto (mayúsculas, sin tildes, sin espacios extras)
+- Calcula similitud con SequenceMatcher
+- Clasifica por severidad (crítico, significativo, menor)
+- Detecta IDs con múltiples nombres
+
+**Salida:** `data/output/03_validaciones/VALIDACION_NOMBRES_DOCUMENTOS_*.xlsx`
+
+#### 4. Actualización desde CELER
+Sincroniza y enriquece SOFTSEGUROS usando CELER como fuente de verdad.
+
+```powershell
+python actualizar_desde_celer.py
+```
+
+**Funcionalidades:**
+- Actualiza nombres y apellidos
+- Sincroniza fechas de nacimiento
+- Actualiza teléfonos móviles
+- Actualiza emails
+- Actualiza direcciones
+
+**Lógica:**
+```
+SI campo_celer tiene valor:
+    SI campo_soft está vacío → Actualizar
+    SI campo_soft tiene valor diferente → Actualizar (CELER prevalece)
+SINO:
+    → Mantener valor de SOFTSEGUROS
+```
+
+**Salida:** `data/output/04_actualizaciones/CLIENTES_SOFTSEGUROS_ACTUALIZADO_*.xlsx`
+
+#### 5. Asignación de Géneros
+Asigna automáticamente género (M/F) basándose en el primer nombre.
+
+```powershell
+python asignar_generos.py
+```
+
+**Funcionalidades:**
+- Base de datos de +150 nombres colombianos comunes
+- Detecta nombres masculinos y femeninos
+- Marca como 'REVISAR' los ambiguos
+- Excluye NITs (empresas) del proceso
+
+**Salida:** `data/output/05_finales/CLIENTES_SOFTSEGUROSv2_FINAL.xlsx`
+
+### Estado del Pipeline
+
+| Fase | Script | Estado | Resultado |
+|------|--------|--------|-----------|
+| 1. Análisis | `analisis_ids.py` | ✅ | 99.3% coincidencia |
+| 2. NITs | `corregir_nits.py` | ✅ | 217 corregidos |
+| 3. Validación | `validar_nombres_documentos.py` | ✅ | 99.7% exactitud |
+| 4. Actualización | `actualizar_desde_celer.py` | ✅ | 3,449 cambios |
+| 5. Género | `asignar_generos.py` | ✅ | 77.3% asignados |
+
+### Flujo del Pipeline
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    PIPELINE MIGRADOR v2                         │
+└────────────────────────────────────────────────────────────────┘
+
+         CLIENTES SOFTSEGUROS.xlsx    CLIENTES VIGENTES CELER.xlsx
+                    │                            │
+                    └──────────┬─────────────────┘
+                               │
+                    ┌──────────▼──────────┐
+              1️⃣   │   analisis_ids.py   │  → Análisis de calidad
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+              2️⃣   │   corregir_nits.py  │  → Formato DIAN
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+              3️⃣   │ validar_nombres.py  │  → Validar coincidencias
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+              4️⃣   │ actualizar_celer.py │  → Sincronizar datos
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+              5️⃣   │ asignar_generos.py  │  → Asignar M/F
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  ARCHIVO FINAL v2   │
+                    │  1,370 registros    │
+                    │  ✅ LISTO MIGRACIÓN │
+                    └─────────────────────┘
+```
+
+### Archivos de Entrada/Salida
+
+| Archivo | Tipo | Descripción |
+|---------|------|-------------|
+| `CLIENTES SOFTSEGUROSv2.xlsx` | Entrada | Base principal (1,370 registros) |
+| `CLIENTES VIGENTES CELER.xlsx` | Entrada | Fuente de verdad CELER |
+| `CLIENTES_SOFTSEGUROSv2_FINAL.xlsx` | Salida | ⭐ Archivo final para migración |
+| `REPORTE_CORRECCIONES_NITS_*.xlsx` | Reporte | Detalle de NITs corregidos |
+| `REPORTE_ACTUALIZACIONES_*.xlsx` | Reporte | Trazabilidad de cambios |
+
+---
+
+## 📋 Procesamiento de Pólizas (NEW_ARCHIVE_TO_BE_SENT)
+
+El directorio `NEW_ARCHIVE_TO_BE_SENT/` contiene scripts para clasificación automática de entidades y ajuste de documentos en archivos de pólizas.
+
+### Estructura del Directorio
+
+```
+NEW_ARCHIVE_TO_BE_SENT/
+├── clasificar_tomador.py              # Script principal de clasificación
+├── clasificacion_tomador.log          # Log detallado de cambios
+│
+├── Plantilla POLIZAS Actulizada.xlsx  # Archivo fuente de pólizas
+├── Plantilla POLIZAS_Clasificada.xlsx # Versión procesada v1
+├── Plantilla POLIZAS_Clasificada_v2.xlsx
+├── Plantilla POLIZAS_Clasificada_v3.xlsx
+├── Plantilla POLIZAS_Clasificada_v4.xlsx # ⭐ Última versión procesada
+│
+├── Copy of Copia de errores.xlsx      # Archivo de errores original
+├── Copy of Copia de errores_corregido.xlsx # Errores corregidos
+│
+└── README.md                          # Documentación específica
+```
+
+### Script Principal: clasificar_tomador.py
+
+Clasifica automáticamente entidades (PERSONA/EMPRESA) y ajusta documentos.
+
+```powershell
+cd NEW_ARCHIVE_TO_BE_SENT
+python clasificar_tomador.py
+```
+
+### Funcionalidades
+
+#### 1. Clasificación Automática de Entidades
+
+| Tipo | Criterio |
+|------|----------|
+| **PERSONA** | Nombres propios con 2-4 palabras, sin términos empresariales |
+| **EMPRESA** | Contiene términos empresariales o >4 palabras |
+| **DESCONOCIDO** | Campo vacío o nulo |
+
+#### 2. Términos Empresariales Detectados
+
+```
+COOPERATIVA, FONDO, S.A., LTDA., SAS, CIA, LIMITADA,
+SOCIEDAD, ASOCIADOS, GRUPO, CORPORACION, DEPARTAMENTO,
+EMPLEADOS, SENA, AFROAMERICANA, PARROQUIAL, COLEGIO,
+INSTITUTO, VICARIAL, ACINPRO, COOSANROQUE
+```
+
+#### 3. Ajuste de Documentos
+
+| Tipo | Acción |
+|------|--------|
+| **PERSONA** | Quita dígito de verificación si existe (`890981212-5` → `890981212`) |
+| **EMPRESA** | Calcula y agrega DV si falta (`890981212` → `890981212-5`) |
+
+### Columnas Procesadas
+
+| Columna Excel | Campo | Basado en |
+|---------------|-------|-----------|
+| AB | DOCUMENTO DEL TOMADOR | AA (NOMBRE DEL TOMADOR) |
+| AD | DOCUMENTO DEL ASEGURADO | AC (NOMBRE DEL ASEGURADO) |
+| Z | DOCUMENTO DEL CLIENTE | AA (mismo tipo que tomador) |
+
+### Algoritmo de Decisión
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  CLASIFICACIÓN DE ENTIDAD                    │
+└─────────────────────────────────────────────────────────────┘
+
+                    ┌─────────────────┐
+                    │  Leer Nombre    │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │ ¿Está vacío?    │───SI──→ DESCONOCIDO
+                    └────────┬────────┘
+                             │ NO
+                    ┌────────▼────────┐
+                    │ ¿Contiene       │
+                    │ términos        │───SI──→ EMPRESA
+                    │ empresariales?  │
+                    └────────┬────────┘
+                             │ NO
+                    ┌────────▼────────┐
+                    │ ¿Tiene >4       │───SI──→ EMPRESA
+                    │ palabras?       │
+                    └────────┬────────┘
+                             │ NO
+                    ┌────────▼────────┐
+                    │ ¿Tiene 2-4      │───SI──→ PERSONA
+                    │ palabras?       │
+                    └────────┬────────┘
+                             │ NO
+                    ┌────────▼────────┐
+                    │ ¿Mayúsculas     │
+                    │ >2 palabras?    │───SI──→ EMPRESA
+                    └────────┬────────┘
+                             │ NO
+                             ▼
+                          PERSONA
+```
+
+### Logs Generados
+
+El archivo `clasificacion_tomador.log` registra:
+- Clasificación por fila y columna
+- Cambios realizados en documentos (antes/después)
+- Estadísticas de procesamiento
+- Errores encontrados
+
+---
+
+## 📅 Producción a Un Mes
+
+El directorio `produccion_a_un_mes/` contiene scripts para el procesamiento de pólizas con vigencia de un mes, incluyendo análisis de estructura Excel y generación de fechas.
+
+### Estructura del Directorio
+
+```
+produccion_a_un_mes/
+├── src/
+│   ├── dian_utils/                    # Utilidades DIAN
+│   │   ├── dian_verificacion.py       # Cálculo de DV (módulo reutilizable)
+│   │   └── DIAN/                      # Recursos DIAN adicionales
+│   └── utils/                         # Scripts de procesamiento
+│       ├── analizar_estructura_excel.py  # Análisis de columnas y tipos
+│       ├── generar_fecha_fin.py          # Genera fecha fin (+1 año)
+│       └── comparar_nits.py              # Comparación de NITs
+│
+├── data/
+│   ├── input/                         # Archivos Excel a procesar
+│   └── clients_input/                 # Datos de clientes
+│
+├── output/                            # Archivos procesados
+│
+├── conciliador_clientes/              # Sub-módulo de conciliación
+│   ├── carpeta_1/
+│   ├── carpeta_2/
+│   └── carpeta_3/
+│
+├── tests/                             # Pruebas unitarias
+└── README.md                          # Documentación específica
+```
+
+### Scripts Disponibles
+
+#### 1. Módulo DIAN (dian_verificacion.py)
+Módulo reutilizable para cálculo de dígito de verificación DIAN.
+
+```python
+from src.dian_utils.dian_verificacion import calcular_digito_verificacion
+
+nit = "900437270"
+dv = calcular_digito_verificacion(nit)
+print(f"NIT: {nit}-{dv}")  # NIT: 900437270-3
+```
+
+**Algoritmo:**
+- Pesos oficiales DIAN: `[71, 67, 59, 53, 47, 43, 41, 37, 29, 23, 19, 17, 13, 7, 3]`
+- Aplicados de derecha a izquierda
+- Fórmula: `DV = (11 - (suma % 11))` si residuo > 1, sino residuo
+
+#### 2. Analizar Estructura Excel
+Analiza columnas, tipos y formatos de archivos Excel.
+
+```powershell
+cd produccion_a_un_mes
+python src/utils/analizar_estructura_excel.py
+```
+
+**Detecta:**
+- Tipos de datos por columna (datetime, object, float, int)
+- Formato de fechas (con/sin hora)
+- Fechas en formato texto
+- Muestra de valores por columna
+
+**Salida en consola:**
+```
+Archivo: data/input/polizas.xlsx
+Filas: 1500, Columnas: 25
+Columnas, tipos y formato detectado:
+  - NÚMERO DE PÓLIZA: object | Formato: Texto | Ejemplo: ['1527934', '101092379']
+  - FECHA INICIO: datetime64[ns] | Formato: Solo fecha | Ejemplo: [...]
+```
+
+#### 3. Generar Fecha Fin
+Genera la columna de fecha fin sumando un año a la fecha de inicio.
+
+```powershell
+python src/utils/generar_fecha_fin.py
+```
+
+**Funcionalidades:**
+- Lee archivos Excel de `data/input/`
+- Detecta columna de fecha inicio (columna I)
+- Calcula fecha fin (+1 año)
+- Limpia formatos de fecha inconsistentes
+- Exporta a `output/` con sufijo `_con_fecha_fin.xlsx`
+
+**Manejo de fechas:**
+- Formato esperado: `dd/mm/yyyy`
+- Convierte datetime a string formateado
+- Marca fechas inválidas como `FECHA_FALTANTE`
+
+### Flujo de Trabajo
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│              PRODUCCIÓN A UN MES - FLUJO                        │
+└────────────────────────────────────────────────────────────────┘
+
+         data/input/*.xlsx
+               │
+    ┌──────────▼──────────┐
+    │ analizar_estructura │  → Ver columnas y tipos
+    │      _excel.py      │
+    └──────────┬──────────┘
+               │
+    ┌──────────▼──────────┐
+    │ generar_fecha_fin   │  → Crear columna FECHA FIN
+    │        .py          │
+    └──────────┬──────────┘
+               │
+               ▼
+    output/*_con_fecha_fin.xlsx
+```
+
+### Ejemplo de Datos Procesados
+
+| NÚMERO DE PÓLIZA | RIESGO | ASEGURADORA | FECHA INICIO | FECHA FIN |
+|------------------|--------|-------------|--------------|-----------|
+| 1527934 | DFU947 | SEGUROS DE VIDA SURAMERICANA | 01/01/2025 | 01/01/2026 |
+| 101092379 | SNX880 | SEGUROS DE VIDA SURAMERICANA | 15/03/2025 | 15/03/2026 |
+
+---
+
 ## 🚀 Inicio Rápido
 
 ### Prerrequisitos
