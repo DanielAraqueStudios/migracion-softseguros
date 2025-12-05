@@ -10,7 +10,14 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | **Total Aseguradoras CELER** | 26 |
 | **Total Ramos únicos CELER** | 44 |
 | **Aseguradoras en MAVISO** | 30 |
-| **Cobertura de mapeo** | 98.2% |
+| **Cobertura de mapeo** | 100% |
+
+## 🎨 Leyenda de Colores
+
+| Color | Significado |
+|-------|-------------|
+| 🟢 **Verde claro** | Requiere REVISIÓN MANUAL - Verificar subramo correcto en destino |
+| ✅ | Mapeo automático confirmado |
 
 ---
 
@@ -50,7 +57,7 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 
 | CELER | Pólizas | Observación |
 |-------|---------|-------------|
-| **LIBERTY SEGUROS S A** | 53 | No existe dropdown en MAVISO |
+| **LIBERTY SEGUROS S A** | 53 | **Usar mapeo de ALLIANZ** (misma aseguradora) |
 
 ---
 
@@ -65,7 +72,7 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | AUTOMOVILES | 251 | AUTOS INDIVIDUAL | ✅ |
 | MULTIRIESGO RESIDENCIAL | 199 | HOGAR | ✅ |
 | MULTIRIESGO EMPRESARIAL | 80 | MULTIRRIESGO EMPRESARIAL | ✅ |
-| MI PYME | 4 | MULTIRRIESGO EMPRESARIAL | ✅ |
+| MI PYME | 4 | MI PYME | ✅ |
 | RESPONSABILIDAD CIVIL | 9 | RC DIRECTORES Y ADMINISTRADORES | ✅ |
 | TRANSPORTES DE MERCANCIAS | 6 | TRANSPORTES DE MERCANCIAS | ✅ |
 
@@ -74,9 +81,9 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
 | ACCIDENTES PERSONALES | 28 | ACCIDENTES PERSONALES | ✅ |
-| VIDA INDIVIDUAL | 20 | VIDA ACTUAL | ✅ |
+| VIDA INDIVIDUAL | 20 | VIDA ACTUAL | 🟢 REVISAR |
 | SALUD FAMILIAR | 5 | SALUD MEDICALL CARE | ✅ |
-| VIDA COLECTIVO | 1 | VIDA GRUPO CONTRIBUTIVA | ✅ |
+| VIDA COLECTIVO | 1 | VIDA GRUPO CONTRIBUTIVA | 🟢 REVISAR |
 
 **Subramos MAVISO disponibles (no usados):**
 - AUTOS COLECTIVO, AUTOS PESADOS, HOGAR DEUDOR, INFIDELIDAD DE RIESGSOS FINANCIEROS
@@ -98,8 +105,8 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | MULTIRIESGO RESIDENCIAL | 42 | HOGAR | ✅ |
 | MULTIRIESGO EMPRESARIAL | 20 | MULTIRIESGO EMPRESARIAL | ✅ |
 | VIDA GRUPO COLECTIVO | 12 | VIDA GRUPO CONTRIBUTIVO | ✅ |
-| MANEJO | 9 | MANEJO | ✅ |
-| MANEJO ENTIDADES FINANCIERAS | 7 | INFIDELIDAD DE RIESGSOS FINANCIEROS | ✅ |
+| MANEJO | 9 | MANEJO ENTIDADES FINANCIERAS | ✅ |
+| MANEJO ENTIDADES FINANCIERAS | 7 | MANEJO ENTIDADES FINANCIERAS | ✅ |
 | MAQUINARIA Y EQUIPO | 5 | MAQUINARIA Y EQUIPO | ✅ |
 | TRANSPORTES DE MERCANCIAS | 5 | TRANSPORTES DE MERCANCIAS | ✅ |
 | ACCIDENTES PERSONALES | 3 | ACCIDENTES PERSONALES | ✅ |
@@ -132,9 +139,9 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
-| VIDA INDIVIDUAL | 104 | VIDA GRUPO APORTES | ✅ |
-| SALUD FAMILIAR | 96 | SALUD CLASICO | ✅ |
-| VIDA GRUPO COLECTIVO | 59 | VIDA GRUPO CONTRIBUTIVO | ✅ |
+| VIDA INDIVIDUAL | 104 | VIDA GRUPO APORTES | 🟢 REVISAR |
+| SALUD FAMILIAR | 96 | SALUD CLASICO | 🟢 REVISAR |
+| VIDA GRUPO COLECTIVO | 59 | VIDA GRUPO CONTRIBUTIVO | 🟢 REVISAR |
 | SALUD PARA TODOS | 31 | SALUD PARA TODOS | ✅ |
 | PLAN COMPLEMENTARIO | 12 | PLAN COMPLEMENTARIO | ✅ |
 | ARL | 11 | ARL | ✅ |
@@ -152,10 +159,10 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
 | CUMPLIMIENTO | 160 | CUMPLIMIENTO | ✅ |
-| RESPONSABILIDAD CIVIL | 53 | RC DERIVADA DE CUMPLIMIENTO | ✅ |
+| RESPONSABILIDAD CIVIL | 53 | RC DERIVADA DE CUMPLIMIENTO | 🟢 REVISAR |
 | AUTOMOVILES | 36 | AUTOS INDIVIDUAL | ✅ |
 | ARRENDAMIENTO | 1 | ARRENDAMIENTO | ✅ |
-| TRANSPORTES DE MERCANCIAS | 1 | ⚠️ No disponible | ❌ |
+| TRANSPORTES DE MERCANCIAS | 1 | TRANSPORTES DE MERCANCIAS | ✅ |
 
 ---
 
@@ -164,12 +171,12 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
 | AUTOMOVILES | 153 | AUTOS INDIVIDUAL | ✅ |
-| RESPONSABILIDAD CIVIL | 10 | RC EXTRACONTRACTUAL | ✅ |
+| RESPONSABILIDAD CIVIL | 10 | RC EXTRACONTRACTUAL | 🟢 REVISAR |
 | ACCIDENTES PERSONALES | 2 | ACCIDENTES PERSONAL | ✅ |
 | MULTIRIESGO COPROPIEDADES | 2 | COPROPIEDADES | ✅ |
 | MULTIRIESGO RESIDENCIAL | 1 | HOGAR | ✅ |
 | MAQUINARIA Y EQUIPO | 1 | MAQUINARIA Y EQUIPO | ✅ |
-| INCENDIO | 1 | MULTIRIESGO EMPRESARIAL | ✅ |
+| INCENDIO | 1 | MULTIRIESGO EMPRESARIAL | 🟢 REVISAR |
 
 ---
 
@@ -185,9 +192,9 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | MULTIRIESGO COPROPIEDADES | 3 | COPROPIEDADES | ✅ |
 | MULTIRIESGO EMPRESARIAL | 1 | MULTIRIESGO EMPRESARIAL | ✅ |
 | MANEJO | 2 | MANEJO | ✅ |
-| INCENDIO | 1 | MULTIRIESGO EMPRESARIAL | ✅ |
-| TRANSPORTES DE MERCANCIAS | 1 | PREDIOS LABORES Y OPERACIONES | ✅ |
-| SOAT | 1 | ⚠️ No disponible | ❌ |
+| INCENDIO | 1 | MULTIRIESGO EMPRESARIAL | 🟢 REVISAR |
+| TRANSPORTES DE MERCANCIAS | 1 | TRANSPORTES DE MERCANCIAS | ✅ |
+| SOAT | 1 | SOAT | ✅ |
 
 **→ SEGUROS DE VIDA DEL ESTADO**
 
@@ -205,6 +212,7 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | ACCIDENTES PERSONALES | 3 | ACCIDENTES PERSONAL | ✅ |
 | MULTIRIESGO RESIDENCIAL | 3 | HOGAR | ✅ |
 | MULTIRIESGO EMPRESARIAL | 1 | MULTIRIESGO EMPRESARIAL | ✅ |
+| VIDA INDIVIDUAL | - | - | 🟢 REVISAR (si existe) |
 
 ---
 
@@ -230,7 +238,7 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 |------------|----------|----------------|---|
 | AUTOMOVILES | 50 | AUTOS INDIVIDUAL | ✅ |
 | MULTIRIESGO COPROPIEDADES | 2 | COPROPIEDADES | ✅ |
-| SOAT | 1 | ⚠️ No disponible | ❌ |
+| SOAT | 1 | SOAT | 🟢 REVISAR |
 
 **→ AXA COLPATRIA SEGUROS DE VIDA SA**
 
@@ -242,14 +250,14 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 
 ---
 
-### LIBERTY SEGUROS S A (53 pólizas) ⚠️
+### LIBERTY SEGUROS S A (53 pólizas) → **USAR ALLIANZ**
 
-| Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
-|------------|----------|----------------|---|
-| AUTOMOVILES | 52 | ❌ No existe aseguradora | ❌ |
-| MULTIRIESGO RESIDENCIAL | 1 | ❌ No existe aseguradora | ❌ |
+| Ramo CELER | Cantidad | Subramo MAVISO (Allianz) | ✓ |
+|------------|----------|--------------------------|---|
+| AUTOMOVILES | 52 | AUTOS INDIVIDUAL | ✅ |
+| MULTIRIESGO RESIDENCIAL | 1 | HOGAR | ✅ |
 
-**⚠️ NOTA: Liberty Seguros no tiene equivalencia en MAVISO. Estas 53 pólizas requieren asignación manual.**
+**✅ NOTA: Liberty Seguros usa el mismo mapeo de ALLIANZ ya que son la misma aseguradora.**
 
 ---
 
@@ -268,7 +276,7 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 |------------|----------|----------------|---|
 | MEDICINA PREPAGADA FAMILIAR | 15 | MEDICINA PREPAGADA FAMILIAR | ✅ |
 | MEDICINA PREPAGADA COLECTIV | 10 | MEDICINA PREPAGADA COLECTIV | ✅ |
-| EMERGENCIAS MÉDICAS | 3 | AREA PROTEGIDA | ✅ |
+| EMERGENCIAS MÉDICAS | 3 | AREA PROTEGIDA | 🟢 REVISAR |
 
 #### LA PREVISORA S A COMPAÑÍA DE SEGUROS (23 pólizas)
 
@@ -276,9 +284,9 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 |------------|----------|----------------|---|
 | AUTOMOVILES | 13 | AUTOS INDIVIDUAL | ✅ |
 | CUMPLIMIENTO | 3 | CUMPLIMIENTO | ✅ |
-| RESPONSABILIDAD CIVIL | 2 | RC PREDIOS LABORES Y OPERACIONES | ✅ |
+| RESPONSABILIDAD CIVIL | 2 | RC PREDIOS LABORES Y OPERACIONES | 🟢 REVISAR |
 | MULTIRIESGO EMPRESARIAL | 2 | MULTIRIESGO EMPRESARIAL | ✅ |
-| RC SERVIDORES PUBLICOS | 1 | RC PREDIOS LABORES Y OPERACIONES | ✅ |
+| RC SERVIDORES PUBLICOS | 1 | RC PREDIOS LABORES Y OPERACIONES | 🟢 REVISAR |
 | MANEJO | 1 | MANEJO | ✅ |
 | VIDA COLECTIVO | 1 | VIDA GRUPO COLECTIVO | ✅ |
 
@@ -326,7 +334,7 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | RESPONSABILIDAD CIVIL | 3 | RC DIRECTORES Y ADMINISTRADORES | ✅ |
 | MULTIRIESGO EMPRESARIAL | 1 | MULTIRIESGO EMPRESARIAL | ✅ |
 | MULTIRIESGO RESIDENCIAL | 1 | HOGAR DEUDOR | ✅ |
-| AERONAVES CASCO | 1 | ⚠️ No disponible | ❌ |
+| AERONAVES CASCO | 1 | AERONAVES CASCO | ✅ |
 
 #### CHUBB DE COLOMBIA (5 pólizas) → CHUBB SEGUROS COLOMBIA SA
 
@@ -375,17 +383,41 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 
 ---
 
+## 🟢 Filas que Requieren Revisión Manual (Resaltar en Verde)
+
+Las siguientes combinaciones deben ser **resaltadas en verde claro** en el archivo Excel para revisión manual:
+
+| Aseguradora | Ramo CELER | Cantidad | Motivo |
+|-------------|------------|----------|--------|
+| ALLIANZ | VIDA INDIVIDUAL | 20 | Verificar subramo correcto |
+| ALLIANZ | VIDA COLECTIVO | 1 | Verificar subramo correcto |
+| SURA VIDA | VIDA INDIVIDUAL | 104 | Verificar subramo correcto |
+| SURA VIDA | SALUD FAMILIAR | 96 | Verificar subramo correcto |
+| SURA VIDA | VIDA GRUPO COLECTIVO | 59 | Verificar subramo correcto |
+| MUNDIAL | RESPONSABILIDAD CIVIL | 53 | Verificar subramo correcto |
+| SBS | RESPONSABILIDAD CIVIL | 10 | Verificar subramo correcto |
+| SBS | INCENDIO | 1 | Verificar subramo correcto |
+| SEGUROS DEL ESTADO | INCENDIO | 1 | Verificar subramo correcto |
+| HDI | VIDA INDIVIDUAL | - | Verificar si existe |
+| AXA | SOAT | 1 | Verificar subramo correcto |
+| COOMEVA | EMERGENCIAS MÉDICAS | 3 | Verificar subramo correcto |
+| PREVISORA | RESPONSABILIDAD CIVIL | 2 | Verificar subramo correcto |
+| PREVISORA | RC SERVIDORES PUBLICOS | 1 | Verificar subramo correcto |
+
+**Total filas a revisar: ~352**
+
+---
+
 ## ❌ Ramos Sin Mapeo Directo
 
-| Aseguradora MAVISO | Ramo CELER | Cantidad | Observación |
-|--------------------|------------|----------|-------------|
-| - | LIBERTY (todos) | 53 | Aseguradora no existe |
-| AXA COLPATRIA SEGUROS SA | SOAT | 1 | Subramo no disponible |
-| SEGUROS DEL ESTADO SA | SOAT | 1 | Subramo no disponible |
-| SEGUROS MUNDIAL | TRANSPORTES DE MERCANCIAS | 1 | Subramo no disponible |
-| ZURICH COLOMBIA SEGUROS SA | AERONAVES CASCO | 1 | Subramo no disponible |
+**✅ TODOS LOS RAMOS TIENEN MAPEO - NO HAY EXCEPCIONES**
 
-**Total sin mapeo: 57 pólizas (1.8%)**
+Las correcciones aplicadas:
+- LIBERTY → Usar mapeo de ALLIANZ (misma aseguradora)
+- TRANSPORTES DE MERCANCIAS (Mundial) → TRANSPORTES DE MERCANCIAS ✅
+- TRANSPORTES DE MERCANCIAS (Seg. Estado) → TRANSPORTES DE MERCANCIAS ✅
+- AERONAVES CASCO (Zurich) → AERONAVES CASCO ✅
+- SOAT (AXA/Seg. Estado) → SOAT ✅
 
 ---
 
@@ -393,9 +425,9 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 
 ```
 Total pólizas:               3,164
-Mapeadas correctamente:      3,107 (98.2%)
-Sin aseguradora (Liberty):      53 (1.7%)
-Sin subramo disponible:          4 (0.1%)
+Mapeadas correctamente:      3,164 (100%)
+Requieren revisión manual:     352 (11.1%) - Marcadas en verde
+Sin mapeo:                       0 (0%)
 ```
 
 ---
