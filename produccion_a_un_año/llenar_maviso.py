@@ -62,6 +62,138 @@ CARPETA_OUTPUT.mkdir(exist_ok=True)
 # Variable global para el proceso de la API
 _api_proceso = None
 
+# =============================================================================
+# MAPEO DE ASEGURADORAS (CELER → MAVISO)
+# =============================================================================
+MAPEO_ASEGURADORAS = {
+    'LIBERTY SEGUROS S A': 'ALLIANZ SEGUROS SA',  # Liberty = Allianz
+    'ALLIANZ SEGUROS S.A': 'ALLIANZ SEGUROS SA',
+    'ASEGURADORA SOLIDARIA DE COLOMBIA': 'ASEGURADORA SOLIDARIA DE COLOMBIA',
+    'SURAMERICANA S.A.': 'SEGUROS GENERALES SURAMERICANA S A',
+    'COMPAÑÍA MUNDIAL DE SEGUROS S A': 'SEGUROS MUNDIAL',
+    'SBS SEGUROS COLOMBIA S.A': 'SBS SEGUROS COLOMBIA SA',
+    'SEGUROS DEL ESTADO S A': 'SEGUROS DEL ESTADO SA',
+    'HDI SEGUROS SA': 'HDI SEGUROS',
+    'SEGUROS BOLIVAR': 'COMPAÑIA DE SEGUROS BOLIVAR SA',
+    'AXA COLPATRIA SEGUROS S.A.': 'AXA COLPATRIA SEGUROS SA',
+    'CEM': 'COOMEVA EXPERIENCIA MEDICA SAS',
+    'COOMEVA': 'COOMEVA MEDICINA PREPAGADA SA',
+    'LA PREVISORA S A COMPAÑÍA DE SEGUROS': 'LA PREVISORA S A COMPAÑIA DE SEGUROS',
+    'ASSIST CARD': 'ASSIST CARD DE COLOMBIA SAS',
+    'MAGENTA SEGUROS LTDA': 'MAGENTA ASISTANCE SAS',
+    'COLMENA VIDA Y RIESGOS PROFESIONES SA': 'COLMENA SEGUROS',
+    'LA EQUIDAD SEGUROS OC': 'LA EQUIDAD SEGUROS GENERALES',
+    'MAPFRE SEGUROS DE COLOMBIA S A': 'MAPFRE SEGUROS GENERALES',
+    'ZURICH COLOMBIA SEGUROS S.A': 'ZURICH COLOMBIA SEGUROS SA',
+    'CHUBB DE COLOMBIA COMPAÑÍA SEGUROS S A': 'CHUBB SEGUROS COLOMBIA SA',
+    'COMPAÑIA DE MEDICINA PREPAGADA COLSANITAS S.A': 'COMPAÑIA DE MEDICINA PREPAGADA COLSANITAS SA',
+    'POSITIVA COMPAÑIA DE SEGUROS S.A.': 'POSITIVA COMPAÑIA DE SEGUROS SA',
+    'ASEGURADORA GRANCOLOMBIANA S.A.': 'GRANCOLOMBIANA DE FIANZAS SAS',
+    'FUNER SAN VICENTE': 'FUNERARIA SAN VICENTE SA',
+    'EMERMÉDICA S.A': 'EMERMEDICA SA SERVICIOS DE AMBULANCIA PREPAGADOS',
+    'MEDISANITAS': 'MEDISANITAS SAS COMPAÑIA DE MEDICINA PREPAGADA',
+}
+
+# =============================================================================
+# MAPEO DE RAMOS (CELER → MAVISO SUBRAMO)
+# =============================================================================
+MAPEO_RAMOS = {
+    # Generales
+    'AUTOMOVILES': 'AUTOS INDIVIDUAL',
+    'MULTIRIESGO RESIDENCIAL': 'HOGAR',
+    'MULTIRIESGO EMPRESARIAL': 'MULTIRRIESGO EMPRESARIAL',
+    'MI PYME': 'MI PYME',  # Corregido: era MULTIRIESGO EMPRESARIAL
+    'RESPONSABILIDAD CIVIL': 'RC DERIVADA DE CUMPLIMIENTO',
+    'TRANSPORTES DE MERCANCIAS': 'TRANSPORTES DE MERCANCIAS',
+    'CUMPLIMIENTO': 'CUMPLIMIENTO',
+    'SOAT': 'SOAT',
+    'TODO RIESGO DAÑOS MATERIALES': 'TODO RIESGO DAÑOS MATERIALES',
+    'MANEJO': 'MANEJO ENTIDADES FINANCIERAS',  # Corregido en Solidaria
+    'MANEJO ENTIDADES FINANCIERAS': 'MANEJO ENTIDADES FINANCIERAS',
+    'MAQUINARIA Y EQUIPO': 'MAQUINARIA Y EQUIPO',
+    'TRANSPORTE DE VALORES': 'TRANSPORTE DE VALORES',
+    'MULTIRIESGO COPROPIEDADES': 'COPROPIEDADES',
+    'INCENDIO': 'MULTIRRIESGO EMPRESARIAL',
+    'ARRENDAMIENTO': 'ARRENDAMIENTO',
+    'PROTECCION DIGITAL': 'PROTECCION DIGITAL',
+    'RC CLINICAS Y HOSPITALES': 'RC CLINICAS Y HOSPITALES',
+    'AERONAVES CASCO': 'AERONAVES CASCO',  # Corregido: antes no tenía mapeo
+    
+    # Vida y Salud
+    'ACCIDENTES PERSONALES': 'ACCIDENTES PERSONALES',
+    'ACCIDENTES DE PASAJEROS': 'ACCIDENTES PERSONALES',
+    'ACCIDENTES JUVENILES': 'ACCIDENTES JUVENILES',
+    'ACCIDENTES ESCOLARES': 'ACCIDENTES ESCOLARES',
+    'VIDA INDIVIDUAL': 'VIDA ACTUAL',
+    'VIDA COLECTIVO': 'VIDA GRUPO CONTRIBUTIVA',
+    'VIDA GRUPO COLECTIVO': 'VIDA GRUPO CONTRIBUTIVO',
+    'SALUD FAMILIAR': 'SALUD CLASICO',
+    'SALUD PARA TODOS': 'SALUD PARA TODOS',
+    'SALUD COLECTIVA': 'SALUD COLECTIVA CLASICO',
+    'PLAN COMPLEMENTARIO': 'PLAN COMPLEMENTARIO',
+    'PLAN COMPLEMENTARIO COLECTIVO': 'PLAN COMPLEMENTARIO COLECTIVO',
+    'PLAN COMPLEMENTARIO FAMILIAR': 'PLAN COMPLEMENTARIO',
+    'ARL': 'ARL',
+    'RENTA EDUCATIVA': 'RENTA EDUCATIVA',
+    'MAS VIDA': 'MAS VIDA',
+    'SEGURO EXEQUIAL': 'SEGUROS EXEQUIALES',
+    'SEGUROS EXEQUIALES': 'SEGUROS EXEQUIALES',
+    
+    # Medicina Prepagada
+    'MEDICINA PREPAGADA FAMILIAR': 'MEDICINA PREPAGADA FAMILIAR',
+    'MEDICINA PREPAGADA COLECTIV': 'MEDICINA PREPAGADA COLECTIV',
+    'EMERGENCIAS MÉDICAS': 'EMERGENCIAS MÉDICAS',
+    'AREA PROTEGIDA': 'CEM',
+    'TELEMEDICINA': 'EMERGENCIAS MÉDICAS',
+    
+    # Otros
+    'ASIST CARD': 'ASSIST CARD',
+    'RC SERVIDORES PUBLICOS': 'RC PREDIOS LABORES Y OPERACIONES',
+}
+
+# =============================================================================
+# FILAS A RESALTAR EN VERDE (Requieren revisión manual)
+# =============================================================================
+# Combinaciones (Aseguradora, Ramo) que deben resaltarse en verde claro
+RESALTAR_VERDE = {
+    # ALLIANZ
+    ('ALLIANZ SEGUROS S.A', 'VIDA INDIVIDUAL'),
+    ('ALLIANZ SEGUROS S.A', 'VIDA COLECTIVO'),
+    ('LIBERTY SEGUROS S A', 'VIDA INDIVIDUAL'),
+    ('LIBERTY SEGUROS S A', 'VIDA COLECTIVO'),
+    
+    # SURA
+    ('SURAMERICANA S.A.', 'VIDA INDIVIDUAL'),
+    ('SURAMERICANA S.A.', 'SALUD FAMILIAR'),
+    ('SURAMERICANA S.A.', 'VIDA GRUPO COLECTIVO'),
+    
+    # MUNDIAL
+    ('COMPAÑÍA MUNDIAL DE SEGUROS S A', 'RESPONSABILIDAD CIVIL'),
+    
+    # SBS
+    ('SBS SEGUROS COLOMBIA S.A', 'RESPONSABILIDAD CIVIL'),
+    ('SBS SEGUROS COLOMBIA S.A', 'INCENDIO'),
+    
+    # SEGUROS DEL ESTADO
+    ('SEGUROS DEL ESTADO S A', 'INCENDIO'),
+    
+    # HDI
+    ('HDI SEGUROS SA', 'VIDA INDIVIDUAL'),
+    
+    # AXA
+    ('AXA COLPATRIA SEGUROS S.A.', 'SOAT'),
+    
+    # COOMEVA
+    ('COOMEVA', 'EMERGENCIAS MÉDICAS'),
+    
+    # PREVISORA
+    ('LA PREVISORA S A COMPAÑÍA DE SEGUROS', 'RESPONSABILIDAD CIVIL'),
+    ('LA PREVISORA S A COMPAÑÍA DE SEGUROS', 'RC SERVIDORES PUBLICOS'),
+}
+
+# Color verde claro para resaltar
+VERDE_CLARO = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+
 
 def letra_a_indice(letra):
     """Convierte letra de columna Excel a índice (0-based)"""
@@ -397,11 +529,7 @@ def main():
         }
     
     # 5. Mapeo de columnas (índice 0-based de CELER → letra columna Maviso)
-    # CELER columnas por índice (0-based desde skiprows=3):
-    # A=0, B=1, C=2, ..., U=20, V=21, W=22, X=23, ..., AB=27, ..., AE=30, ..., AP=41, AQ=42, AS=44, AT=45, AW=48, AX=49, BE=56
-    
     mapeo = {
-        # Maviso letra: (índice CELER, descripción)
         'A': (20, 'Póliza'),           # U
         'B': (30, 'Placa'),            # AE
         'C': (17, 'Aseguradora'),      # R
@@ -410,7 +538,6 @@ def main():
         'K': (22, 'F_Inicio'),         # W
         'L': (23, 'F_Fin'),            # X
         'O': (42, 'prima sin iva'),    # AQ
-        # W es condicional - se maneja aparte
         'X': (41, 'V_Asegurado'),      # AP
         'AB': (2, 'Identificacion'),   # C (Documento del cliente)
         'AC': (0, 'Tipo_Persona'),     # A
@@ -422,43 +549,74 @@ def main():
         'AI': (49, 'Iden_Beneficiario') # AX
     }
     
-    # Índice de Forma_Pago en CELER (columna AB = índice 27)
-    idx_forma_pago_celer = 27
+    # Índices de columnas CELER importantes
+    idx_forma_pago_celer = 27  # AB
+    idx_aseguradora_celer = 17  # R
+    idx_ramo_celer = 18  # S
     
-    # 5. Limpiar datos existentes (excepto encabezado) - NO limpiar, crear nuevo
-    # En lugar de limpiar, vamos a trabajar directamente
+    # Columnas Maviso para resaltar
+    col_c_maviso = letra_a_indice('C') + 1  # Aseguradora
+    col_e_maviso = letra_a_indice('E') + 1  # Ramo
+    
     logger.info("Preparando datos para migración...")
     
     # 6. Llenar datos desde CELER
     logger.info("Llenando datos desde CELER...")
     filas_procesadas = 0
+    filas_resaltadas = 0
     
     for idx_celer, row_celer in df_celer.iterrows():
         fila_maviso = idx_celer + 2  # +2 porque fila 1 es encabezado y df empieza en 0
         
+        # Obtener aseguradora y ramo originales de CELER
+        aseguradora_celer = str(row_celer.iloc[idx_aseguradora_celer]).strip() if not pd.isna(row_celer.iloc[idx_aseguradora_celer]) else ''
+        ramo_celer = str(row_celer.iloc[idx_ramo_celer]).strip() if not pd.isna(row_celer.iloc[idx_ramo_celer]) else ''
+        
+        # Verificar si esta fila debe resaltarse en verde
+        debe_resaltar = (aseguradora_celer, ramo_celer) in RESALTAR_VERDE
+        
+        if debe_resaltar:
+            filas_resaltadas += 1
+        
         # Aplicar mapeo directo
         for letra_maviso, (idx_col_celer, descripcion) in mapeo.items():
-            col_maviso = letra_a_indice(letra_maviso) + 1  # +1 porque openpyxl es 1-based
+            col_maviso = letra_a_indice(letra_maviso) + 1
             
-            # Obtener valor de CELER
             if idx_col_celer < len(cols_celer):
                 valor = row_celer.iloc[idx_col_celer]
                 
-                # Limpiar valores NaN
                 if pd.isna(valor):
                     valor = ''
+                
+                # ============================================
+                # APLICAR MAPEOS DE ASEGURADORA Y RAMO
+                # ============================================
+                if letra_maviso == 'C':  # Columna Aseguradora
+                    valor_str = str(valor).strip()
+                    if valor_str in MAPEO_ASEGURADORAS:
+                        valor = MAPEO_ASEGURADORAS[valor_str]
+                
+                elif letra_maviso == 'E':  # Columna Ramo
+                    valor_str = str(valor).strip()
+                    if valor_str in MAPEO_RAMOS:
+                        valor = MAPEO_RAMOS[valor_str]
                 
                 # Escribir en Maviso
                 cell = ws.cell(row=fila_maviso, column=col_maviso)
                 cell.value = valor
                 
-                # Aplicar estilos
+                # Aplicar estilos base
                 if col_maviso in estilos_fila:
                     cell.font = copy.copy(estilos_fila[col_maviso]['font'])
-                    cell.fill = copy.copy(estilos_fila[col_maviso]['fill'])
                     cell.border = copy.copy(estilos_fila[col_maviso]['border'])
                     cell.alignment = copy.copy(estilos_fila[col_maviso]['alignment'])
                     cell.number_format = estilos_fila[col_maviso]['number_format']
+                    
+                    # Si debe resaltar, aplicar verde; si no, estilo original
+                    if debe_resaltar:
+                        cell.fill = VERDE_CLARO
+                    else:
+                        cell.fill = copy.copy(estilos_fila[col_maviso]['fill'])
         
         # Columna W (FORMA PAGO) - Lógica condicional
         col_w_maviso = letra_a_indice('W') + 1
@@ -469,10 +627,14 @@ def main():
         cell_w.value = forma_pago_maviso
         if col_w_maviso in estilos_fila:
             cell_w.font = copy.copy(estilos_fila[col_w_maviso]['font'])
-            cell_w.fill = copy.copy(estilos_fila[col_w_maviso]['fill'])
             cell_w.border = copy.copy(estilos_fila[col_w_maviso]['border'])
             cell_w.alignment = copy.copy(estilos_fila[col_w_maviso]['alignment'])
             cell_w.number_format = estilos_fila[col_w_maviso]['number_format']
+            
+            if debe_resaltar:
+                cell_w.fill = VERDE_CLARO
+            else:
+                cell_w.fill = copy.copy(estilos_fila[col_w_maviso]['fill'])
         
         filas_procesadas += 1
         
@@ -489,6 +651,7 @@ def main():
     logger.info("=" * 60)
     logger.info("✅ MIGRACIÓN COMPLETADA")
     logger.info(f"   Filas procesadas: {filas_procesadas}")
+    logger.info(f"   🟢 Filas resaltadas (revisión manual): {filas_resaltadas}")
     logger.info(f"   Archivo generado: {archivo_salida}")
     logger.info("=" * 60)
     
