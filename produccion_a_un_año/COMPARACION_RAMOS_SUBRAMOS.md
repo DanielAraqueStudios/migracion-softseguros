@@ -2,6 +2,8 @@
 
 Este documento detalla la equivalencia entre los Ramos del sistema CELER y los Subramos disponibles en el sistema MAVISO (SoftSeguros).
 
+> **Última actualización:** 9 de Diciembre 2025
+
 ## 📋 Resumen General
 
 | Métrica | Valor |
@@ -23,49 +25,67 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 
 ## 🔄 Mapeo de Aseguradoras
 
-### Aseguradoras con Equivalencia Directa
+### Lógica de Mapeo Generales vs Vida
+
+El sistema determina automáticamente si usar la versión **Generales** o **Vida** de la aseguradora según el ramo:
+
+**Ramos que van a compañía de VIDA:**
+- VIDA INDIVIDUAL, VIDA COLECTIVO, VIDA GRUPO COLECTIVO
+- ACCIDENTES PERSONALES, ACCIDENTES DE PASAJEROS, ACCIDENTES JUVENILES, ACCIDENTES ESCOLARES
+- SALUD FAMILIAR, SALUD PARA TODOS, SALUD COLECTIVA
+- RENTA EDUCATIVA, MAS VIDA, ARL
+
+### Aseguradoras con versión Generales/Vida
+
+| CELER | MAVISO Generales | MAVISO Vida |
+|-------|------------------|-------------|
+| **LIBERTY SEGUROS S A** | ALLIANZ SEGUROS S.A | ALLIANZ SEGUROS DE VIDA S.A |
+| **ALLIANZ SEGUROS S.A** | ALLIANZ SEGUROS S.A | ALLIANZ SEGUROS DE VIDA S.A |
+| SURAMERICANA S.A. | SEGUROS GENERALES SURAMERICANA S A | SEGUROS DE VIDA SURAMERICANA SA |
+| AXA COLPATRIA SEGUROS S.A. | AXA COLPATRIA SEGUROS SA | AXA COLPATRIA SEGUROS DE VIDA SA |
+| SEGUROS DEL ESTADO S A | SEGUROS DEL ESTADO SA | SEGUROS DE VIDA DEL ESTADO |
+
+> **Nota:** LIBERTY y ALLIANZ son la misma compañía, ambos van a ALLIANZ en MAVISO.
+
+### Aseguradoras con Mapeo Simple (sin versión Vida)
 
 | CELER | MAVISO |
 |-------|--------|
-| ALLIANZ SEGUROS S.A | ALLIANZ SEGUROS SA / ALLIANZ SEGUROS DE VIDA SA |
-| ASEGURADORA SOLIDARIA DE COLOMBIA | ASEGURADORA SOLIDARIA DE COLOMBIA |
-| ASSIST CARD | ASSIST CARD DE COLOMBIA SAS |
-| AXA COLPATRIA SEGUROS S.A. | AXA COLPATRIA SEGUROS SA / AXA COLPATRIA SEGUROS DE VIDA SA |
-| CEM | COOMEVA EXPERIENCIA MEDICA SAS |
-| CHUBB DE COLOMBIA COMPAÑÍA SEGUROS S A | CHUBB SEGUROS COLOMBIA SA |
-| COLMENA VIDA Y RIESGOS PROFESIONES SA | COLMENA SEGUROS |
-| COMPAÑIA DE MEDICINA PREPAGADA COLSANITAS S.A | COMPAÑIA DE MEDICINA PREPAGADA COLSANITAS SA |
 | COMPAÑÍA MUNDIAL DE SEGUROS S A | SEGUROS MUNDIAL |
-| COOMEVA | COOMEVA MEDICINA PREPAGADA SA |
-| EMERMÉDICA S.A | EMERMEDICA SA SERVICIOS DE AMBULANCIA PREPAGADOS |
-| FUNER SAN VICENTE | FUNERARIA SAN VICENTE SA |
 | HDI SEGUROS SA | HDI SEGUROS |
 | LA EQUIDAD SEGUROS OC | LA EQUIDAD SEGUROS GENERALES |
-| LA PREVISORA S A COMPAÑÍA DE SEGUROS | LA PREVISORA S A COMPAÑIA DE SEGUROS |
-| MAGENTA SEGUROS LTDA | MAGENTA ASISTANCE SAS |
 | MAPFRE SEGUROS DE COLOMBIA S A | MAPFRE SEGUROS GENERALES |
-| MEDISANITAS | MEDISANITAS SAS COMPAÑIA DE MEDICINA PREPAGADA |
-| POSITIVA COMPAÑIA DE SEGUROS S.A. | POSITIVA COMPAÑIA DE SEGUROS SA |
-| SBS SEGUROS COLOMBIA S.A | SBS SEGUROS COLOMBIA SA |
+| COLMENA VIDA Y RIESGOS PROFESIONES SA | COLMENA SEGUROS |
 | SEGUROS BOLIVAR | COMPAÑIA DE SEGUROS BOLIVAR SA |
-| SEGUROS DEL ESTADO S A | SEGUROS DEL ESTADO SA / SEGUROS DE VIDA DEL ESTADO |
-| SURAMERICANA S.A. | SEGUROS GENERALES SURAMERICANA S A / SEGUROS DE VIDA SURAMERICANA SA |
-| ZURICH COLOMBIA SEGUROS S.A | ZURICH COLOMBIA SEGUROS SA |
+| CEM | COOMEVA EXPERIENCIA MEDICA SAS |
+| COOMEVA | COOMEVA MEDICINA PREPAGADA SA |
+| ASSIST CARD | ASSIST CARD DE COLOMBIA SAS |
+| MAGENTA SEGUROS LTDA | MAGENTA ASISTANCE SAS |
+| FUNER SAN VICENTE | FUNERARIA SAN VICENTE SA |
+| EMERMÉDICA S.A | EMERMEDICA SA SERVICIOS DE AMBULANCIA PREPAGADOS |
+| MEDISANITAS | MEDISANITAS SAS COMPAÑIA DE MEDICINA PREPAGADA |
 | ASEGURADORA GRANCOLOMBIANA S.A. | GRANCOLOMBIANA DE FIANZAS SAS |
 
-### ⚠️ Aseguradoras Sin Equivalencia
+### Aseguradoras sin Mapeo (nombre idéntico)
 
-| CELER | Pólizas | Observación |
-|-------|---------|-------------|
-| **LIBERTY SEGUROS S A** | 53 | **Usar mapeo de ALLIANZ** (misma aseguradora) |
+Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
+- ASEGURADORA SOLIDARIA DE COLOMBIA
+- POSITIVA COMPAÑIA DE SEGUROS S.A.
+- CHUBB DE COLOMBIA COMPAÑÍA SEGUROS S A
+- ZURICH COLOMBIA SEGUROS S.A
+- LA PREVISORA S A COMPAÑÍA DE SEGUROS
+- COMPAÑIA DE MEDICINA PREPAGADA COLSANITAS S.A
+- SBS SEGUROS COLOMBIA S.A
 
 ---
 
 ## 📑 Mapeo Detallado por Aseguradora
 
-### ALLIANZ SEGUROS S.A (603 pólizas)
+### ALLIANZ / LIBERTY (656 pólizas combinadas)
 
-**Ramos CELER → Subramos MAVISO (Generales)**
+> **Importante:** LIBERTY SEGUROS S A y ALLIANZ SEGUROS S.A son la misma compañía. Ambas se mapean a ALLIANZ en MAVISO.
+
+**Ramos CELER → Subramos MAVISO (Generales) → ALLIANZ SEGUROS S.A**
 
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
@@ -73,10 +93,10 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 | MULTIRIESGO RESIDENCIAL | 199 | HOGAR | ✅ |
 | MULTIRIESGO EMPRESARIAL | 80 | MULTIRRIESGO EMPRESARIAL | ✅ |
 | MI PYME | 4 | MI PYME | ✅ |
-| RESPONSABILIDAD CIVIL | 9 | RC DIRECTORES Y ADMINISTRADORES | ✅ |
+| RESPONSABILIDAD CIVIL | 9 | RC DIRECTORES Y ADMINISTRADORES | 🟢 REVISAR |
 | TRANSPORTES DE MERCANCIAS | 6 | TRANSPORTES DE MERCANCIAS | ✅ |
 
-**Ramos CELER → Subramos MAVISO (Vida)**
+**Ramos CELER → Subramos MAVISO (Vida) → ALLIANZ SEGUROS DE VIDA S.A**
 
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
@@ -416,7 +436,7 @@ Se resaltan en **verde claro** todas las filas cuyo RAMO contenga alguna de esta
 | MULTIRIESGO RESIDENCIAL | MULTIRIESGO RESIDENCIAL |
 | PLAN COMPLEMENTARIO COLECTIVO | COLECTIV |
 
-**Estimado de filas resaltadas: ~800-1000 pólizas**
+**Estimado de filas resaltadas: ~877 pólizas**
 
 ---
 
@@ -433,12 +453,24 @@ Las correcciones aplicadas:
 
 ---
 
+## 🔧 Herramientas de Migración
+
+| Herramienta | Descripción |
+|-------------|-------------|
+| `llenar_maviso.py` | Script principal de migración CELER → MAVISO |
+| `llenar_maviso_gui.py` | Interfaz gráfica PyQt6 (modo oscuro) |
+| `calcular_dv_maviso.py` | Calculador de DV para NITs (API DIAN) |
+| `conciliar_ramos.py` | Concilia ramos entre archivo manual y generado |
+| `test_mapeos.py` | Tests unitarios para validar mapeos |
+
+---
+
 ## 📊 Estadísticas de Cobertura
 
 ```
 Total pólizas:               3,164
 Mapeadas correctamente:      3,164 (100%)
-Requieren revisión manual:   ~800-1000 (25-32%) - Marcadas en verde
+Requieren revisión manual:     877 (28%) - Marcadas en verde
 Sin mapeo:                       0 (0%)
 ```
 
@@ -449,19 +481,22 @@ Sin mapeo:                       0 (0%)
 - Ramos con "COLECTIV" (colectivo/colectiva)
 - Ramos con "HOGAR"
 - Ramos con "SALUD"
+- Ramos con "MULTIRIESGO RESIDENCIAL"
 
 ---
 
-## 📁 Archivos Relacionados
+## 📁 Archivos del Proyecto
 
 | Archivo | Descripción |
 |---------|-------------|
-| `mapeo_ramos.py` | Diccionarios Python con mapeos programáticos |
-| `verificar_mapeo.py` | Script para verificar cobertura del mapeo |
-| `extraer_dropdowns.py` | Extrae valores válidos de dropdowns de MAVISO |
-| `analizar_ramos_subramos.py` | Análisis inicial de combinaciones |
+| `llenar_maviso.py` | Script principal con mapeos de aseguradoras y ramos |
+| `llenar_maviso_gui.py` | GUI con tema oscuro profesional |
+| `calcular_dv_maviso.py` | Calcula DV de NITs usando API DIAN |
+| `conciliar_ramos.py` | Actualiza ramos desde archivo de referencia |
+| `test_mapeos.py` | Tests de validación de mapeos |
+| `backend/app.py` | API FastAPI para cálculo de DV (DIAN) |
 
 ---
 
-*Documento generado: Diciembre 2025*
+*Documento actualizado: 9 Diciembre 2025*
 *Fuente: Copy of polizas vigentes celer.xlsx → Copy of Maviso.xlsx*

@@ -65,34 +65,62 @@ _api_proceso = None
 # =============================================================================
 # MAPEO DE ASEGURADORAS (CELER → MAVISO)
 # =============================================================================
+# Aseguradoras que tienen nombre DIFERENTE en MAVISO
+# Para aseguradoras con versión Generales/Vida, se usa get_aseguradora_maviso()
 MAPEO_ASEGURADORAS = {
-    'LIBERTY SEGUROS S A': 'ALLIANZ SEGUROS SA',  # Liberty = Allianz
-    'ALLIANZ SEGUROS S.A': 'ALLIANZ SEGUROS SA',
-    'ASEGURADORA SOLIDARIA DE COLOMBIA': 'ASEGURADORA SOLIDARIA DE COLOMBIA',
-    'SURAMERICANA S.A.': 'SEGUROS GENERALES SURAMERICANA S A',
+    # LIBERTY y ALLIANZ son la misma compañía → ALLIANZ en MAVISO
+    'LIBERTY SEGUROS S A': 'ALLIANZ SEGUROS S.A',
+    'ALLIANZ SEGUROS S.A': 'ALLIANZ SEGUROS S.A',
+    # Otras equivalencias según documentación
     'COMPAÑÍA MUNDIAL DE SEGUROS S A': 'SEGUROS MUNDIAL',
-    'SBS SEGUROS COLOMBIA S.A': 'SBS SEGUROS COLOMBIA SA',
-    'SEGUROS DEL ESTADO S A': 'SEGUROS DEL ESTADO SA',
     'HDI SEGUROS SA': 'HDI SEGUROS',
-    'SEGUROS BOLIVAR': 'COMPAÑIA DE SEGUROS BOLIVAR SA',
-    'AXA COLPATRIA SEGUROS S.A.': 'AXA COLPATRIA SEGUROS SA',
-    'CEM': 'COOMEVA EXPERIENCIA MEDICA SAS',
-    'COOMEVA': 'COOMEVA MEDICINA PREPAGADA SA',
-    'LA PREVISORA S A COMPAÑÍA DE SEGUROS': 'LA PREVISORA S A COMPAÑIA DE SEGUROS',
-    'ASSIST CARD': 'ASSIST CARD DE COLOMBIA SAS',
-    'MAGENTA SEGUROS LTDA': 'MAGENTA ASISTANCE SAS',
-    'COLMENA VIDA Y RIESGOS PROFESIONES SA': 'COLMENA SEGUROS',
     'LA EQUIDAD SEGUROS OC': 'LA EQUIDAD SEGUROS GENERALES',
     'MAPFRE SEGUROS DE COLOMBIA S A': 'MAPFRE SEGUROS GENERALES',
-    'ZURICH COLOMBIA SEGUROS S.A': 'ZURICH COLOMBIA SEGUROS SA',
-    'CHUBB DE COLOMBIA COMPAÑÍA SEGUROS S A': 'CHUBB SEGUROS COLOMBIA SA',
-    'COMPAÑIA DE MEDICINA PREPAGADA COLSANITAS S.A': 'COMPAÑIA DE MEDICINA PREPAGADA COLSANITAS SA',
-    'POSITIVA COMPAÑIA DE SEGUROS S.A.': 'POSITIVA COMPAÑIA DE SEGUROS SA',
-    'ASEGURADORA GRANCOLOMBIANA S.A.': 'GRANCOLOMBIANA DE FIANZAS SAS',
+    'COLMENA VIDA Y RIESGOS PROFESIONES SA': 'COLMENA SEGUROS',
+    'SEGUROS BOLIVAR': 'COMPAÑIA DE SEGUROS BOLIVAR SA',
+    'CEM': 'COOMEVA EXPERIENCIA MEDICA SAS',
+    'COOMEVA': 'COOMEVA MEDICINA PREPAGADA SA',
+    'ASSIST CARD': 'ASSIST CARD DE COLOMBIA SAS',
+    'MAGENTA SEGUROS LTDA': 'MAGENTA ASISTANCE SAS',
     'FUNER SAN VICENTE': 'FUNERARIA SAN VICENTE SA',
     'EMERMÉDICA S.A': 'EMERMEDICA SA SERVICIOS DE AMBULANCIA PREPAGADOS',
     'MEDISANITAS': 'MEDISANITAS SAS COMPAÑIA DE MEDICINA PREPAGADA',
+    'ASEGURADORA GRANCOLOMBIANA S.A.': 'GRANCOLOMBIANA DE FIANZAS SAS',
 }
+
+# Aseguradoras con versión GENERALES y VIDA (depende del ramo)
+ASEGURADORAS_CON_VIDA = {
+    'ALLIANZ SEGUROS S.A': ('ALLIANZ SEGUROS S.A', 'ALLIANZ SEGUROS DE VIDA S.A'),
+    'LIBERTY SEGUROS S A': ('ALLIANZ SEGUROS S.A', 'ALLIANZ SEGUROS DE VIDA S.A'),
+    'SURAMERICANA S.A.': ('SEGUROS GENERALES SURAMERICANA S A', 'SEGUROS DE VIDA SURAMERICANA SA'),
+    'AXA COLPATRIA SEGUROS S.A.': ('AXA COLPATRIA SEGUROS SA', 'AXA COLPATRIA SEGUROS DE VIDA SA'),
+    'SEGUROS DEL ESTADO S A': ('SEGUROS DEL ESTADO SA', 'SEGUROS DE VIDA DEL ESTADO'),
+}
+
+# Ramos que son de VIDA (para determinar si usar aseguradora Generales o Vida)
+RAMOS_VIDA = [
+    'VIDA INDIVIDUAL', 'VIDA COLECTIVO', 'VIDA GRUPO COLECTIVO',
+    'ACCIDENTES PERSONALES', 'ACCIDENTES DE PASAJEROS', 'ACCIDENTES JUVENILES', 'ACCIDENTES ESCOLARES',
+    'SALUD FAMILIAR', 'SALUD PARA TODOS', 'SALUD COLECTIVA',
+    'RENTA EDUCATIVA', 'MAS VIDA', 'ARL',
+]
+
+
+def get_aseguradora_maviso(aseguradora_celer: str, ramo_celer: str) -> str:
+    """
+    Obtiene el nombre de la aseguradora en MAVISO.
+    Si la aseguradora tiene versión Generales/Vida, determina cuál usar según el ramo.
+    """
+    # Verificar si tiene versión Generales/Vida
+    if aseguradora_celer in ASEGURADORAS_CON_VIDA:
+        generales, vida = ASEGURADORAS_CON_VIDA[aseguradora_celer]
+        # Determinar si el ramo es de Vida
+        if ramo_celer in RAMOS_VIDA:
+            return vida
+        return generales
+    
+    # Si no tiene versión Vida, buscar en mapeo normal
+    return MAPEO_ASEGURADORAS.get(aseguradora_celer, aseguradora_celer)
 
 # =============================================================================
 # MAPEO DE RAMOS (CELER → MAVISO SUBRAMO)
@@ -591,8 +619,8 @@ def main():
                 # ============================================
                 if letra_maviso == 'C':  # Columna Aseguradora
                     valor_str = str(valor).strip()
-                    if valor_str in MAPEO_ASEGURADORAS:
-                        valor = MAPEO_ASEGURADORAS[valor_str]
+                    # Usar función que determina Generales vs Vida según el ramo
+                    valor = get_aseguradora_maviso(valor_str, ramo_celer)
                 
                 elif letra_maviso == 'E':  # Columna Ramo
                     valor_str = str(valor).strip()

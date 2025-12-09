@@ -93,6 +93,14 @@ class CalculadorDVMaviso:
             print("  ✅ API ya está corriendo")
             return True
         
+        # Liberar el puerto 8000 si está ocupado
+        print("  🔍 Verificando puerto 8000...")
+        if self.matar_proceso_puerto(8000):
+            print("  🧹 Puerto 8000 liberado (proceso anterior terminado)")
+            time.sleep(1)  # Esperar a que se libere completamente
+        else:
+            print("  ✅ Puerto 8000 disponible")
+        
         print("  🚀 Iniciando servidor API...")
         
         # Ruta al directorio backend
@@ -134,38 +142,90 @@ class CalculadorDVMaviso:
             self.api_proceso.terminate()
             print("\n  ℹ️  API detenida")
 
-    def calcular_digito_verificacion(self, nit):
+    def calcular_digito_verificacion(self, nit, reintentos=3):
         """
         Calcula el dígito de verificación usando la API de DIAN.
         
         Args:
             nit: NIT sin dígito de verificación (solo números)
+            reintentos: Número de reintentos en caso de error
             
         Returns:
             str: Dígito de verificación calculado (0-9) o None si hay error
         """
-        try:
-            # Limpiar el NIT - solo números
-            nit_str = re.sub(r'\D', '', str(nit))
-            
-            if not nit_str or len(nit_str) > 15:
-                return None
-
-            # Llamar a la API
-            response = requests.post(
-                f"{API_URL}/calcular",
-                json={"nit": nit_str},
-                timeout=5
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                return str(data["digito_verificacion"])
-            else:
-                return None
-
-        except Exception as e:
+        # Limpiar el NIT - solo números
+        nit_str = re.sub(r'\D', '', str(nit))
+        
+        if not nit_str or len(nit_str) > 15:
             return None
+
+        for intento in range(reintentos):
+            try:
+                # Llamar a la API
+                response = requests.post(
+                    f"{API_URL}/calcular",
+                    json={"nit": nit_str},
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return str(data["digito_verificacion"])
+                else:
+                    # Si falla con código de error, reintentar
+                    if intento < reintentos - 1:
+                        time.sleep(0.5)
+                        continue
+                    return None
+
+            except requests.exceptions.ConnectionError:
+                # La API se desconectó - intentar reiniciarla
+                if intento < reintentos - 1:
+                    print(f"\n     🔄 Reconectando API (intento {intento + 2}/{reintentos})...")
+                    if not self.verificar_api():
+                        # Reiniciar la API
+                        self.matar_proceso_puerto(8000)
+                        time.sleep(1)
+                        self._reiniciar_api_silencioso()
+                        time.sleep(2)
+                    continue
+                return None
+            except requests.exceptions.Timeout:
+                if intento < reintentos - 1:
+                    time.sleep(1)
+                    continue
+                return None
+            except Exception as e:
+                if intento < reintentos - 1:
+                    time.sleep(0.5)
+                    continue
+                return None
+        
+        return None
+
+    def _reiniciar_api_silencioso(self):
+        """Reinicia la API sin mensajes verbosos"""
+        script_dir = Path(__file__).parent.parent
+        backend_dir = script_dir / 'backend'
+        
+        if backend_dir.exists():
+            try:
+                self.api_proceso = subprocess.Popen(
+                    [sys.executable, "-m", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "8000"],
+                    cwd=str(backend_dir),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+                )
+                # Esperar a que inicie
+                for _ in range(5):
+                    time.sleep(1)
+                    if self.verificar_api():
+                        print("     ✅ API reconectada")
+                        return True
+            except:
+                pass
+        return False
 
     def seleccionar_archivo(self):
         """Permite al usuario seleccionar el archivo Excel"""
