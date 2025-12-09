@@ -396,6 +396,7 @@ Se resaltan en **verde claro** todas las filas cuyo RAMO contenga alguna de esta
 | **COLECTIV** | Pólizas colectivas (vida, salud, etc.) |
 | **HOGAR** | Seguros de hogar/residencial |
 | **SALUD** | Seguros de salud |
+| **MULTIRIESGO RESIDENCIAL** | Se convierte a HOGAR en Maviso |
 
 ### Ramos que se Resaltan Automáticamente:
 
@@ -412,7 +413,7 @@ Se resaltan en **verde claro** todas las filas cuyo RAMO contenga alguna de esta
 | SALUD COLECTIVA | SALUD, COLECTIV |
 | MEDICINA PREPAGADA FAMILIAR | MEDICINA PREPAGADA |
 | MEDICINA PREPAGADA COLECTIV | MEDICINA PREPAGADA, COLECTIV |
-| MULTIRIESGO RESIDENCIAL | HOGAR (subramo destino) |
+| MULTIRIESGO RESIDENCIAL | MULTIRIESGO RESIDENCIAL |
 | PLAN COMPLEMENTARIO COLECTIVO | COLECTIV |
 
 **Estimado de filas resaltadas: ~800-1000 pólizas**

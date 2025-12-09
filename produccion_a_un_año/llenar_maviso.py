@@ -164,6 +164,7 @@ PALABRAS_RESALTAR = [
     'COLECTIV',  # Cubre COLECTIVO y COLECTIVA
     'HOGAR',
     'SALUD',
+    'MULTIRIESGO RESIDENCIAL',  # Se convierte a HOGAR en Maviso
 ]
 
 # Color verde claro para resaltar
