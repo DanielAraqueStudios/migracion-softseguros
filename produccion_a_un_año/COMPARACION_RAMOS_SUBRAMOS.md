@@ -385,26 +385,37 @@ Este documento detalla la equivalencia entre los Ramos del sistema CELER y los S
 
 ## 🟢 Filas que Requieren Revisión Manual (Resaltar en Verde)
 
-Las siguientes combinaciones deben ser **resaltadas en verde claro** en el archivo Excel para revisión manual:
+Se resaltan en **verde claro** todas las filas cuyo RAMO contenga alguna de estas palabras clave:
 
-| Aseguradora | Ramo CELER | Cantidad | Motivo |
-|-------------|------------|----------|--------|
-| ALLIANZ | VIDA INDIVIDUAL | 20 | Verificar subramo correcto |
-| ALLIANZ | VIDA COLECTIVO | 1 | Verificar subramo correcto |
-| SURA VIDA | VIDA INDIVIDUAL | 104 | Verificar subramo correcto |
-| SURA VIDA | SALUD FAMILIAR | 96 | Verificar subramo correcto |
-| SURA VIDA | VIDA GRUPO COLECTIVO | 59 | Verificar subramo correcto |
-| MUNDIAL | RESPONSABILIDAD CIVIL | 53 | Verificar subramo correcto |
-| SBS | RESPONSABILIDAD CIVIL | 10 | Verificar subramo correcto |
-| SBS | INCENDIO | 1 | Verificar subramo correcto |
-| SEGUROS DEL ESTADO | INCENDIO | 1 | Verificar subramo correcto |
-| HDI | VIDA INDIVIDUAL | - | Verificar si existe |
-| AXA | SOAT | 1 | Verificar subramo correcto |
-| COOMEVA | EMERGENCIAS MÉDICAS | 3 | Verificar subramo correcto |
-| PREVISORA | RESPONSABILIDAD CIVIL | 2 | Verificar subramo correcto |
-| PREVISORA | RC SERVIDORES PUBLICOS | 1 | Verificar subramo correcto |
+| Palabra Clave | Descripción |
+|---------------|-------------|
+| **RESPONSABILIDAD CIVIL** | Todos los ramos de RC |
+| **RC** | Cualquier variante de Responsabilidad Civil |
+| **VIDA** | Seguros de vida (individual, colectivo, grupo) |
+| **MEDICINA PREPAGADA** | Medicina prepagada familiar/colectiva |
+| **COLECTIV** | Pólizas colectivas (vida, salud, etc.) |
+| **HOGAR** | Seguros de hogar/residencial |
+| **SALUD** | Seguros de salud |
 
-**Total filas a revisar: ~352**
+### Ramos que se Resaltan Automáticamente:
+
+| Ramo CELER | Palabra Detectada |
+|------------|-------------------|
+| RESPONSABILIDAD CIVIL | RESPONSABILIDAD CIVIL |
+| RC SERVIDORES PUBLICOS | RC |
+| RC CLINICAS Y HOSPITALES | RC |
+| VIDA INDIVIDUAL | VIDA |
+| VIDA COLECTIVO | VIDA, COLECTIV |
+| VIDA GRUPO COLECTIVO | VIDA, COLECTIV |
+| SALUD FAMILIAR | SALUD |
+| SALUD PARA TODOS | SALUD |
+| SALUD COLECTIVA | SALUD, COLECTIV |
+| MEDICINA PREPAGADA FAMILIAR | MEDICINA PREPAGADA |
+| MEDICINA PREPAGADA COLECTIV | MEDICINA PREPAGADA, COLECTIV |
+| MULTIRIESGO RESIDENCIAL | HOGAR (subramo destino) |
+| PLAN COMPLEMENTARIO COLECTIVO | COLECTIV |
+
+**Estimado de filas resaltadas: ~800-1000 pólizas**
 
 ---
 
@@ -426,9 +437,17 @@ Las correcciones aplicadas:
 ```
 Total pólizas:               3,164
 Mapeadas correctamente:      3,164 (100%)
-Requieren revisión manual:     352 (11.1%) - Marcadas en verde
+Requieren revisión manual:   ~800-1000 (25-32%) - Marcadas en verde
 Sin mapeo:                       0 (0%)
 ```
+
+### Criterios de Resaltado Verde:
+- Ramos con "RESPONSABILIDAD CIVIL" o "RC"
+- Ramos con "VIDA"
+- Ramos con "MEDICINA PREPAGADA"
+- Ramos con "COLECTIV" (colectivo/colectiva)
+- Ramos con "HOGAR"
+- Ramos con "SALUD"
 
 ---
 

@@ -154,45 +154,42 @@ MAPEO_RAMOS = {
 # =============================================================================
 # FILAS A RESALTAR EN VERDE (Requieren revisión manual)
 # =============================================================================
-# Combinaciones (Aseguradora, Ramo) que deben resaltarse en verde claro
-RESALTAR_VERDE = {
-    # ALLIANZ
-    ('ALLIANZ SEGUROS S.A', 'VIDA INDIVIDUAL'),
-    ('ALLIANZ SEGUROS S.A', 'VIDA COLECTIVO'),
-    ('LIBERTY SEGUROS S A', 'VIDA INDIVIDUAL'),
-    ('LIBERTY SEGUROS S A', 'VIDA COLECTIVO'),
-    
-    # SURA
-    ('SURAMERICANA S.A.', 'VIDA INDIVIDUAL'),
-    ('SURAMERICANA S.A.', 'SALUD FAMILIAR'),
-    ('SURAMERICANA S.A.', 'VIDA GRUPO COLECTIVO'),
-    
-    # MUNDIAL
-    ('COMPAÑÍA MUNDIAL DE SEGUROS S A', 'RESPONSABILIDAD CIVIL'),
-    
-    # SBS
-    ('SBS SEGUROS COLOMBIA S.A', 'RESPONSABILIDAD CIVIL'),
-    ('SBS SEGUROS COLOMBIA S.A', 'INCENDIO'),
-    
-    # SEGUROS DEL ESTADO
-    ('SEGUROS DEL ESTADO S A', 'INCENDIO'),
-    
-    # HDI
-    ('HDI SEGUROS SA', 'VIDA INDIVIDUAL'),
-    
-    # AXA
-    ('AXA COLPATRIA SEGUROS S.A.', 'SOAT'),
-    
-    # COOMEVA
-    ('COOMEVA', 'EMERGENCIAS MÉDICAS'),
-    
-    # PREVISORA
-    ('LA PREVISORA S A COMPAÑÍA DE SEGUROS', 'RESPONSABILIDAD CIVIL'),
-    ('LA PREVISORA S A COMPAÑÍA DE SEGUROS', 'RC SERVIDORES PUBLICOS'),
-}
+# Palabras clave en el RAMO que indican que la fila debe resaltarse
+# Si el ramo contiene alguna de estas palabras, se resalta en verde
+PALABRAS_RESALTAR = [
+    'RESPONSABILIDAD CIVIL',
+    'RC ',  # Con espacio para evitar falsos positivos
+    'VIDA',
+    'MEDICINA PREPAGADA',
+    'COLECTIV',  # Cubre COLECTIVO y COLECTIVA
+    'HOGAR',
+    'SALUD',
+]
 
 # Color verde claro para resaltar
 VERDE_CLARO = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+
+
+def debe_resaltar_fila(ramo_celer):
+    """
+    Determina si una fila debe resaltarse en verde basándose en el ramo.
+    
+    Args:
+        ramo_celer: Nombre del ramo de CELER
+        
+    Returns:
+        bool: True si debe resaltarse
+    """
+    if not ramo_celer:
+        return False
+    
+    ramo_upper = str(ramo_celer).upper().strip()
+    
+    for palabra in PALABRAS_RESALTAR:
+        if palabra.upper() in ramo_upper:
+            return True
+    
+    return False
 
 
 def letra_a_indice(letra):
@@ -572,8 +569,8 @@ def main():
         aseguradora_celer = str(row_celer.iloc[idx_aseguradora_celer]).strip() if not pd.isna(row_celer.iloc[idx_aseguradora_celer]) else ''
         ramo_celer = str(row_celer.iloc[idx_ramo_celer]).strip() if not pd.isna(row_celer.iloc[idx_ramo_celer]) else ''
         
-        # Verificar si esta fila debe resaltarse en verde
-        debe_resaltar = (aseguradora_celer, ramo_celer) in RESALTAR_VERDE
+        # Verificar si esta fila debe resaltarse en verde (basado en palabras clave del ramo)
+        debe_resaltar = debe_resaltar_fila(ramo_celer)
         
         if debe_resaltar:
             filas_resaltadas += 1
