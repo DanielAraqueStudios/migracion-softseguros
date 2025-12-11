@@ -59,42 +59,53 @@ API_URL = "http://localhost:8000"
 # Crear carpeta output si no existe
 CARPETA_OUTPUT.mkdir(exist_ok=True)
 
+# Carpeta para logs detallados
+CARPETA_LOGS = CARPETA_BASE / 'logs'
+CARPETA_LOGS.mkdir(exist_ok=True)
+
 # Variable global para el proceso de la API
 _api_proceso = None
 
 # =============================================================================
-# MAPEO DE ASEGURADORAS (CELER → MAVISO)
+# MAPEO DE ASEGURADORAS (CELER → MAVISO/SOFTSEGUROS)
 # =============================================================================
-# Aseguradoras que tienen nombre DIFERENTE en MAVISO
+# Nombres EXACTOS según sistema SoftSeguros (usar COMPANIA sin Ñ)
 # Para aseguradoras con versión Generales/Vida, se usa get_aseguradora_maviso()
 MAPEO_ASEGURADORAS = {
-    # LIBERTY y ALLIANZ son la misma compañía → ALLIANZ en MAVISO
+    # LIBERTY y ALLIANZ son la misma compañía → ALLIANZ en SoftSeguros
     'LIBERTY SEGUROS S A': 'ALLIANZ SEGUROS S.A',
     'ALLIANZ SEGUROS S.A': 'ALLIANZ SEGUROS S.A',
-    # Otras equivalencias según documentación
+    # Otras equivalencias - NOMBRES EXACTOS DE SOFTSEGUROS
     'COMPAÑÍA MUNDIAL DE SEGUROS S A': 'SEGUROS MUNDIAL',
     'HDI SEGUROS SA': 'HDI SEGUROS',
     'LA EQUIDAD SEGUROS OC': 'LA EQUIDAD SEGUROS GENERALES',
     'MAPFRE SEGUROS DE COLOMBIA S A': 'MAPFRE SEGUROS GENERALES',
     'COLMENA VIDA Y RIESGOS PROFESIONES SA': 'COLMENA SEGUROS',
-    'SEGUROS BOLIVAR': 'COMPAÑIA DE SEGUROS BOLIVAR SA',
+    'SEGUROS BOLIVAR': 'COMPANIA DE SEGUROS BOLIVAR S.A',
     'CEM': 'COOMEVA EXPERIENCIA MEDICA SAS',
-    'COOMEVA': 'COOMEVA MEDICINA PREPAGADA SA',
+    'COOMEVA': 'COOMEVA MEDICINA PREPAGADA S.A.',
     'ASSIST CARD': 'ASSIST CARD DE COLOMBIA SAS',
-    'MAGENTA SEGUROS LTDA': 'MAGENTA ASISTANCE SAS',
-    'FUNER SAN VICENTE': 'FUNERARIA SAN VICENTE SA',
-    'EMERMÉDICA S.A': 'EMERMEDICA SA SERVICIOS DE AMBULANCIA PREPAGADOS',
-    'MEDISANITAS': 'MEDISANITAS SAS COMPAÑIA DE MEDICINA PREPAGADA',
-    'ASEGURADORA GRANCOLOMBIANA S.A.': 'GRANCOLOMBIANA DE FIANZAS SAS',
+    'MAGENTA SEGUROS LTDA': 'MAGENTA ASISTANCE S.A.S.',
+    'FUNER SAN VICENTE': 'FUNERARIA SAN VICENTE S.A.',
+    'EMERMÉDICA S.A': 'EMERMEDICA S.A SERVICIOS DE AMBULANCIA PREPAGADOS',
+    'MEDISANITAS': 'MEDISANITAS S.A.S COMPANIA DE MEDICINA PREPAGADA',
+    'ASEGURADORA GRANCOLOMBIANA S.A.': 'GRANCOLOMBIANA DE FIANZAS S.A.S',
+    # Aseguradoras que pasan sin cambio pero con nombre exacto SoftSeguros
+    'CHUBB DE COLOMBIA COMPAÑÍA SEGUROS S A': 'CHUBB SEGUROS COLOMBIA S.A.',
+    'COMPAÑIA DE MEDICINA PREPAGADA COLSANITAS S.A': 'COMPANIA DE MEDICINA PREPAGADA COLSANITAS S.A.',
+    'LA PREVISORA S A COMPAÑÍA DE SEGUROS': 'LA PREVISORA S A COMPANIA DE SEGUROS',
+    'POSITIVA COMPAÑIA DE SEGUROS S.A.': 'POSITIVA COMPANIA DE SEGUROS S.A',
+    'ZURICH COLOMBIA SEGUROS S.A': 'ZURICH COLOMBIA SEGUROS SA',
 }
 
 # Aseguradoras con versión GENERALES y VIDA (depende del ramo)
+# NOMBRES EXACTOS DE SOFTSEGUROS
 ASEGURADORAS_CON_VIDA = {
     'ALLIANZ SEGUROS S.A': ('ALLIANZ SEGUROS S.A', 'ALLIANZ SEGUROS DE VIDA S.A'),
     'LIBERTY SEGUROS S A': ('ALLIANZ SEGUROS S.A', 'ALLIANZ SEGUROS DE VIDA S.A'),
-    'SURAMERICANA S.A.': ('SEGUROS GENERALES SURAMERICANA S A', 'SEGUROS DE VIDA SURAMERICANA SA'),
-    'AXA COLPATRIA SEGUROS S.A.': ('AXA COLPATRIA SEGUROS SA', 'AXA COLPATRIA SEGUROS DE VIDA SA'),
-    'SEGUROS DEL ESTADO S A': ('SEGUROS DEL ESTADO SA', 'SEGUROS DE VIDA DEL ESTADO'),
+    'SURAMERICANA S.A.': ('SEGUROS GENERALES SURAMERICANA S.A.', 'SEGUROS DE VIDA SURAMERICANA S.A.'),
+    'AXA COLPATRIA SEGUROS S.A.': ('AXA COLPATRIA SEGUROS S.A', 'AXA COLPATRIA SEGUROS DE VIDA S.A'),
+    'SEGUROS DEL ESTADO S A': ('SEGUROS DEL ESTADO S.A', 'SEGUROS DE VIDA DEL ESTADO'),
 }
 
 # Ramos que son de VIDA (para determinar si usar aseguradora Generales o Vida)
@@ -555,54 +566,86 @@ def main():
         }
     
     # 5. Mapeo de columnas (índice 0-based de CELER → letra columna Maviso)
+    # MAVISO: C=CELER(cod), D=ASEGURADORA, E=CELER(cod), F=SUBRAMO
     mapeo = {
-        'A': (20, 'Póliza'),           # U
-        'B': (30, 'Placa'),            # AE
-        'C': (17, 'Aseguradora'),      # R
-        'E': (18, 'Ramo'),             # S
-        'J': (56, 'Ejecutivos'),       # BE (Nombre del vendedor)
-        'K': (22, 'F_Inicio'),         # W
-        'L': (23, 'F_Fin'),            # X
-        'O': (42, 'prima sin iva'),    # AQ
-        'X': (41, 'V_Asegurado'),      # AP
-        'AB': (2, 'Identificacion'),   # C (Documento del cliente)
-        'AC': (0, 'Tipo_Persona'),     # A
-        'AD': (1, 'Tomador'),          # B
-        'AE': (2, 'Identificacion'),   # C (Documento del tomador)
-        'AF': (44, 'Asegurado'),       # AS
-        'AG': (45, 'Iden_Asegurado'),  # AT
-        'AH': (48, 'Beneficiario'),    # AW
-        'AI': (49, 'Iden_Beneficiario') # AX
+        'A': (20, 'Póliza'),             # CELER U
+        'B': (30, 'Placa'),              # CELER AE
+        'C': (16, 'Cod_Aseguradora'),    # CELER Q (Código aseguradora)
+        'D': (17, 'Aseguradora'),        # CELER R (Nombre aseguradora) - con mapeo
+        'E': (19, 'Cod_Ramo'),           # CELER T (Código ramo)
+        'F': (18, 'Ramo'),               # CELER S (Nombre ramo) - con mapeo
+        'J': (56, 'Ejecutivos'),         # CELER BE (Nombre del vendedor)
+        'K': (22, 'F_Inicio'),           # CELER W
+        'L': (23, 'F_Fin'),              # CELER X
+        'O': (42, 'prima sin iva'),      # CELER AQ
+        'X': (41, 'V_Asegurado'),        # CELER AP
+        'AB': (2, 'Identificacion'),     # CELER C (Documento del cliente)
+        'AC': (0, 'Tipo_Persona'),       # CELER A
+        'AD': (1, 'Tomador'),            # CELER B
+        'AE': (2, 'Identificacion'),     # CELER C (Documento del tomador)
+        'AF': (44, 'Asegurado'),         # CELER AS
+        'AG': (45, 'Iden_Asegurado'),    # CELER AT
+        'AH': (48, 'Beneficiario'),      # CELER AW
+        'AI': (49, 'Iden_Beneficiario')  # CELER AX
     }
     
     # Índices de columnas CELER importantes
     idx_forma_pago_celer = 27  # AB
+    idx_cod_aseguradora_celer = 16  # Q
     idx_aseguradora_celer = 17  # R
     idx_ramo_celer = 18  # S
+    idx_cod_ramo_celer = 19  # T
     
     # Columnas Maviso para resaltar
-    col_c_maviso = letra_a_indice('C') + 1  # Aseguradora
-    col_e_maviso = letra_a_indice('E') + 1  # Ramo
+    col_c_maviso = letra_a_indice('C') + 1  # Código Aseguradora
+    col_d_maviso = letra_a_indice('D') + 1  # Aseguradora
+    col_e_maviso = letra_a_indice('E') + 1  # Código Ramo
+    col_f_maviso = letra_a_indice('F') + 1  # Subramo
     
     logger.info("Preparando datos para migración...")
+    
+    # =========================================================================
+    # ARCHIVO DE LOG DETALLADO
+    # =========================================================================
+    timestamp_log = datetime.now().strftime('%Y%m%d_%H%M%S')
+    archivo_log = CARPETA_LOGS / f'migracion_detalle_{timestamp_log}.csv'
+    
+    # Crear archivo CSV para log detallado
+    with open(archivo_log, 'w', encoding='utf-8') as f_log:
+        f_log.write("Fila,CELER_Cod_Aseguradora,MAVISO_C,CELER_Aseguradora,MAVISO_D,CELER_Cod_Ramo,MAVISO_E,CELER_Ramo,MAVISO_F,Resaltado\n")
+    
+    logger.info(f"📝 Log detallado: {archivo_log}")
     
     # 6. Llenar datos desde CELER
     logger.info("Llenando datos desde CELER...")
     filas_procesadas = 0
     filas_resaltadas = 0
     
+    # Lista para acumular logs (escribir en lotes)
+    logs_detalle = []
+    
     for idx_celer, row_celer in df_celer.iterrows():
         fila_maviso = idx_celer + 2  # +2 porque fila 1 es encabezado y df empieza en 0
         
-        # Obtener aseguradora y ramo originales de CELER
+        # Obtener valores originales de CELER para las columnas C, D, E, F
+        cod_aseguradora_celer = str(row_celer.iloc[idx_cod_aseguradora_celer]).strip() if not pd.isna(row_celer.iloc[idx_cod_aseguradora_celer]) else ''
         aseguradora_celer = str(row_celer.iloc[idx_aseguradora_celer]).strip() if not pd.isna(row_celer.iloc[idx_aseguradora_celer]) else ''
+        cod_ramo_celer = str(row_celer.iloc[idx_cod_ramo_celer]).strip() if not pd.isna(row_celer.iloc[idx_cod_ramo_celer]) else ''
         ramo_celer = str(row_celer.iloc[idx_ramo_celer]).strip() if not pd.isna(row_celer.iloc[idx_ramo_celer]) else ''
+        
+        # Calcular valores MAVISO (con mapeos aplicados)
+        aseguradora_maviso = get_aseguradora_maviso(aseguradora_celer, ramo_celer)
+        ramo_maviso = MAPEO_RAMOS.get(ramo_celer, ramo_celer)
         
         # Verificar si esta fila debe resaltarse en verde (basado en palabras clave del ramo)
         debe_resaltar = debe_resaltar_fila(ramo_celer)
         
         if debe_resaltar:
             filas_resaltadas += 1
+        
+        # Guardar log detallado
+        log_entry = f'{fila_maviso},"{cod_aseguradora_celer}","{cod_aseguradora_celer}","{aseguradora_celer}","{aseguradora_maviso}","{cod_ramo_celer}","{cod_ramo_celer}","{ramo_celer}","{ramo_maviso}",{debe_resaltar}'
+        logs_detalle.append(log_entry)
         
         # Aplicar mapeo directo
         for letra_maviso, (idx_col_celer, descripcion) in mapeo.items():
@@ -617,15 +660,17 @@ def main():
                 # ============================================
                 # APLICAR MAPEOS DE ASEGURADORA Y RAMO
                 # ============================================
-                if letra_maviso == 'C':  # Columna Aseguradora
-                    valor_str = str(valor).strip()
-                    # Usar función que determina Generales vs Vida según el ramo
-                    valor = get_aseguradora_maviso(valor_str, ramo_celer)
+                if letra_maviso == 'C':  # Columna Código Aseguradora - SIN MAPEO
+                    valor = cod_aseguradora_celer
                 
-                elif letra_maviso == 'E':  # Columna Ramo
-                    valor_str = str(valor).strip()
-                    if valor_str in MAPEO_RAMOS:
-                        valor = MAPEO_RAMOS[valor_str]
+                elif letra_maviso == 'D':  # Columna Aseguradora - CON MAPEO
+                    valor = aseguradora_maviso
+                
+                elif letra_maviso == 'E':  # Columna Código Ramo - SIN MAPEO
+                    valor = cod_ramo_celer
+                
+                elif letra_maviso == 'F':  # Columna Subramo - CON MAPEO
+                    valor = ramo_maviso
                 
                 # Escribir en Maviso
                 cell = ws.cell(row=fila_maviso, column=col_maviso)
@@ -667,6 +712,11 @@ def main():
         if filas_procesadas % 500 == 0:
             logger.info(f"  Procesadas {filas_procesadas} filas...")
     
+    # Escribir logs detallados a archivo
+    logger.info("📝 Guardando log detallado...")
+    with open(archivo_log, 'a', encoding='utf-8') as f_log:
+        f_log.write('\n'.join(logs_detalle))
+    
     # 7. Guardar archivo
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     archivo_salida = CARPETA_OUTPUT / f'Maviso_llenado_{timestamp}.xlsx'
@@ -679,6 +729,7 @@ def main():
     logger.info(f"   Filas procesadas: {filas_procesadas}")
     logger.info(f"   🟢 Filas resaltadas (revisión manual): {filas_resaltadas}")
     logger.info(f"   Archivo generado: {archivo_salida}")
+    logger.info(f"   📝 Log detallado: {archivo_log}")
     logger.info("=" * 60)
     
     return archivo_salida
