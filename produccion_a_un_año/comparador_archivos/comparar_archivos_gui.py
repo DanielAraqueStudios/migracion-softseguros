@@ -602,11 +602,19 @@ class TabMavisoVsCeler(QWidget):
         layout_btns_log = QHBoxLayout()
         btn_limpiar = QPushButton("🗑️ Limpiar")
         btn_limpiar.clicked.connect(self.limpiar_logs)
+        
+        self.btn_corregir = QPushButton("🔧 Corregir Modalidades")
+        self.btn_corregir.setObjectName("btnCorregir")
+        self.btn_corregir.clicked.connect(self.corregir_modalidades)
+        self.btn_corregir.setEnabled(False)
+        self.btn_corregir.setToolTip("Actualiza las modalidades en MAVISO para que coincidan con CELER")
+        
         self.btn_exportar = QPushButton("📊 Exportar Reporte")
         self.btn_exportar.setObjectName("btnExportar")
         self.btn_exportar.clicked.connect(self.exportar_reporte)
         self.btn_exportar.setEnabled(False)
         layout_btns_log.addWidget(btn_limpiar)
+        layout_btns_log.addWidget(self.btn_corregir)
         layout_btns_log.addStretch()
         layout_btns_log.addWidget(self.btn_exportar)
         layout_logs.addLayout(layout_btns_log)
@@ -681,6 +689,7 @@ class TabMavisoVsCeler(QWidget):
             self.log("=" * 50, "success")
             
             self.btn_exportar.setEnabled(True)
+            self.btn_corregir.setEnabled(True)
         else:
             self.log(f"❌ Error: {mensaje}", "error")
     
@@ -708,6 +717,110 @@ class TabMavisoVsCeler(QWidget):
     
     def limpiar_logs(self):
         self.txt_logs.clear()
+    
+    def corregir_modalidades(self):
+        """Corrige las modalidades en MAVISO para que coincidan con CELER"""
+        if not self.ruta_maviso or not self.comparador.resultados:
+            QMessageBox.warning(self, "Advertencia", "Debe ejecutar la comparación primero")
+            return
+        
+        respuesta = QMessageBox.question(
+            self,
+            "Confirmar Corrección",
+            "¿Desea actualizar las modalidades en MAVISO para que coincidan con CELER?\n\n"
+            "CELER se usará como fuente correcta.\n"
+            "Se creará un archivo nuevo con los cambios.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if respuesta != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            self.log("", "info")
+            self.log("🔧 Iniciando corrección de modalidades...", "info")
+            
+            # Cargar MAVISO
+            df_maviso = pd.read_excel(self.ruta_maviso)
+            self.log(f"📂 Archivo MAVISO cargado: {len(df_maviso)} registros", "info")
+            
+            # Cargar CELER
+            df_celer = pd.read_excel(self.ruta_celer, skiprows=3)
+            self.log(f"📂 Archivo CELER cargado: {len(df_celer)} registros", "info")
+            
+            # Columnas
+            MAVISO_COL_POLIZA = 0
+            MAVISO_COL_MODALIDAD = 21
+            CELER_COL_POLIZA = 20
+            CELER_COL_MODALIDAD = 27
+            
+            # Crear diccionario de CELER
+            celer_dict = {}
+            for idx, row in df_celer.iterrows():
+                poliza = str(row.iloc[CELER_COL_POLIZA]).strip()
+                modalidad = str(row.iloc[CELER_COL_MODALIDAD]).strip().upper()
+                celer_dict[poliza] = modalidad
+            
+            # Corregir MAVISO
+            cambios = []
+            for idx, row in df_maviso.iterrows():
+                poliza = str(row.iloc[MAVISO_COL_POLIZA]).strip()
+                modalidad_maviso = str(row.iloc[MAVISO_COL_MODALIDAD]).strip().upper()
+                
+                if poliza in celer_dict:
+                    modalidad_celer = celer_dict[poliza]
+                    if modalidad_maviso != modalidad_celer and modalidad_celer in ['MENSUAL', 'ANUAL']:
+                        # Actualizar
+                        df_maviso.at[idx, df_maviso.columns[MAVISO_COL_MODALIDAD]] = modalidad_celer
+                        cambios.append({
+                            'poliza': poliza,
+                            'fila': idx + 2,
+                            'anterior': modalidad_maviso,
+                            'nuevo': modalidad_celer
+                        })
+            
+            if len(cambios) == 0:
+                self.log("✅ No se encontraron discrepancias de modalidad para corregir", "success")
+                QMessageBox.information(self, "Información", "No hay cambios necesarios.")
+                return
+            
+            # Guardar archivo corregido
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            ruta_base = Path(self.ruta_maviso)
+            ruta_salida = ruta_base.parent / f"{ruta_base.stem}_modalidades_corregidas_{timestamp}.xlsx"
+            
+            df_maviso.to_excel(ruta_salida, index=False)
+            
+            self.log(f"\n✅ Corrección completada:", "success")
+            self.log(f"   Cambios realizados: {len(cambios)}", "success")
+            self.log(f"   Archivo guardado: {ruta_salida.name}", "success")
+            
+            # Mostrar resumen
+            self.log("\n📋 Resumen de cambios:", "info")
+            for i, cambio in enumerate(cambios[:10], 1):
+                self.log(
+                    f"   {i}. Póliza {cambio['poliza']} (Fila {cambio['fila']}): "
+                    f"{cambio['anterior']} → {cambio['nuevo']}",
+                    "warning"
+                )
+            
+            if len(cambios) > 10:
+                self.log(f"   ... y {len(cambios) - 10} cambios más", "info")
+            
+            QMessageBox.information(
+                self,
+                "Corrección Exitosa",
+                f"Se corrigieron {len(cambios)} modalidades.\n\n"
+                f"Archivo guardado en:\n{ruta_salida}"
+            )
+            
+            # Abrir archivo
+            if os.name == 'nt':
+                os.startfile(ruta_salida)
+            
+        except Exception as e:
+            self.log(f"❌ Error al corregir: {str(e)}", "error")
+            QMessageBox.critical(self, "Error", f"Error al corregir modalidades:\n{str(e)}")
 
 
 class ComparadorGUI(QMainWindow):
