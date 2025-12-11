@@ -4,10 +4,12 @@ Comparador de Archivos - Interfaz Gráfica con Pestañas
 GUI para comparar archivos Excel:
 - Pestaña 1: Maviso Manual vs Maviso Generado
 - Pestaña 2: Maviso vs CELER (validar datos originales)
+- Pestaña 3: Validar Mensuales sin Prima
 """
 
 import sys
 from pathlib import Path
+from datetime import datetime
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QTextEdit, QFileDialog, QGroupBox,
@@ -17,6 +19,7 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QPalette
 import subprocess
 import os
+import pandas as pd
 
 from comparar_archivos import ComparadorMaviso
 from comparar_maviso_celer import ComparadorMavisoCeler
@@ -735,6 +738,310 @@ class ComparadorGUI(QMainWindow):
         # Pestaña 2: Maviso vs CELER
         self.tab_celer = TabMavisoVsCeler()
         self.tabs.addTab(self.tab_celer, "🔄 Maviso vs CELER")
+        
+        # Pestaña 3: Validar Mensuales sin Prima
+        self.tab_validar = TabValidarMensuales()
+        self.tabs.addTab(self.tab_validar, "⚠️ Validar Mensuales sin Prima")
+        
+        layout.addWidget(self.tabs)
+
+
+# ==================================================================================
+# Thread para Validación de Mensuales
+# ==================================================================================
+
+class ValidadorThread(QThread):
+    """Thread para ejecutar validación sin bloquear la GUI"""
+    log = pyqtSignal(str)
+    terminado = pyqtSignal(bool, str, dict)
+    
+    def __init__(self, ruta_archivo):
+        super().__init__()
+        self.ruta_archivo = ruta_archivo
+    
+    def run(self):
+        try:
+            # Configuración de columnas
+            COL_POLIZA = 0
+            COL_PRIMA = 14
+            COL_MODALIDAD = 21
+            
+            self.log.emit("📂 Cargando archivo...")
+            df = pd.read_excel(self.ruta_archivo)
+            self.log.emit(f"   Total registros: {len(df)}")
+            
+            # Filtrar MENSUALES
+            self.log.emit("\n🔍 Filtrando pólizas MENSUALES (Col 21)...")
+            mask_mensual = df.iloc[:, COL_MODALIDAD].astype(str).str.strip().str.upper() == 'MENSUAL'
+            df_mensuales = df[mask_mensual]
+            self.log.emit(f"   Pólizas MENSUALES: {len(df_mensuales)}")
+            
+            # Filtrar prima = 0
+            self.log.emit("\n🔍 Filtrando pólizas con Prima = 0 (Col 14)...")
+            mask_prima_cero = df_mensuales.iloc[:, COL_PRIMA].fillna(0) == 0
+            df_problema = df_mensuales[mask_prima_cero]
+            self.log.emit(f"   MENSUALES con Prima = 0: {len(df_problema)}")
+            
+            # Preparar estadísticas
+            stats = {
+                'total': len(df),
+                'mensuales': len(df_mensuales),
+                'problematicas': len(df_problema),
+                'porcentaje': len(df_problema)/len(df_mensuales)*100 if len(df_mensuales) > 0 else 0,
+                'df_problema': df_problema
+            }
+            
+            self.log.emit("\n✅ Validación completada")
+            self.terminado.emit(True, "Validación exitosa", stats)
+            
+        except Exception as e:
+            self.log.emit(f"\n❌ Error: {str(e)}")
+            self.terminado.emit(False, f"Error: {str(e)}", {})
+
+
+# ==================================================================================
+# Pestaña: Validar Mensuales sin Prima
+# ==================================================================================
+
+class TabValidarMensuales(QWidget):
+    """Pestaña para validar pólizas mensuales sin prima"""
+    
+    def __init__(self):
+        super().__init__()
+        self.ruta_archivo = None
+        self.validador_thread = None
+        self.df_resultados = None
+        self.inicializar_ui()
+    
+    def inicializar_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setSpacing(15)
+        
+        # Título
+        titulo = QLabel("⚠️ Validación de Pólizas MENSUALES sin Prima")
+        titulo.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(titulo)
+        
+        # Grupo: Selección de archivo
+        grupo_archivo = QGroupBox("📁 Archivo a Validar")
+        grupo_archivo.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        layout_archivo = QVBoxLayout()
+        
+        layout_btn_archivo = QHBoxLayout()
+        self.btn_seleccionar = QPushButton("📂 Seleccionar Archivo MAVISO")
+        self.btn_seleccionar.clicked.connect(self.seleccionar_archivo)
+        self.btn_seleccionar.setMinimumHeight(40)
+        layout_btn_archivo.addWidget(self.btn_seleccionar)
+        
+        self.lbl_archivo = QLabel("Ningún archivo seleccionado")
+        self.lbl_archivo.setWordWrap(True)
+        self.lbl_archivo.setStyleSheet("padding: 8px; background-color: #2d2d2d; border-radius: 4px;")
+        
+        layout_archivo.addLayout(layout_btn_archivo)
+        layout_archivo.addWidget(self.lbl_archivo)
+        grupo_archivo.setLayout(layout_archivo)
+        layout.addWidget(grupo_archivo)
+        
+        # Grupo: Estadísticas
+        grupo_stats = QGroupBox("📊 Estadísticas")
+        grupo_stats.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        layout_stats = QVBoxLayout()
+        
+        self.lbl_total = QLabel("Total pólizas: -")
+        self.lbl_mensuales = QLabel("Pólizas MENSUALES: -")
+        self.lbl_problematicas = QLabel("MENSUALES sin prima: -")
+        self.lbl_porcentaje = QLabel("Porcentaje: -")
+        
+        for lbl in [self.lbl_total, self.lbl_mensuales, self.lbl_problematicas, self.lbl_porcentaje]:
+            lbl.setFont(QFont("Segoe UI", 10))
+            layout_stats.addWidget(lbl)
+        
+        grupo_stats.setLayout(layout_stats)
+        layout.addWidget(grupo_stats)
+        
+        # Botones de acción
+        layout_botones = QHBoxLayout()
+        
+        self.btn_validar = QPushButton("🔍 Validar")
+        self.btn_validar.setEnabled(False)
+        self.btn_validar.clicked.connect(self.validar)
+        self.btn_validar.setMinimumHeight(45)
+        self.btn_validar.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        
+        self.btn_exportar = QPushButton("💾 Exportar Resultados")
+        self.btn_exportar.setEnabled(False)
+        self.btn_exportar.clicked.connect(self.exportar_resultados)
+        self.btn_exportar.setMinimumHeight(45)
+        
+        layout_botones.addWidget(self.btn_validar, 2)
+        layout_botones.addWidget(self.btn_exportar, 1)
+        layout.addLayout(layout_botones)
+        
+        # Log
+        grupo_log = QGroupBox("📋 Registro de Actividad")
+        grupo_log.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        layout_log = QVBoxLayout()
+        
+        self.log_text = QTextEdit()
+        self.log_text.setReadOnly(True)
+        self.log_text.setFont(QFont("Consolas", 9))
+        self.log_text.setMinimumHeight(200)
+        
+        layout_log.addWidget(self.log_text)
+        grupo_log.setLayout(layout_log)
+        layout.addWidget(grupo_log)
+        
+        # Barra de progreso
+        self.progress = QProgressBar()
+        self.progress.setVisible(False)
+        self.progress.setTextVisible(False)
+        layout.addWidget(self.progress)
+    
+    def seleccionar_archivo(self):
+        """Selecciona el archivo a validar"""
+        ruta, _ = QFileDialog.getOpenFileName(
+            self,
+            "Seleccionar archivo MAVISO",
+            "../output",
+            "Archivos Excel (*.xlsx *.xls)"
+        )
+        
+        if ruta:
+            self.ruta_archivo = ruta
+            nombre = Path(ruta).name
+            self.lbl_archivo.setText(f"📄 {nombre}")
+            self.btn_validar.setEnabled(True)
+            self.agregar_log(f"Archivo seleccionado: {nombre}")
+    
+    def validar(self):
+        """Ejecuta la validación"""
+        if not self.ruta_archivo:
+            QMessageBox.warning(self, "Advertencia", "Debe seleccionar un archivo primero")
+            return
+        
+        self.btn_validar.setEnabled(False)
+        self.btn_exportar.setEnabled(False)
+        self.progress.setVisible(True)
+        self.progress.setRange(0, 0)  # Modo indeterminado
+        self.log_text.clear()
+        
+        # Limpiar estadísticas
+        self.lbl_total.setText("Total pólizas: Validando...")
+        self.lbl_mensuales.setText("Pólizas MENSUALES: Validando...")
+        self.lbl_problematicas.setText("MENSUALES sin prima: Validando...")
+        self.lbl_porcentaje.setText("Porcentaje: Validando...")
+        
+        # Iniciar thread
+        self.validador_thread = ValidadorThread(self.ruta_archivo)
+        self.validador_thread.log.connect(self.agregar_log)
+        self.validador_thread.terminado.connect(self.validacion_terminada)
+        self.validador_thread.start()
+    
+    def validacion_terminada(self, exito, mensaje, stats):
+        """Callback cuando termina la validación"""
+        self.progress.setVisible(False)
+        self.btn_validar.setEnabled(True)
+        
+        if exito:
+            # Actualizar estadísticas
+            self.lbl_total.setText(f"Total pólizas: {stats['total']:,}")
+            self.lbl_mensuales.setText(f"Pólizas MENSUALES: {stats['mensuales']:,}")
+            self.lbl_problematicas.setText(f"MENSUALES sin prima: {stats['problematicas']:,}")
+            self.lbl_porcentaje.setText(f"Porcentaje: {stats['porcentaje']:.1f}%")
+            
+            # Guardar resultados
+            self.df_resultados = stats.get('df_problema')
+            self.btn_exportar.setEnabled(len(self.df_resultados) > 0 if self.df_resultados is not None else False)
+            
+            if stats['problematicas'] > 0:
+                self.agregar_log(f"\n⚠️ Se encontraron {stats['problematicas']} pólizas problemáticas")
+            else:
+                self.agregar_log("\n✅ No se encontraron problemas")
+        else:
+            QMessageBox.critical(self, "Error", mensaje)
+    
+    def exportar_resultados(self):
+        """Exporta los resultados a Excel"""
+        if self.df_resultados is None or len(self.df_resultados) == 0:
+            QMessageBox.warning(self, "Advertencia", "No hay resultados para exportar")
+            return
+        
+        try:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            archivo_salida = Path('../output') / f'mensuales_sin_prima_{timestamp}.xlsx'
+            
+            # Preparar datos
+            resultado = pd.DataFrame({
+                'Póliza': self.df_resultados.iloc[:, 0],
+                'Prima Neta': self.df_resultados.iloc[:, 14],
+                'Modalidad': self.df_resultados.iloc[:, 21],
+                'Fila Excel': self.df_resultados.index + 2,
+                'Placa': self.df_resultados.iloc[:, 1],
+                'Asegurado': self.df_resultados.iloc[:, 2],
+                'Fecha Inicio': self.df_resultados.iloc[:, 10],
+                'Fecha Fin': self.df_resultados.iloc[:, 11],
+            })
+            
+            resultado.to_excel(archivo_salida, index=False)
+            self.agregar_log(f"\n💾 Reporte exportado: {archivo_salida.name}")
+            
+            QMessageBox.information(
+                self,
+                "Éxito",
+                f"Reporte exportado correctamente:\n{archivo_salida}"
+            )
+            
+            # Abrir archivo
+            if os.name == 'nt':
+                os.startfile(archivo_salida)
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error al exportar:\n{str(e)}")
+    
+    def agregar_log(self, mensaje):
+        """Agrega mensaje al log"""
+        self.log_text.append(mensaje)
+        self.log_text.verticalScrollBar().setValue(
+            self.log_text.verticalScrollBar().maximum()
+        )
+
+
+# ==================================================================================
+# Ventana Principal
+# ==================================================================================
+
+class ComparadorGUI(QMainWindow):
+    """Ventana principal con pestañas"""
+    
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Comparador de Archivos - SoftSeguros")
+        self.setMinimumSize(1000, 800)
+        
+        # Aplicar estilos
+        self.setStyleSheet(DARK_STYLE)
+        
+        # Widget central
+        central = QWidget()
+        self.setCentralWidget(central)
+        layout = QVBoxLayout(central)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Crear pestañas
+        self.tabs = QTabWidget()
+        
+        # Pestaña 1: Maviso vs Maviso
+        self.tab_maviso = TabMavisoVsMaviso()
+        self.tabs.addTab(self.tab_maviso, "📊 Maviso Manual vs Generado")
+        
+        # Pestaña 2: Maviso vs CELER
+        self.tab_celer = TabMavisoVsCeler()
+        self.tabs.addTab(self.tab_celer, "🔄 Maviso vs CELER")
+        
+        # Pestaña 3: Validar Mensuales sin Prima
+        self.tab_validar = TabValidarMensuales()
+        self.tabs.addTab(self.tab_validar, "⚠️ Validar Mensuales sin Prima")
         
         layout.addWidget(self.tabs)
 

@@ -34,7 +34,7 @@ CELER_COL_POLIZA = 20       # Póliza
 CELER_COL_PRIMA = 42        # Prima sin IVA
 CELER_COL_FECHA_INICIO = 22 # F_Inicio
 CELER_COL_FECHA_FIN = 23    # F_Fin
-CELER_COL_MODALIDAD = 26    # Modalidad
+CELER_COL_MODALIDAD = 27    # Forma_Pago (col AB: MENSUAL/ANUAL)
 
 # ============================================
 # COLUMNAS MAVISO
@@ -43,7 +43,7 @@ MAVISO_COL_POLIZA = 0       # NÚMERO DE PÓLIZA
 MAVISO_COL_PRIMA = 14       # PRIMA NETA
 MAVISO_COL_FECHA_INICIO = 10 # FECHA INICIO
 MAVISO_COL_FECHA_FIN = 11    # FECHA FIN
-MAVISO_COL_FORMA_PAGO = 22   # FORMA PAGO
+MAVISO_COL_MODALIDAD = 21    # CELER.1 (col V: MENSUAL/ANUAL)
 
 # Estilos para Excel
 HEADER_FILL = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
@@ -71,6 +71,11 @@ class ComparadorMavisoCeler:
     def cargar_maviso(self, ruta: str) -> Tuple[bool, str]:
         """Carga el archivo Maviso (modificado manualmente)"""
         try:
+            # Si la ruta no está especificada o es relativa, usar archivo por defecto
+            if not ruta or ruta == '../Copy of Maviso.xlsx':
+                ruta = '../output/MASIVO_NO_TERMINADO_YULIANA.xlsx'
+                logger.info(f"Usando archivo MAVISO por defecto: {ruta}")
+            
             ruta_path = Path(ruta)
             if not ruta_path.exists():
                 return False, f"Archivo no encontrado: {ruta}"
@@ -191,7 +196,7 @@ class ComparadorMavisoCeler:
                     'prima': row.iloc[MAVISO_COL_PRIMA],
                     'fecha_inicio': row.iloc[MAVISO_COL_FECHA_INICIO],
                     'fecha_fin': row.iloc[MAVISO_COL_FECHA_FIN],
-                    'forma_pago': row.iloc[MAVISO_COL_FORMA_PAGO]
+                    'modalidad': row.iloc[MAVISO_COL_MODALIDAD]
                 }
         
         # Estadísticas
@@ -234,7 +239,13 @@ class ComparadorMavisoCeler:
                         'celer': self._normalizar_valor(datos_celer['fecha_fin'])
                     })
                 
-                # NOTA: Modalidad/Forma de pago NO se compara
+                # Modalidad (MENSUAL/ANUAL)
+                if not self._comparar_valores(datos_celer['modalidad'], datos_maviso['modalidad']):
+                    errores.append({
+                        'campo': 'Modalidad',
+                        'maviso': self._normalizar_valor(datos_maviso['modalidad']),
+                        'celer': self._normalizar_valor(datos_celer['modalidad'])
+                    })
                 
                 if errores:
                     discrepancias.append({
