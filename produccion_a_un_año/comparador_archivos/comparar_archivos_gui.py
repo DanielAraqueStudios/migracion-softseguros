@@ -729,7 +729,7 @@ class TabMavisoVsCeler(QWidget):
             "Confirmar Corrección",
             "¿Desea actualizar las modalidades en MAVISO para que coincidan con CELER?\n\n"
             "CELER se usará como fuente correcta.\n"
-            "Se creará un archivo nuevo con los cambios.",
+            "⚠️ Se modificará el archivo original manteniendo formato y colores.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
@@ -740,19 +740,15 @@ class TabMavisoVsCeler(QWidget):
             self.log("", "info")
             self.log("🔧 Iniciando corrección de modalidades...", "info")
             
-            # Cargar MAVISO
-            df_maviso = pd.read_excel(self.ruta_maviso)
-            self.log(f"📂 Archivo MAVISO cargado: {len(df_maviso)} registros", "info")
-            
-            # Cargar CELER
+            # Cargar CELER con pandas para crear diccionario
             df_celer = pd.read_excel(self.ruta_celer, skiprows=3)
             self.log(f"📂 Archivo CELER cargado: {len(df_celer)} registros", "info")
             
             # Columnas
-            MAVISO_COL_POLIZA = 0
-            MAVISO_COL_MODALIDAD = 21
-            CELER_COL_POLIZA = 20
-            CELER_COL_MODALIDAD = 27
+            MAVISO_COL_POLIZA = 0  # Columna A (índice 0)
+            MAVISO_COL_MODALIDAD = 21  # Columna V (índice 21)
+            CELER_COL_POLIZA = 20  # Columna U
+            CELER_COL_MODALIDAD = 27  # Columna AB
             
             # Crear diccionario de CELER
             celer_dict = {}
@@ -761,20 +757,34 @@ class TabMavisoVsCeler(QWidget):
                 modalidad = str(row.iloc[CELER_COL_MODALIDAD]).strip().upper()
                 celer_dict[poliza] = modalidad
             
-            # Corregir MAVISO
+            self.log(f"📋 Diccionario CELER creado: {len(celer_dict)} pólizas", "info")
+            
+            # Cargar MAVISO con openpyxl para mantener formato
+            from openpyxl import load_workbook
+            wb = load_workbook(self.ruta_maviso)
+            ws = wb.active
+            
+            total_filas = ws.max_row
+            self.log(f"📂 Archivo MAVISO cargado: {total_filas - 1} registros", "info")
+            
+            # Corregir MAVISO manteniendo formato
             cambios = []
-            for idx, row in df_maviso.iterrows():
-                poliza = str(row.iloc[MAVISO_COL_POLIZA]).strip()
-                modalidad_maviso = str(row.iloc[MAVISO_COL_MODALIDAD]).strip().upper()
+            for fila in range(2, total_filas + 1):  # Empezar desde fila 2 (después del encabezado)
+                # Columna A = 1, Columna V = 22 (en openpyxl las columnas empiezan en 1)
+                celda_poliza = ws.cell(row=fila, column=MAVISO_COL_POLIZA + 1)
+                celda_modalidad = ws.cell(row=fila, column=MAVISO_COL_MODALIDAD + 1)
+                
+                poliza = str(celda_poliza.value).strip() if celda_poliza.value else ""
+                modalidad_maviso = str(celda_modalidad.value).strip().upper() if celda_modalidad.value else ""
                 
                 if poliza in celer_dict:
                     modalidad_celer = celer_dict[poliza]
                     if modalidad_maviso != modalidad_celer and modalidad_celer in ['MENSUAL', 'ANUAL']:
-                        # Actualizar
-                        df_maviso.at[idx, df_maviso.columns[MAVISO_COL_MODALIDAD]] = modalidad_celer
+                        # Actualizar solo el valor, manteniendo formato
+                        celda_modalidad.value = modalidad_celer
                         cambios.append({
                             'poliza': poliza,
-                            'fila': idx + 2,
+                            'fila': fila,
                             'anterior': modalidad_maviso,
                             'nuevo': modalidad_celer
                         })
@@ -782,18 +792,16 @@ class TabMavisoVsCeler(QWidget):
             if len(cambios) == 0:
                 self.log("✅ No se encontraron discrepancias de modalidad para corregir", "success")
                 QMessageBox.information(self, "Información", "No hay cambios necesarios.")
+                wb.close()
                 return
             
-            # Guardar archivo corregido
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            ruta_base = Path(self.ruta_maviso)
-            ruta_salida = ruta_base.parent / f"{ruta_base.stem}_modalidades_corregidas_{timestamp}.xlsx"
-            
-            df_maviso.to_excel(ruta_salida, index=False)
+            # Guardar archivo sobrescribiendo el original
+            wb.save(self.ruta_maviso)
+            wb.close()
             
             self.log(f"\n✅ Corrección completada:", "success")
             self.log(f"   Cambios realizados: {len(cambios)}", "success")
-            self.log(f"   Archivo guardado: {ruta_salida.name}", "success")
+            self.log(f"   Archivo actualizado: {Path(self.ruta_maviso).name}", "success")
             
             # Mostrar resumen
             self.log("\n📋 Resumen de cambios:", "info")
@@ -811,12 +819,12 @@ class TabMavisoVsCeler(QWidget):
                 self,
                 "Corrección Exitosa",
                 f"Se corrigieron {len(cambios)} modalidades.\n\n"
-                f"Archivo guardado en:\n{ruta_salida}"
+                f"El archivo original ha sido actualizado manteniendo su formato."
             )
             
             # Abrir archivo
             if os.name == 'nt':
-                os.startfile(ruta_salida)
+                os.startfile(self.ruta_maviso)
             
         except Exception as e:
             self.log(f"❌ Error al corregir: {str(e)}", "error")
