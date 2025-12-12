@@ -8,6 +8,11 @@ GUI para comparar archivos Excel:
 """
 
 import sys
+import subprocess
+import os
+import time
+import re
+import requests
 from pathlib import Path
 from datetime import datetime
 from PyQt6.QtWidgets import (
@@ -17,8 +22,6 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QPalette
-import subprocess
-import os
 import pandas as pd
 
 from comparar_archivos import ComparadorMaviso
@@ -609,12 +612,33 @@ class TabMavisoVsCeler(QWidget):
         self.btn_corregir.setEnabled(False)
         self.btn_corregir.setToolTip("Actualiza las modalidades en MAVISO para que coincidan con CELER")
         
+        self.btn_corregir_primas = QPushButton("💰 Corregir Primas")
+        self.btn_corregir_primas.setObjectName("btnCorregirPrimas")
+        self.btn_corregir_primas.clicked.connect(self.corregir_primas)
+        self.btn_corregir_primas.setEnabled(False)
+        self.btn_corregir_primas.setToolTip("Actualiza las primas en MAVISO para que coincidan con CELER")
+        
+        self.btn_primas_mensuales_cero = QPushButton("🔄 Primas Mensuales a Cero")
+        self.btn_primas_mensuales_cero.setObjectName("btnPrimasMensualesCero")
+        self.btn_primas_mensuales_cero.clicked.connect(self.primas_mensuales_a_cero)
+        self.btn_primas_mensuales_cero.setEnabled(False)
+        self.btn_primas_mensuales_cero.setToolTip("Pone las primas en 0 para todas las pólizas MENSUALES")
+        
+        self.btn_colocar_nits = QPushButton("🔧 Colocar NITs Completos")
+        self.btn_colocar_nits.setObjectName("btnColocarNits")
+        self.btn_colocar_nits.clicked.connect(self.colocar_nits_completos)
+        self.btn_colocar_nits.setEnabled(False)
+        self.btn_colocar_nits.setToolTip("Calcula y agrega DV a NITs de personas jurídicas usando API DIAN")
+        
         self.btn_exportar = QPushButton("📊 Exportar Reporte")
         self.btn_exportar.setObjectName("btnExportar")
         self.btn_exportar.clicked.connect(self.exportar_reporte)
         self.btn_exportar.setEnabled(False)
         layout_btns_log.addWidget(btn_limpiar)
         layout_btns_log.addWidget(self.btn_corregir)
+        layout_btns_log.addWidget(self.btn_corregir_primas)
+        layout_btns_log.addWidget(self.btn_primas_mensuales_cero)
+        layout_btns_log.addWidget(self.btn_colocar_nits)
         layout_btns_log.addStretch()
         layout_btns_log.addWidget(self.btn_exportar)
         layout_logs.addLayout(layout_btns_log)
@@ -690,6 +714,9 @@ class TabMavisoVsCeler(QWidget):
             
             self.btn_exportar.setEnabled(True)
             self.btn_corregir.setEnabled(True)
+            self.btn_corregir_primas.setEnabled(True)
+            self.btn_primas_mensuales_cero.setEnabled(True)
+            self.btn_colocar_nits.setEnabled(True)
         else:
             self.log(f"❌ Error: {mensaje}", "error")
     
@@ -717,6 +744,41 @@ class TabMavisoVsCeler(QWidget):
     
     def limpiar_logs(self):
         self.txt_logs.clear()
+    
+    def recomparar_automaticamente(self):
+        """Re-ejecuta la comparación para actualizar estadísticas después de correcciones"""
+        try:
+            # Recargar archivos
+            exito, mensaje = self.comparador.cargar_maviso(self.ruta_maviso)
+            if not exito:
+                self.log(f"⚠️ No se pudo recargar MAVISO: {mensaje}", "warning")
+                return
+            
+            exito, mensaje = self.comparador.cargar_celer(self.ruta_celer)
+            if not exito:
+                self.log(f"⚠️ No se pudo recargar CELER: {mensaje}", "warning")
+                return
+            
+            # Ejecutar comparación en background
+            self.worker_thread = ComparadorThread(self.comparador, "celer")
+            self.worker_thread.log_signal.connect(self.log)
+            self.worker_thread.finished_signal.connect(self.comparacion_actualizada)
+            self.worker_thread.start()
+            
+        except Exception as e:
+            self.log(f"⚠️ Error al recomparar: {str(e)}", "warning")
+    
+    def comparacion_actualizada(self, exito: bool, mensaje: str, estadisticas: dict):
+        """Callback cuando termina la recomparación automática"""
+        if exito:
+            # Actualizar widgets de estadísticas
+            for key, widget in self.stats_widgets.items():
+                valor = estadisticas.get(key, 0)
+                widget.setText(str(valor))
+            
+            self.log("✅ Comparación actualizada - El reporte reflejará los cambios", "success")
+        else:
+            self.log(f"⚠️ No se pudo actualizar la comparación: {mensaje}", "warning")
     
     def corregir_modalidades(self):
         """Corrige las modalidades en MAVISO para que coincidan con CELER"""
@@ -819,16 +881,505 @@ class TabMavisoVsCeler(QWidget):
                 self,
                 "Corrección Exitosa",
                 f"Se corrigieron {len(cambios)} modalidades.\n\n"
-                f"El archivo original ha sido actualizado manteniendo su formato."
+                f"El archivo original ha sido actualizado manteniendo su formato.\n\n"
+                f"🔄 Se volverá a ejecutar la comparación para actualizar el reporte."
             )
             
             # Abrir archivo
             if os.name == 'nt':
                 os.startfile(self.ruta_maviso)
             
+            # Recomparar para actualizar estadísticas
+            self.log("", "info")
+            self.log("🔄 Actualizando comparación...", "info")
+            self.recomparar_automaticamente()
+            
         except Exception as e:
             self.log(f"❌ Error al corregir: {str(e)}", "error")
             QMessageBox.critical(self, "Error", f"Error al corregir modalidades:\n{str(e)}")
+    
+    def corregir_primas(self):
+        """Corrige las primas en MAVISO para que coincidan con CELER"""
+        if not self.ruta_maviso or not self.comparador.resultados:
+            QMessageBox.warning(self, "Advertencia", "Debe ejecutar la comparación primero")
+            return
+        
+        respuesta = QMessageBox.question(
+            self,
+            "Confirmar Corrección",
+            "¿Desea actualizar las primas en MAVISO para que coincidan con CELER?\n\n"
+            "CELER se usará como fuente correcta.\n"
+            "⚠️ Se modificará el archivo original manteniendo formato y colores.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if respuesta != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            self.log("", "info")
+            self.log("💰 Iniciando corrección de primas...", "info")
+            
+            # Cargar CELER con pandas para crear diccionario
+            df_celer = pd.read_excel(self.ruta_celer, skiprows=3)
+            self.log(f"📂 Archivo CELER cargado: {len(df_celer)} registros", "info")
+            
+            # Columnas
+            MAVISO_COL_POLIZA = 0  # Columna A (índice 0)
+            MAVISO_COL_PRIMA = 14  # Columna O (índice 14)
+            CELER_COL_POLIZA = 20  # Columna U
+            CELER_COL_PRIMA = 42  # Columna AQ - Prima sin IVA
+            
+            # Crear diccionario de CELER
+            celer_dict = {}
+            for idx, row in df_celer.iterrows():
+                poliza = str(row.iloc[CELER_COL_POLIZA]).strip()
+                try:
+                    prima = abs(round(float(row.iloc[CELER_COL_PRIMA]), 2))
+                    celer_dict[poliza] = prima
+                except (ValueError, TypeError):
+                    continue
+            
+            self.log(f"📋 Diccionario CELER creado: {len(celer_dict)} pólizas", "info")
+            
+            # Cargar MAVISO con openpyxl para mantener formato
+            from openpyxl import load_workbook
+            wb = load_workbook(self.ruta_maviso)
+            ws = wb.active
+            
+            total_filas = ws.max_row
+            self.log(f"📂 Archivo MAVISO cargado: {total_filas - 1} registros", "info")
+            
+            # Corregir MAVISO manteniendo formato
+            cambios = []
+            for fila in range(2, total_filas + 1):  # Empezar desde fila 2 (después del encabezado)
+                celda_poliza = ws.cell(row=fila, column=MAVISO_COL_POLIZA + 1)
+                celda_prima = ws.cell(row=fila, column=MAVISO_COL_PRIMA + 1)
+                
+                poliza = str(celda_poliza.value).strip() if celda_poliza.value else ""
+                
+                try:
+                    prima_maviso = abs(round(float(celda_prima.value), 2)) if celda_prima.value else 0
+                except (ValueError, TypeError):
+                    prima_maviso = 0
+                
+                if poliza in celer_dict:
+                    prima_celer = celer_dict[poliza]
+                    if prima_maviso != prima_celer:
+                        # Actualizar solo el valor, manteniendo formato
+                        celda_prima.value = prima_celer
+                        cambios.append({
+                            'poliza': poliza,
+                            'fila': fila,
+                            'anterior': prima_maviso,
+                            'nuevo': prima_celer
+                        })
+            
+            if len(cambios) == 0:
+                self.log("✅ No se encontraron discrepancias de prima para corregir", "success")
+                QMessageBox.information(self, "Información", "No hay cambios necesarios.")
+                wb.close()
+                return
+            
+            # Guardar archivo sobrescribiendo el original
+            wb.save(self.ruta_maviso)
+            wb.close()
+            
+            self.log(f"\n✅ Corrección completada:", "success")
+            self.log(f"   Cambios realizados: {len(cambios)}", "success")
+            self.log(f"   Archivo actualizado: {Path(self.ruta_maviso).name}", "success")
+            
+            # Mostrar resumen
+            self.log("\n📋 Resumen de cambios:", "info")
+            for i, cambio in enumerate(cambios[:10], 1):
+                self.log(
+                    f"   {i}. Póliza {cambio['poliza']} (Fila {cambio['fila']}): "
+                    f"{cambio['anterior']:,.2f} → {cambio['nuevo']:,.2f}",
+                    "warning"
+                )
+            
+            if len(cambios) > 10:
+                self.log(f"   ... y {len(cambios) - 10} cambios más", "info")
+            
+            QMessageBox.information(
+                self,
+                "Corrección Exitosa",
+                f"Se corrigieron {len(cambios)} primas.\n\n"
+                f"El archivo original ha sido actualizado manteniendo su formato.\n\n"
+                f"🔄 Se volverá a ejecutar la comparación para actualizar el reporte."
+            )
+            
+            # Abrir archivo
+            if os.name == 'nt':
+                os.startfile(self.ruta_maviso)
+            
+            # Recomparar para actualizar estadísticas
+            self.log("", "info")
+            self.log("🔄 Actualizando comparación...", "info")
+            self.recomparar_automaticamente()
+            
+        except Exception as e:
+            self.log(f"❌ Error al corregir primas: {str(e)}", "error")
+            QMessageBox.critical(self, "Error", f"Error al corregir primas:\n{str(e)}")
+    
+    def primas_mensuales_a_cero(self):
+        """Pone las primas en 0 para todas las pólizas MENSUALES"""
+        if not self.ruta_maviso:
+            QMessageBox.warning(self, "Advertencia", "Debe cargar el archivo MAVISO primero")
+            return
+        
+        respuesta = QMessageBox.question(
+            self,
+            "Confirmar Operación",
+            "¿Desea poner en CERO las primas de todas las pólizas MENSUALES?\n\n"
+            "Esta operación afectará todas las pólizas con modalidad MENSUAL.\n"
+            "⚠️ Se modificará el archivo original manteniendo formato y colores.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if respuesta != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            self.log("", "info")
+            self.log("🔄 Iniciando ajuste de primas mensuales...", "info")
+            
+            # Columnas
+            MAVISO_COL_POLIZA = 0  # Columna A (índice 0)
+            MAVISO_COL_PRIMA = 14  # Columna O (índice 14)
+            MAVISO_COL_MODALIDAD = 21  # Columna V (índice 21)
+            
+            # Cargar MAVISO con openpyxl para mantener formato
+            from openpyxl import load_workbook
+            wb = load_workbook(self.ruta_maviso)
+            ws = wb.active
+            
+            total_filas = ws.max_row
+            self.log(f"📂 Archivo MAVISO cargado: {total_filas - 1} registros", "info")
+            
+            # Poner primas a cero para MENSUALES
+            cambios = []
+            for fila in range(2, total_filas + 1):  # Empezar desde fila 2 (después del encabezado)
+                celda_poliza = ws.cell(row=fila, column=MAVISO_COL_POLIZA + 1)
+                celda_prima = ws.cell(row=fila, column=MAVISO_COL_PRIMA + 1)
+                celda_modalidad = ws.cell(row=fila, column=MAVISO_COL_MODALIDAD + 1)
+                
+                poliza = str(celda_poliza.value).strip() if celda_poliza.value else ""
+                modalidad = str(celda_modalidad.value).strip().upper() if celda_modalidad.value else ""
+                
+                try:
+                    prima_actual = abs(round(float(celda_prima.value), 2)) if celda_prima.value else 0
+                except (ValueError, TypeError):
+                    prima_actual = 0
+                
+                # Si es MENSUAL y la prima no es cero
+                if modalidad == "MENSUAL" and prima_actual != 0:
+                    celda_prima.value = 0
+                    cambios.append({
+                        'poliza': poliza,
+                        'fila': fila,
+                        'prima_anterior': prima_actual
+                    })
+            
+            if len(cambios) == 0:
+                self.log("✅ No se encontraron pólizas mensuales con prima diferente de cero", "success")
+                QMessageBox.information(self, "Información", "No hay cambios necesarios.")
+                wb.close()
+                return
+            
+            # Guardar archivo sobrescribiendo el original
+            wb.save(self.ruta_maviso)
+            wb.close()
+            
+            self.log(f"\n✅ Operación completada:", "success")
+            self.log(f"   Primas modificadas: {len(cambios)}", "success")
+            self.log(f"   Archivo actualizado: {Path(self.ruta_maviso).name}", "success")
+            
+            # Mostrar resumen
+            self.log("\n📋 Resumen de cambios:", "info")
+            for i, cambio in enumerate(cambios[:10], 1):
+                self.log(
+                    f"   {i}. Póliza {cambio['poliza']} (Fila {cambio['fila']}): "
+                    f"{cambio['prima_anterior']:,.2f} → 0.00",
+                    "warning"
+                )
+            
+            if len(cambios) > 10:
+                self.log(f"   ... y {len(cambios) - 10} cambios más", "info")
+            
+            QMessageBox.information(
+                self,
+                "Operación Exitosa",
+                f"Se pusieron en CERO las primas de {len(cambios)} pólizas MENSUALES.\n\n"
+                f"El archivo original ha sido actualizado manteniendo su formato.\n\n"
+                f"🔄 Se volverá a ejecutar la comparación para actualizar el reporte."
+            )
+            
+            # Abrir archivo
+            if os.name == 'nt':
+                os.startfile(self.ruta_maviso)
+            
+            # Recomparar para actualizar estadísticas
+            self.log("", "info")
+            self.log("🔄 Actualizando comparación...", "info")
+            self.recomparar_automaticamente()
+            
+        except Exception as e:
+            self.log(f"❌ Error al ajustar primas: {str(e)}", "error")
+            QMessageBox.critical(self, "Error", f"Error al ajustar primas mensuales:\n{str(e)}")
+    
+    def _verificar_api_dian(self):
+        """Verifica si la API DIAN está corriendo"""
+        try:
+            response = requests.get("http://localhost:8000/health", timeout=2)
+            return response.status_code == 200
+        except:
+            return False
+    
+    def _iniciar_api_dian(self):
+        """Inicia la API DIAN en segundo plano"""
+        if self._verificar_api_dian():
+            return True
+        
+        self.log("🚀 Iniciando API DIAN...", "info")
+        
+        # Ruta al directorio backend (dos niveles arriba desde comparador_archivos)
+        script_dir = Path(__file__).parent.parent.parent
+        backend_dir = script_dir / 'backend'
+        
+        if not backend_dir.exists():
+            self.log(f"❌ No se encuentra el directorio backend: {backend_dir}", "error")
+            return False
+        
+        try:
+            # Iniciar uvicorn en segundo plano
+            subprocess.Popen(
+                [sys.executable, "-m", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "8000"],
+                cwd=str(backend_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+            )
+            
+            # Esperar a que la API esté lista
+            for i in range(10):
+                time.sleep(1)
+                if self._verificar_api_dian():
+                    self.log("✅ API DIAN iniciada correctamente", "success")
+                    return True
+                self.log(f"   Esperando API... ({i+1}/10)", "info")
+            
+            self.log("❌ No se pudo iniciar la API DIAN", "error")
+            return False
+            
+        except Exception as e:
+            self.log(f"❌ Error iniciando API: {str(e)}", "error")
+            return False
+    
+    def _calcular_dv_dian(self, nit, reintentos=3):
+        """Calcula el dígito de verificación usando la API DIAN con reintentos"""
+        nit_str = re.sub(r'\D', '', str(nit))
+        
+        if not nit_str or len(nit_str) > 15 or len(nit_str) < 5:
+            return None
+        
+        for intento in range(reintentos):
+            try:
+                response = requests.post(
+                    "http://localhost:8000/calcular",
+                    json={"nit": nit_str},
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    return str(data["digito_verificacion"])
+                else:
+                    if intento < reintentos - 1:
+                        time.sleep(0.5)
+                        continue
+                    return None
+            
+            except requests.exceptions.ConnectionError:
+                if intento < reintentos - 1:
+                    if not self._verificar_api_dian():
+                        self._iniciar_api_dian()
+                        time.sleep(2)
+                    continue
+                return None
+            except requests.exceptions.Timeout:
+                if intento < reintentos - 1:
+                    time.sleep(1)
+                    continue
+                return None
+            except Exception:
+                if intento < reintentos - 1:
+                    time.sleep(0.5)
+                    continue
+                return None
+        
+        return None
+    
+    def colocar_nits_completos(self):
+        """Calcula y agrega DV a NITs de personas jurídicas usando API DIAN"""
+        if not self.ruta_maviso:
+            QMessageBox.warning(self, "Advertencia", "Debe cargar el archivo MAVISO primero")
+            return
+        
+        respuesta = QMessageBox.question(
+            self,
+            "Confirmar Operación",
+            "¿Desea calcular y agregar el DV a los NITs de personas jurídicas?\n\n"
+            "Esta operación:\n"
+            "- Usa la API DIAN para calcular el DV\n"
+            "- Solo procesa personas JURÍDICAS (columna AC = 'J')\n"
+            "- Ignora personas NATURALES (columna AC = 'N')\n"
+            "⚠️ Se modificará el archivo original manteniendo formato y colores.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if respuesta != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            self.log("", "info")
+            self.log("🔧 Iniciando cálculo de NITs completos...", "info")
+            
+            # Verificar/Iniciar API DIAN
+            if not self._verificar_api_dian():
+                if not self._iniciar_api_dian():
+                    QMessageBox.critical(
+                        self,
+                        "Error API",
+                        "No se pudo iniciar la API DIAN.\n\n"
+                        "Verifique que el directorio 'backend' existe y tiene los archivos necesarios."
+                    )
+                    return
+            else:
+                self.log("✅ API DIAN disponible", "success")
+            
+            # Columnas
+            MAVISO_COL_POLIZA = 0  # Columna A
+            MAVISO_COL_DOCUMENTO = 27  # Columna AB (índice 27)
+            MAVISO_COL_TIPO_PERSONA = 28  # Columna AC (índice 28)
+            
+            # Cargar MAVISO con openpyxl para mantener formato
+            from openpyxl import load_workbook
+            wb = load_workbook(self.ruta_maviso)
+            ws = wb.active
+            
+            total_filas = ws.max_row
+            self.log(f"📂 Archivo MAVISO cargado: {total_filas - 1} registros", "info")
+            
+            # Procesar NITs
+            cambios = []
+            errores = []
+            naturales_ignoradas = 0
+            
+            for fila in range(2, total_filas + 1):
+                celda_poliza = ws.cell(row=fila, column=MAVISO_COL_POLIZA + 1)
+                celda_documento = ws.cell(row=fila, column=MAVISO_COL_DOCUMENTO + 1)
+                celda_tipo = ws.cell(row=fila, column=MAVISO_COL_TIPO_PERSONA + 1)
+                
+                poliza = str(celda_poliza.value).strip() if celda_poliza.value else ""
+                documento = str(celda_documento.value).strip() if celda_documento.value else ""
+                tipo_persona = str(celda_tipo.value).strip().upper() if celda_tipo.value else ""
+                
+                # Solo procesar personas JURÍDICAS
+                if tipo_persona != 'J':
+                    if tipo_persona == 'N':
+                        naturales_ignoradas += 1
+                    continue
+                
+                # Verificar si ya tiene DV
+                if '-' in documento:
+                    continue
+                
+                # Verificar que sea un número válido
+                documento_limpio = re.sub(r'\D', '', documento)
+                if not documento_limpio or len(documento_limpio) < 5:
+                    continue
+                
+                # Calcular DV usando API DIAN
+                dv = self._calcular_dv_dian(documento_limpio)
+                
+                if dv is not None:
+                    nit_completo = f"{documento_limpio}-{dv}"
+                    celda_documento.value = nit_completo
+                    cambios.append({
+                        'poliza': poliza,
+                        'fila': fila,
+                        'anterior': documento,
+                        'nuevo': nit_completo
+                    })
+                else:
+                    errores.append({
+                        'poliza': poliza,
+                        'fila': fila,
+                        'documento': documento
+                    })
+                
+                # Mostrar progreso cada 50 registros
+                if len(cambios) % 50 == 0 and len(cambios) > 0:
+                    self.log(f"   Procesados: {len(cambios)} NITs...", "info")
+            
+            self.log(f"\n📊 Estadísticas:", "info")
+            self.log(f"   Personas naturales ignoradas: {naturales_ignoradas}", "info")
+            self.log(f"   NITs procesados exitosamente: {len(cambios)}", "success" if len(cambios) > 0 else "info")
+            
+            if len(errores) > 0:
+                self.log(f"   Errores al calcular DV: {len(errores)}", "warning")
+            
+            if len(cambios) == 0:
+                self.log("\n✅ No se encontraron NITs de personas jurídicas sin DV", "success")
+                QMessageBox.information(self, "Información", "No hay cambios necesarios.")
+                wb.close()
+                return
+            
+            # Guardar archivo
+            wb.save(self.ruta_maviso)
+            wb.close()
+            
+            self.log(f"\n✅ Operación completada:", "success")
+            self.log(f"   NITs actualizados: {len(cambios)}", "success")
+            self.log(f"   Archivo actualizado: {Path(self.ruta_maviso).name}", "success")
+            
+            # Mostrar resumen
+            self.log("\n📋 Resumen de cambios:", "info")
+            for i, cambio in enumerate(cambios[:10], 1):
+                self.log(
+                    f"   {i}. Póliza {cambio['poliza']} (Fila {cambio['fila']}): "
+                    f"{cambio['anterior']} → {cambio['nuevo']}",
+                    "warning"
+                )
+            
+            if len(cambios) > 10:
+                self.log(f"   ... y {len(cambios) - 10} cambios más", "info")
+            
+            mensaje_resultado = f"Se actualizaron {len(cambios)} NITs con su dígito de verificación.\n\n"
+            if len(errores) > 0:
+                mensaje_resultado += f"⚠️ {len(errores)} NITs no pudieron ser calculados.\n\n"
+            mensaje_resultado += "El archivo original ha sido actualizado manteniendo su formato.\n\n"
+            mensaje_resultado += "🔄 Se volverá a ejecutar la comparación para actualizar el reporte."
+            
+            QMessageBox.information(
+                self,
+                "Operación Exitosa",
+                mensaje_resultado
+            )
+            
+            # Abrir archivo
+            if os.name == 'nt':
+                os.startfile(self.ruta_maviso)
+            
+            # Recomparar para actualizar estadísticas
+            self.log("", "info")
+            self.log("🔄 Actualizando comparación...", "info")
+            self.recomparar_automaticamente()
+            
+        except Exception as e:
+            self.log(f"❌ Error al colocar NITs: {str(e)}", "error")
+            QMessageBox.critical(self, "Error", f"Error al colocar NITs completos:\n{str(e)}")
 
 
 class ComparadorGUI(QMainWindow):
