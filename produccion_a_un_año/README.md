@@ -1,7 +1,7 @@
 # Producción a Un Año - SoftSeguros
 
 ## Descripción
-Módulo para el procesamiento y migración de pólizas con vigencia de un año, trasladando datos desde CELER hacia la plantilla Maviso.
+Módulo completo para el procesamiento, migración, validación y corrección de pólizas con vigencia de un año, trasladando datos desde CELER hacia la plantilla Maviso. Incluye herramientas profesionales con interfaz gráfica para comparación automática, corrección de discrepancias, validación de NITs y más.
 
 ## Estructura de Carpetas
 
@@ -9,10 +9,23 @@ Módulo para el procesamiento y migración de pólizas con vigencia de un año, 
 produccion_a_un_año/
 ├── Copy of Maviso.xlsx                    # Plantilla destino (estructura y formato)
 ├── Copy of polizas vigentes celer.xlsx    # Archivo fuente CELER
-├── llenar_maviso.py                       # Script de migración
+├── llenar_maviso.py                       # Script CLI de migración
+├── llenar_maviso_gui.py                   # 🎨 GUI para llenado de Maviso
+├── calcular_dv_maviso.py                  # Script CLI para cálculo de DV
+├── calcular_dv_maviso_gui.py              # 🎨 GUI para cálculo de DV con API DIAN
+├── comparador_archivos/                   # 📊 Herramientas de comparación
+│   ├── comparar_archivos_gui.py           # GUI principal de comparación
+│   ├── comparar_maviso_celer.py           # Motor de comparación
+│   ├── estilos.py                         # Tema dark profesional
+│   └── output/                            # Reportes de comparación
+├── mapeo_ramos.py                         # Mapeo de ramos CELER → Maviso
+├── conciliar_ramos.py                     # Conciliación de ramos
+├── analizar_ramos_subramos.py             # Análisis de ramos/subramos
 ├── README.md                              # Esta documentación
-└── output/                                # Carpeta de salida
-    └── Maviso_llenado_YYYYMMDD_HHMMSS.xlsx  # Archivo generado
+├── COMPARACION_RAMOS_SUBRAMOS.md          # Documentación de mapeos
+├── logs/                                  # Logs de ejecución
+└── output/                                # Archivos generados
+    └── Maviso_llenado_YYYYMMDD_HHMMSS.xlsx
 ```
 
 ## Archivos
@@ -188,16 +201,434 @@ elif forma_pago_celer == "ANUAL":
 
 ---
 
-## Uso
+## 🚀 Herramientas Principales
 
+### 1. 🎨 Comparador de Archivos (GUI)
+**Archivo**: `comparador_archivos/comparar_archivos_gui.py`
+
+Interfaz gráfica profesional para comparar MAVISO vs CELER, detectar discrepancias y aplicar correcciones automáticas.
+
+#### Funcionalidades:
+
+**📊 Comparación Automática**
+- Compara ambos archivos póliza por póliza
+- Detecta discrepancias en: Modalidad, Prima, Fechas (Inicio/Fin)
+- Identifica pólizas solo en MAVISO o solo en CELER
+- Equivalencia especial: CELER "UNICA" = MAVISO "ANUAL"
+- Genera estadísticas en tiempo real
+
+**🔍 Búsqueda de Póliza**
+- Busca póliza específica en ambos archivos
+- Muestra todos los campos (prima, fechas, modalidad)
+- Indica en qué archivo existe
+- Proporciona conclusiones sobre discrepancias
+
+**📥 Agregar Faltantes desde CELER**
+- Detecta pólizas que están solo en CELER
+- Las agrega automáticamente a MAVISO
+- Mapea todos los campos según especificación
+- Genera archivo nuevo con timestamp
+
+**🔧 Corregir Modalidades**
+- Actualiza modalidades en MAVISO con datos de CELER
+- Preserva formato y colores Excel
+- Recompara automáticamente después de corrección
+- Abre archivo actualizado
+
+**💰 Corregir Primas**
+- Actualiza primas en MAVISO con datos de CELER
+- Mantiene formatos numéricos
+- Recompara automáticamente
+- Log detallado de cambios
+
+**🔄 Primas Mensuales a Cero**
+- Pone en 0 las primas de todas las pólizas MENSUALES
+- Útil para ajustes de facturación
+- Confirmación antes de aplicar
+
+**📅 Corregir Vigencias**
+- Actualiza fechas de inicio y fin desde CELER
+- Toma CELER como fuente de verdad
+- Preserva formato de fechas
+
+**📝 Llenar Riesgos Vacíos**
+- Si columna B (RIESGO) está vacía, copia columna F (SUBRAMO)
+- Útil para completar datos faltantes
+
+**🔧 Colocar NITs Completos**
+- Calcula y agrega DV a NITs de personas jurídicas
+- Usa API DIAN para validación
+- Solo actualiza si no tiene DV
+
+**📊 Exportar Reporte**
+- Genera Excel con pestañas: Coincidencias, Discrepancias, Solo Maviso, Solo CELER
+- Abre automáticamente el reporte
+- Timestamp en nombre de archivo
+
+**Ejecutar**:
+```powershell
+cd produccion_a_un_año/comparador_archivos
+python comparar_archivos_gui.py
+```
+
+---
+
+### 2. 🧮 Calculadora de DV (GUI)
+**Archivo**: `calcular_dv_maviso_gui.py`
+
+Interfaz para calcular y agregar Dígitos de Verificación a NITs de personas jurídicas usando la API DIAN.
+
+#### Funcionalidades:
+
+**🚀 Gestión de API DIAN**
+- Inicia/detiene API FastAPI automáticamente
+- Puerto 8000 (localhost)
+- Verificación de salud de API
+- Botón de reinicio con limpieza de puerto
+
+**🔢 Cálculo Masivo de DV**
+- Procesa todo el archivo MAVISO
+- Solo actualiza NITs de personas jurídicas (tipo "J")
+- Solo agrega DV si no existe (no tiene "-")
+- Preserva formato Excel original
+
+**📊 Monitoreo en Tiempo Real**
+- Barra de progreso visual
+- Log detallado de operaciones
+- Contador de NITs procesados
+- Errores y advertencias
+
+**Ejecutar**:
+```powershell
+cd produccion_a_un_año
+python calcular_dv_maviso_gui.py
+```
+
+---
+
+### 3. 📋 Llenado de Maviso (GUI)
+**Archivo**: `llenar_maviso_gui.py`
+
+Interfaz gráfica para migración inicial de datos CELER → Maviso.
+
+#### Funcionalidades:
+
+**📤 Migración Completa**
+- Lee CELER con skiprows=3
+- Aplica mapeo según especificación
+- Copia formato y estilos de plantilla
+- Lógica condicional para FORMA PAGO
+
+**📊 Validaciones**
+- Verifica estructura de archivos
+- Valida columnas requeridas
+- Log detallado de proceso
+
+**Ejecutar**:
+```powershell
+cd produccion_a_un_año
+python llenar_maviso_gui.py
+```
+
+---
+
+## 📖 Workflow Recomendado
+
+### Migración Completa Paso a Paso
+
+1. **🏁 Llenado Inicial**
+   ```powershell
+   python llenar_maviso_gui.py
+   ```
+   - Selecciona archivo CELER fuente
+   - Selecciona plantilla Maviso
+   - Ejecuta migración
+   - Genera `output/Maviso_llenado_TIMESTAMP.xlsx`
+
+2. **🔍 Comparación y Validación**
+   ```powershell
+   cd comparador_archivos
+   python comparar_archivos_gui.py
+   ```
+   - Carga MAVISO generado
+   - Carga archivo CELER original
+   - Ejecuta comparación
+   - Revisa estadísticas y discrepancias
+
+3. **🔧 Correcciones Automáticas**
+   En orden recomendado:
+   - **📥 Agregar Faltantes**: Si hay pólizas solo en CELER
+   - **📅 Corregir Vigencias**: Actualizar fechas desde CELER
+   - **🔧 Corregir Modalidades**: Sincronizar modalidades
+   - **💰 Corregir Primas**: Actualizar valores
+   - **📝 Llenar Riesgos Vacíos**: Completar datos faltantes
+
+4. **🔢 Cálculo de DV**
+   ```powershell
+   python calcular_dv_maviso_gui.py
+   ```
+   - Inicia API DIAN
+   - Carga archivo MAVISO
+   - Ejecuta cálculo masivo
+   - Verifica NITs actualizados
+
+5. **📊 Exportar Reporte Final**
+   - Click en "📊 Exportar Reporte"
+   - Revisa pestañas del reporte Excel
+   - Valida coincidencias vs discrepancias
+
+---
+
+## 🎨 Características de las GUI
+
+### Tema Dark Profesional
+- Colores: Fondo #1e1e1e, Texto #d4d4d4
+- Botones con gradientes y hover effects
+- Logs con colores por tipo (success, error, warning, info)
+- Iconos emoji para mejor UX
+
+### Operaciones Asíncronas
+- Comparaciones en threads separados
+- No bloquea la interfaz
+- Barras de progreso en tiempo real
+
+### Preservación de Formato
+- Usa openpyxl para mantener estilos
+- Colores, fuentes, bordes originales
+- Formatos numéricos y de fecha
+
+---
+
+## Uso CLI (Scripts Originales)
+
+### Migración básica
 ```powershell
 cd produccion_a_un_año
 python llenar_maviso.py
 ```
 
-## Características del Script
+### Cálculo de DV por consola
+### Cálculo de DV por consola
+```powershell
+python calcular_dv_maviso.py
+```
 
-- ✅ Lee archivo CELER con skiprows=3
+---
+
+## ⚙️ Configuración de API DIAN
+
+### Backend FastAPI
+Ubicación: `backend/app.py` (dos niveles arriba)
+
+**Endpoints**:
+- `GET /health` - Verificar estado de API
+- `POST /calcular` - Calcular DV para un NIT
+
+**Puerto**: 8000 (localhost)
+
+### Inicio Manual de API
+```powershell
+cd ../../backend
+uvicorn app:app --host 127.0.0.1 --port 8000
+```
+
+### Reinicio con Limpieza de Puerto
+Si el puerto 8000 está ocupado:
+1. Usa el botón "🔄 REINICIAR API" en la GUI
+2. O manualmente:
+   ```powershell
+   netstat -ano | findstr :8000
+   taskkill /F /PID <PID_NUMBER>
+   ```
+
+---
+
+## 📋 Reglas de Negocio
+
+### Equivalencias de Modalidad
+- **CELER "UNICA"** = **MAVISO "ANUAL"** (no se marca como discrepancia)
+
+### Forma de Pago (Lógica Condicional)
+- CELER "MENSUAL" → MAVISO "Fraccionado"
+- CELER "ANUAL" → MAVISO "Contado"
+
+### Personas Jurídicas (Cálculo DV)
+- Solo se procesa si Tipo Persona = "J"
+- Solo se agrega DV si NIT no contiene "-"
+- Formato: `NIT-DV` (ej: 890906852-7)
+
+### Llenado de Riesgos
+- Si columna B (RIESGO) vacía → copiar columna F (SUBRAMO)
+
+---
+
+## 🗂️ Estructura de Archivos
+
+### Archivos de Entrada
+
+---
+
+## 🗂️ Estructura de Archivos
+
+### Archivos de Entrada
+- **MAVISO**: 3,140+ filas × 39 columnas (sin skiprows)
+- **CELER**: 3,164+ filas × 59 columnas (skiprows=3)
+
+### Archivos Generados
+- `output/Maviso_llenado_YYYYMMDD_HHMMSS.xlsx` - Migración inicial
+- `output/MAVISO_con_faltantes_YYYYMMDD_HHMMSS.xlsx` - Con pólizas agregadas
+- `comparador_archivos/output/reporte_comparacion_YYYYMMDD_HHMMSS.xlsx` - Reportes
+- `logs/` - Logs de ejecución
+
+---
+
+## 🔍 Mapeo de Columnas Detallado
+
+### Migración CELER → Maviso
+
+| MAVISO | Col# | CELER | Col# | Descripción | Notas |
+|--------|------|-------|------|-------------|-------|
+| A | 0 | U | 20 | NÚMERO DE PÓLIZA | - |
+| B | 1 | AE | 30 | RIESGO | Placa del vehículo |
+| C | 2 | R | 17 | ASEGURADORA | - |
+| D | 3 | - | - | - | Vacío |
+| E | 4 | S | 18 | SUBRAMO | Ramo de CELER |
+| F | 5 | - | - | SUBRAMO | Puede copiarse a B si B vacío |
+| J | 9 | BE | 56 | FECHA INICIO | - |
+| K | 10 | W | 22 | FECHA INICIO | F_Inicio |
+| L | 11 | X | 23 | FECHA FIN | F_Fin |
+| O | 14 | AQ | 42 | PRIMA NETA | Prima sin IVA |
+| V | 21 | AB | 27 | MODALIDAD | Forma_Pago |
+| W | 22 | AB | 27 | FORMA PAGO | Condicional (ver arriba) |
+| X | 23 | AP | 41 | VALOR ASEGURADO | V_Asegurado |
+| AB | 27 | C | 2 | DOCUMENTO CLIENTE | Identificacion |
+| AC | 28 | A | 0 | TIPO PERSONA | N=Natural, J=Jurídica |
+| AD | 29 | B | 1 | NOMBRE TOMADOR | - |
+| AE | 30 | C | 2 | DOC TOMADOR | Identificacion |
+| AF | 31 | AS | 44 | NOMBRE ASEGURADO | - |
+| AG | 32 | AT | 45 | DOC ASEGURADO | Iden_Asegurado |
+| AH | 33 | AW | 48 | NOMBRE BENEFICIARIO | - |
+| AI | 34 | AX | 49 | DOC BENEFICIARIO | Iden_Beneficiario |
+
+### Comparación (Campos Verificados)
+
+La comparación automática verifica:
+1. **Modalidad** (col V): Con equivalencia UNICA=ANUAL
+2. **Prima** (col O): Valores numéricos
+3. **Fecha Inicio** (col K): Formato fecha
+4. **Fecha Fin** (col L): Formato fecha
+
+---
+
+## 📊 Formato de Reportes
+
+### Reporte de Comparación (Excel)
+
+**Pestaña: Coincidencias**
+- Pólizas que coinciden en todos los campos
+- Verde para validación positiva
+
+**Pestaña: Discrepancias**
+- Pólizas con diferencias en campos específicos
+- Columnas: Póliza, Campo, Valor MAVISO, Valor CELER
+- Amarillo para revisión
+
+**Pestaña: Solo en MAVISO**
+- Pólizas que no existen en CELER
+- Posibles pólizas antiguas o erróneas
+
+**Pestaña: Solo en CELER**
+- Pólizas faltantes en MAVISO
+- Usar botón "Agregar Faltantes" para incluirlas
+
+---
+
+## 🛠️ Dependencias
+
+```python
+PyQt6==6.7.0              # GUI framework
+pandas==2.2.2             # Procesamiento de datos
+openpyxl==3.1.2           # Manipulación Excel con formato
+xlrd==2.0.1               # Lectura de .xls antiguos
+requests==2.31.0          # Comunicación con API
+fastapi==0.109.0          # Backend API DIAN
+uvicorn==0.27.0           # Servidor ASGI
+```
+
+### Instalación
+```powershell
+pip install -r requirements.txt
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Error: "Puerto 8000 ocupado"
+**Solución**: Click en botón "🔄 REINICIAR API" o ejecutar:
+```powershell
+netstat -ano | findstr :8000
+taskkill /F /PID <PID>
+```
+
+### Error: "No se encuentra el archivo CELER"
+**Solución**: Verificar que el archivo tenga exactamente 3 filas de encabezado para skiprows=3
+
+### Error: "Discrepancias en modalidades"
+**Solución**: 
+1. Verificar equivalencia UNICA=ANUAL está activa
+2. Usar botón "🔧 Corregir Modalidades"
+
+### Error: "NITs sin DV"
+**Solución**:
+1. Iniciar API DIAN
+2. Ejecutar calculadora de DV
+3. Verificar que API esté en puerto 8000
+
+### Pólizas no se agregan desde CELER
+**Solución**:
+1. Verificar normalización de números de póliza (uppercase, trim)
+2. Revisar columna U en CELER (índice 20)
+3. Check skiprows=3 en lectura
+
+---
+
+## 📝 Notas Técnicas
+
+### Normalización de Pólizas
+Todas las pólizas se normalizan para comparación:
+```python
+poliza_normalizada = str(poliza).strip().upper()
+```
+
+### Preservación de Formato Excel
+- Usa `openpyxl.load_workbook()` en lugar de pandas para escritura
+- Mantiene colores, fuentes, bordes, anchos de columna
+- No altera celdas no modificadas
+
+### Threads en GUI
+- `ComparadorThread`: Ejecuta comparación asíncrona
+- `CalculadorThread`: Procesa cálculo de DV
+- `APIThread`: Inicia servidor FastAPI
+
+### Auto-Recomparación
+Después de cada corrección se ejecuta automáticamente:
+1. Recarga archivos
+2. Ejecuta comparación
+3. Actualiza estadísticas
+4. Habilita botón de exportar
+
+---
+
+## 📄 Archivos de Soporte
+
+- `COMPARACION_RAMOS_SUBRAMOS.md` - Mapeo detallado de ramos
+- `estilos.py` - Definición de tema dark para PyQt6
+- `mapeo_ramos.py` - Lógica de conciliación de ramos
+
+---
+
+Actualizado: 15/12/2025
 - ✅ Copia formato y estilos de Maviso original (colores, fuentes, bordes)
 - ✅ Aplica mapeo de columnas según especificación
 - ✅ Lógica condicional para FORMA PAGO (MENSUAL→Fraccionado, ANUAL→Contado)

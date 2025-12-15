@@ -13,7 +13,7 @@ Solo modifica la columna AB (Identificación).
 
 import pandas as pd
 import re
-import os
+import osOK 
 import sys
 import subprocess
 import time
