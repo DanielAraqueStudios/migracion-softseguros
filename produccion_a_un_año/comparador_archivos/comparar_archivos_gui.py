@@ -606,6 +606,18 @@ class TabMavisoVsCeler(QWidget):
         btn_limpiar = QPushButton("🗑️ Limpiar")
         btn_limpiar.clicked.connect(self.limpiar_logs)
         
+        self.btn_buscar_poliza = QPushButton("🔍 Buscar Póliza")
+        self.btn_buscar_poliza.setObjectName("btnBuscar")
+        self.btn_buscar_poliza.clicked.connect(self.buscar_poliza)
+        self.btn_buscar_poliza.setEnabled(False)
+        self.btn_buscar_poliza.setToolTip("Busca una póliza específica en MAVISO y CELER")
+        
+        self.btn_agregar_faltantes = QPushButton("📥 Agregar Faltantes desde CELER")
+        self.btn_agregar_faltantes.setObjectName("btnAgregarFaltantes")
+        self.btn_agregar_faltantes.clicked.connect(self.agregar_faltantes_desde_celer)
+        self.btn_agregar_faltantes.setEnabled(False)
+        self.btn_agregar_faltantes.setToolTip("Agrega al archivo MAVISO las pólizas que están solo en CELER")
+        
         self.btn_corregir = QPushButton("🔧 Corregir Modalidades")
         self.btn_corregir.setObjectName("btnCorregir")
         self.btn_corregir.clicked.connect(self.corregir_modalidades)
@@ -630,15 +642,31 @@ class TabMavisoVsCeler(QWidget):
         self.btn_colocar_nits.setEnabled(False)
         self.btn_colocar_nits.setToolTip("Calcula y agrega DV a NITs de personas jurídicas usando API DIAN")
         
+        self.btn_corregir_vigencias = QPushButton("📅 Corregir Vigencias")
+        self.btn_corregir_vigencias.setObjectName("btnCorregirVigencias")
+        self.btn_corregir_vigencias.clicked.connect(self.corregir_vigencias)
+        self.btn_corregir_vigencias.setEnabled(False)
+        self.btn_corregir_vigencias.setToolTip("Actualiza las fechas de inicio y fin en MAVISO con los datos de CELER")
+        
+        self.btn_llenar_riesgos = QPushButton("📝 Llenar Riesgos Vacíos")
+        self.btn_llenar_riesgos.setObjectName("btnLlenarRiesgos")
+        self.btn_llenar_riesgos.clicked.connect(self.llenar_riesgos_vacios)
+        self.btn_llenar_riesgos.setEnabled(False)
+        self.btn_llenar_riesgos.setToolTip("Llena la columna RIESGO con SUBRAMO cuando está vacía")
+        
         self.btn_exportar = QPushButton("📊 Exportar Reporte")
         self.btn_exportar.setObjectName("btnExportar")
         self.btn_exportar.clicked.connect(self.exportar_reporte)
         self.btn_exportar.setEnabled(False)
         layout_btns_log.addWidget(btn_limpiar)
+        layout_btns_log.addWidget(self.btn_buscar_poliza)
+        layout_btns_log.addWidget(self.btn_agregar_faltantes)
         layout_btns_log.addWidget(self.btn_corregir)
         layout_btns_log.addWidget(self.btn_corregir_primas)
         layout_btns_log.addWidget(self.btn_primas_mensuales_cero)
         layout_btns_log.addWidget(self.btn_colocar_nits)
+        layout_btns_log.addWidget(self.btn_corregir_vigencias)
+        layout_btns_log.addWidget(self.btn_llenar_riesgos)
         layout_btns_log.addStretch()
         layout_btns_log.addWidget(self.btn_exportar)
         layout_logs.addLayout(layout_btns_log)
@@ -713,10 +741,14 @@ class TabMavisoVsCeler(QWidget):
             self.log("=" * 50, "success")
             
             self.btn_exportar.setEnabled(True)
+            self.btn_buscar_poliza.setEnabled(True)
+            self.btn_agregar_faltantes.setEnabled(True)
             self.btn_corregir.setEnabled(True)
             self.btn_corregir_primas.setEnabled(True)
             self.btn_primas_mensuales_cero.setEnabled(True)
             self.btn_colocar_nits.setEnabled(True)
+            self.btn_corregir_vigencias.setEnabled(True)
+            self.btn_llenar_riesgos.setEnabled(True)
         else:
             self.log(f"❌ Error: {mensaje}", "error")
     
@@ -744,6 +776,311 @@ class TabMavisoVsCeler(QWidget):
     
     def limpiar_logs(self):
         self.txt_logs.clear()
+    
+    def buscar_poliza(self):
+        """Busca una póliza específica en MAVISO y CELER"""
+        from PyQt6.QtWidgets import QInputDialog
+        
+        # Solicitar número de póliza
+        poliza, ok = QInputDialog.getText(
+            self,
+            "Buscar Póliza",
+            "Ingrese el número de póliza a buscar:"
+        )
+        
+        if not ok or not poliza.strip():
+            return
+        
+        poliza = poliza.strip()
+        
+        self.log("", "info")
+        self.log("=" * 60, "info")
+        self.log(f"🔍 BUSCANDO PÓLIZA: {poliza}", "info")
+        self.log("=" * 60, "info")
+        
+        try:
+            # Buscar en MAVISO
+            import pandas as pd
+            df_maviso = pd.read_excel(self.ruta_maviso, header=0)
+            
+            # Normalizar números de póliza en MAVISO
+            maviso_encontrada = False
+            fila_maviso = None
+            datos_maviso = None
+            
+            for idx, row in df_maviso.iterrows():
+                pol_maviso = str(row.iloc[0]).strip().upper()  # Columna A
+                if pol_maviso == poliza.upper():
+                    maviso_encontrada = True
+                    fila_maviso = idx + 2  # +2 por header y 0-index
+                    datos_maviso = {
+                        'poliza': pol_maviso,
+                        'prima': row.iloc[14],  # Columna O
+                        'fecha_inicio': row.iloc[10],  # Columna K
+                        'fecha_fin': row.iloc[11],  # Columna L
+                        'modalidad': row.iloc[21],  # Columna V
+                    }
+                    break
+            
+            # Buscar en CELER
+            df_celer = pd.read_excel(self.ruta_celer, skiprows=3)
+            
+            celer_encontrada = False
+            fila_celer = None
+            datos_celer = None
+            
+            for idx, row in df_celer.iterrows():
+                pol_celer = str(row.iloc[20]).strip().upper()  # Columna U
+                if pol_celer == poliza.upper():
+                    celer_encontrada = True
+                    fila_celer = idx + 5  # +5 por skiprows=3 + header + 0-index
+                    datos_celer = {
+                        'poliza': pol_celer,
+                        'prima': row.iloc[42],  # Columna AQ
+                        'fecha_inicio': row.iloc[22],  # Columna W
+                        'fecha_fin': row.iloc[23],  # Columna X
+                        'modalidad': row.iloc[27],  # Columna AB
+                    }
+                    break
+            
+            # Mostrar resultados
+            self.log("", "info")
+            self.log("📋 RESULTADOS DE BÚSQUEDA:", "info")
+            self.log("-" * 60, "info")
+            
+            # MAVISO
+            if maviso_encontrada:
+                self.log(f"✅ ENCONTRADA EN MAVISO (Fila {fila_maviso}):", "success")
+                self.log(f"   • Póliza: {datos_maviso['poliza']}", "info")
+                self.log(f"   • Prima: {datos_maviso['prima']}", "info")
+                self.log(f"   • Fecha Inicio: {datos_maviso['fecha_inicio']}", "info")
+                self.log(f"   • Fecha Fin: {datos_maviso['fecha_fin']}", "info")
+                self.log(f"   • Modalidad: {datos_maviso['modalidad']}", "info")
+            else:
+                self.log(f"❌ NO ENCONTRADA EN MAVISO", "error")
+            
+            self.log("", "info")
+            
+            # CELER
+            if celer_encontrada:
+                self.log(f"✅ ENCONTRADA EN CELER (Fila {fila_celer}):", "success")
+                self.log(f"   • Póliza: {datos_celer['poliza']}", "info")
+                self.log(f"   • Prima: {datos_celer['prima']}", "info")
+                self.log(f"   • Fecha Inicio: {datos_celer['fecha_inicio']}", "info")
+                self.log(f"   • Fecha Fin: {datos_celer['fecha_fin']}", "info")
+                self.log(f"   • Modalidad: {datos_celer['modalidad']}", "info")
+            else:
+                self.log(f"❌ NO ENCONTRADA EN CELER", "error")
+            
+            self.log("-" * 60, "info")
+            
+            # Resumen
+            if not maviso_encontrada and celer_encontrada:
+                self.log("⚠️ CONCLUSIÓN: Póliza existe en CELER pero NO en MAVISO", "warning")
+                self.log("   Esta póliza aparecerá en 'Solo en CELER' del reporte", "warning")
+            elif maviso_encontrada and not celer_encontrada:
+                self.log("⚠️ CONCLUSIÓN: Póliza existe en MAVISO pero NO en CELER", "warning")
+                self.log("   Esta póliza aparecerá en 'Solo en MAVISO' del reporte", "warning")
+            elif maviso_encontrada and celer_encontrada:
+                self.log("✅ CONCLUSIÓN: Póliza existe en ambos archivos", "success")
+            else:
+                self.log("❌ CONCLUSIÓN: Póliza NO existe en ningún archivo", "error")
+            
+            self.log("=" * 60, "info")
+            
+        except Exception as e:
+            self.log(f"❌ Error al buscar: {str(e)}", "error")
+    
+    def agregar_faltantes_desde_celer(self):
+        """Agrega al archivo MAVISO las pólizas que están solo en CELER"""
+        try:
+            if not self.comparador or not self.comparador.resultados:
+                self.log("⚠️ No hay resultados de comparación. Ejecuta primero la comparación.", "warning")
+                return
+            
+            solo_celer = self.comparador.resultados.get('solo_celer', [])
+            
+            if not solo_celer:
+                self.log("✅ No hay pólizas faltantes en MAVISO. Todos los datos ya están sincronizados.", "success")
+                return
+            
+            self.log("", "info")
+            self.log("="*60, "info")
+            self.log(f"📥 AGREGANDO {len(solo_celer)} PÓLIZAS FALTANTES DESDE CELER", "info")
+            self.log("="*60, "info")
+            
+            # Leer archivos con openpyxl para mantener formato
+            from openpyxl import load_workbook
+            from datetime import datetime
+            import pandas as pd
+            
+            # Cargar MAVISO con openpyxl
+            wb_maviso = load_workbook(self.ruta_maviso)
+            ws_maviso = wb_maviso.active
+            
+            # Cargar CELER con pandas (skiprows=3)
+            df_celer = pd.read_excel(self.ruta_celer, engine='openpyxl', skiprows=3)
+            
+            # Normalizar columna de pólizas en CELER
+            poliza_col_celer = df_celer.iloc[:, 20]  # Columna U
+            poliza_col_celer = poliza_col_celer.astype(str).str.strip().str.upper()
+            
+            agregadas = 0
+            errores = 0
+            
+            for item_poliza in solo_celer:
+                try:
+                    # Extraer número de póliza del diccionario
+                    poliza = item_poliza['poliza']
+                    
+                    # Buscar la póliza en CELER
+                    poliza_normalizada = str(poliza).strip().upper()
+                    mascara = poliza_col_celer == poliza_normalizada
+                    
+                    if not mascara.any():
+                        self.log(f"⚠️ Póliza {poliza} no encontrada en CELER (extraño, debería estar)", "warning")
+                        errores += 1
+                        continue
+                    
+                    # Obtener la fila de CELER (primera coincidencia)
+                    idx_celer = mascara.idxmax()
+                    fila_celer = df_celer.iloc[idx_celer]
+                    
+                    # Mapeo CELER → MAVISO según README
+                    # Crear nueva fila para MAVISO
+                    nueva_fila = []
+                    
+                    # MAPEO DE COLUMNAS (índices 0-based)
+                    # A (0): NÚMERO DE PÓLIZA ← CELER U (20)
+                    nueva_fila.append(fila_celer.iloc[20])
+                    
+                    # B (1): RIESGO ← CELER AE (30) - Placa
+                    nueva_fila.append(fila_celer.iloc[30])
+                    
+                    # C (2): ASEGURADORA ← CELER R (17)
+                    nueva_fila.append(fila_celer.iloc[17])
+                    
+                    # D (3): vacío
+                    nueva_fila.append("")
+                    
+                    # E (4): SUBRAMO ← CELER S (18) - Ramo
+                    nueva_fila.append(fila_celer.iloc[18])
+                    
+                    # F-I (5-8): vacíos por ahora
+                    for _ in range(4):
+                        nueva_fila.append("")
+                    
+                    # J (9): FECHA INICIO ← CELER W (22)
+                    nueva_fila.append(fila_celer.iloc[22])
+                    
+                    # K (10): FECHA FIN ← CELER X (23)
+                    nueva_fila.append(fila_celer.iloc[23])
+                    
+                    # L-N (11-13): vacíos
+                    for _ in range(3):
+                        nueva_fila.append("")
+                    
+                    # O (14): PRIMA NETA ← CELER AQ (42)
+                    nueva_fila.append(fila_celer.iloc[42])
+                    
+                    # P-V (15-21): vacíos por ahora, excepto V
+                    for _ in range(6):
+                        nueva_fila.append("")
+                    
+                    # V (21): MODALIDAD ← CELER AB (27)
+                    nueva_fila.append(fila_celer.iloc[27])
+                    
+                    # W (22): FORMA PAGO - lógica condicional
+                    forma_pago_celer = str(fila_celer.iloc[27]).strip().upper()
+                    if forma_pago_celer == "MENSUAL":
+                        nueva_fila.append("Fraccionado")
+                    elif forma_pago_celer == "ANUAL":
+                        nueva_fila.append("Contado")
+                    else:
+                        nueva_fila.append("")
+                    
+                    # X (23): VALOR RIESGO ASEGURADO ← CELER AP (41)
+                    nueva_fila.append(fila_celer.iloc[41])
+                    
+                    # Y-AA (24-26): vacíos
+                    for _ in range(3):
+                        nueva_fila.append("")
+                    
+                    # AB (27): DOCUMENTO DEL CLIENTE ← CELER C (2)
+                    nueva_fila.append(fila_celer.iloc[2])
+                    
+                    # AC (28): TIPO PERSONA ← CELER A (0)
+                    nueva_fila.append(fila_celer.iloc[0])
+                    
+                    # AD (29): NOMBRE DEL TOMADOR ← CELER B (1)
+                    nueva_fila.append(fila_celer.iloc[1])
+                    
+                    # AE (30): DOCUMENTO DEL TOMADOR ← CELER C (2)
+                    nueva_fila.append(fila_celer.iloc[2])
+                    
+                    # AF (31): NOMBRE DEL ASEGURADO ← CELER AS (44)
+                    nueva_fila.append(fila_celer.iloc[44])
+                    
+                    # AG (32): DOCUMENTO DEL ASEGURADO ← CELER AT (45)
+                    nueva_fila.append(fila_celer.iloc[45])
+                    
+                    # AH (33): NOMBRE DEL BENEFICIARIO ← CELER AW (48)
+                    nueva_fila.append(fila_celer.iloc[48])
+                    
+                    # AI (34): DOCUMENTO DEL BENEFICIARIO ← CELER AX (49)
+                    nueva_fila.append(fila_celer.iloc[49])
+                    
+                    # AJ-AM (35-38): vacíos
+                    for _ in range(4):
+                        nueva_fila.append("")
+                    
+                    # Agregar fila al worksheet de MAVISO
+                    ws_maviso.append(nueva_fila)
+                    
+                    agregadas += 1
+                    self.log(f"✅ Póliza {poliza} agregada desde CELER", "success")
+                    
+                except Exception as e:
+                    self.log(f"❌ Error al procesar póliza {poliza}: {str(e)}", "error")
+                    errores += 1
+                    continue
+            
+            # Guardar archivo MAVISO actualizado
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            carpeta_output = os.path.dirname(self.ruta_maviso)
+            nombre_salida = f"MAVISO_con_faltantes_{timestamp}.xlsx"
+            ruta_salida = os.path.join(carpeta_output, nombre_salida)
+            
+            wb_maviso.save(ruta_salida)
+            
+            self.log("", "info")
+            self.log("="*60, "success")
+            self.log(f"✅ PROCESO COMPLETADO", "success")
+            self.log(f"📊 Pólizas agregadas: {agregadas}", "success")
+            if errores > 0:
+                self.log(f"⚠️ Errores: {errores}", "warning")
+            self.log(f"💾 Archivo guardado: {nombre_salida}", "success")
+            self.log("="*60, "success")
+            
+            # Preguntar si quiere recomparar con el nuevo archivo
+            from PyQt6.QtWidgets import QMessageBox
+            respuesta = QMessageBox.question(
+                self,
+                "Recomparar",
+                f"Se agregaron {agregadas} pólizas al archivo MAVISO.\n\n"
+                f"¿Deseas recargar y recomparar con el nuevo archivo?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            
+            if respuesta == QMessageBox.StandardButton.Yes:
+                self.ruta_maviso = ruta_salida
+                self.lbl_ruta_maviso.setText(ruta_salida)
+                self.recomparar_automaticamente()
+            
+        except Exception as e:
+            self.log(f"❌ Error al agregar faltantes: {str(e)}", "error")
+            import traceback
+            self.log(f"Detalles: {traceback.format_exc()}", "error")
     
     def recomparar_automaticamente(self):
         """Re-ejecuta la comparación para actualizar estadísticas después de correcciones"""
@@ -1021,6 +1358,187 @@ class TabMavisoVsCeler(QWidget):
         except Exception as e:
             self.log(f"❌ Error al corregir primas: {str(e)}", "error")
             QMessageBox.critical(self, "Error", f"Error al corregir primas:\n{str(e)}")
+    
+    def corregir_vigencias(self):
+        """Actualiza las fechas de inicio y fin en MAVISO con los datos de CELER"""
+        if not self.ruta_maviso or not self.ruta_celer:
+            QMessageBox.warning(self, "Advertencia", "Debe cargar ambos archivos primero")
+            return
+        
+        respuesta = QMessageBox.question(
+            self,
+            "Confirmar Operación",
+            "¿Desea actualizar las VIGENCIAS (fechas inicio y fin) en MAVISO con los datos de CELER?\n\n"
+            "Esta operación actualizará TODAS las pólizas que coincidan.\n"
+            "⚠️ Se modificará el archivo original manteniendo formato y colores.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if respuesta != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            self.log("", "info")
+            self.log("📅 Iniciando corrección de vigencias...", "info")
+            
+            # Columnas según README
+            MAVISO_COL_POLIZA = 0  # Columna A
+            MAVISO_COL_FECHA_INICIO = 10  # Columna K
+            MAVISO_COL_FECHA_FIN = 11  # Columna L
+            
+            CELER_COL_POLIZA = 20  # Columna U
+            CELER_COL_FECHA_INICIO = 22  # Columna W
+            CELER_COL_FECHA_FIN = 23  # Columna X
+            
+            # Leer archivos
+            from openpyxl import load_workbook
+            import pandas as pd
+            
+            wb_maviso = load_workbook(self.ruta_maviso)
+            ws_maviso = wb_maviso.active
+            
+            df_celer = pd.read_excel(self.ruta_celer, engine='openpyxl', skiprows=3)
+            
+            # Crear diccionario de vigencias CELER: {poliza: (fecha_inicio, fecha_fin)}
+            vigencias_celer = {}
+            for idx, row in df_celer.iterrows():
+                poliza = str(row.iloc[CELER_COL_POLIZA]).strip().upper()
+                fecha_inicio = row.iloc[CELER_COL_FECHA_INICIO]
+                fecha_fin = row.iloc[CELER_COL_FECHA_FIN]
+                vigencias_celer[poliza] = (fecha_inicio, fecha_fin)
+            
+            self.log(f"📊 Vigencias CELER cargadas: {len(vigencias_celer)}", "info")
+            
+            # Actualizar MAVISO
+            actualizadas = 0
+            no_encontradas = 0
+            
+            for row_idx in range(2, ws_maviso.max_row + 1):
+                poliza_maviso = ws_maviso.cell(row_idx, MAVISO_COL_POLIZA + 1).value
+                
+                if poliza_maviso is None:
+                    continue
+                
+                poliza_normalizada = str(poliza_maviso).strip().upper()
+                
+                if poliza_normalizada in vigencias_celer:
+                    fecha_inicio_celer, fecha_fin_celer = vigencias_celer[poliza_normalizada]
+                    
+                    # Actualizar fechas en MAVISO
+                    ws_maviso.cell(row_idx, MAVISO_COL_FECHA_INICIO + 1).value = fecha_inicio_celer
+                    ws_maviso.cell(row_idx, MAVISO_COL_FECHA_FIN + 1).value = fecha_fin_celer
+                    
+                    actualizadas += 1
+                    if actualizadas <= 10:  # Mostrar solo las primeras 10
+                        self.log(f"✅ Póliza {poliza_normalizada}: Vigencias actualizadas", "success")
+                else:
+                    no_encontradas += 1
+            
+            if actualizadas > 10:
+                self.log(f"... y {actualizadas - 10} más actualizadas", "success")
+            
+            # Guardar cambios
+            wb_maviso.save(self.ruta_maviso)
+            
+            self.log("", "info")
+            self.log("="*60, "success")
+            self.log(f"✅ Vigencias corregidas: {actualizadas}", "success")
+            if no_encontradas > 0:
+                self.log(f"⚠️ Pólizas no encontradas en CELER: {no_encontradas}", "warning")
+            self.log(f"💾 Archivo actualizado: {os.path.basename(self.ruta_maviso)}", "success")
+            self.log("="*60, "success")
+            
+            # Abrir archivo
+            if os.name == 'nt':
+                os.startfile(self.ruta_maviso)
+            
+            # Recomparar para actualizar estadísticas
+            self.log("", "info")
+            self.log("🔄 Actualizando comparación...", "info")
+            self.recomparar_automaticamente()
+            
+        except Exception as e:
+            self.log(f"❌ Error al corregir vigencias: {str(e)}", "error")
+            QMessageBox.critical(self, "Error", f"Error al corregir vigencias:\n{str(e)}")
+    
+    def llenar_riesgos_vacios(self):
+        """Llena la columna RIESGO (B) con SUBRAMO (F) cuando está vacía"""
+        if not self.ruta_maviso:
+            QMessageBox.warning(self, "Advertencia", "Debe cargar el archivo MAVISO primero")
+            return
+        
+        respuesta = QMessageBox.question(
+            self,
+            "Confirmar Operación",
+            "¿Desea llenar los RIESGOS vacíos con el valor de SUBRAMO?\n\n"
+            "Si la columna B (RIESGO) está vacía, se copiará el valor de la columna F (SUBRAMO).\n"
+            "⚠️ Se modificará el archivo original manteniendo formato y colores.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if respuesta != QMessageBox.StandardButton.Yes:
+            return
+        
+        try:
+            self.log("", "info")
+            self.log("📝 Llenando riesgos vacíos...", "info")
+            
+            # Columnas
+            MAVISO_COL_POLIZA = 0  # Columna A
+            MAVISO_COL_RIESGO = 1  # Columna B
+            MAVISO_COL_SUBRAMO = 5  # Columna F
+            
+            # Leer archivo con openpyxl
+            from openpyxl import load_workbook
+            
+            wb = load_workbook(self.ruta_maviso)
+            ws = wb.active
+            
+            llenados = 0
+            
+            # Recorrer todas las filas (empezando desde fila 2, asumiendo encabezados en fila 1)
+            for row_idx in range(2, ws.max_row + 1):
+                riesgo = ws.cell(row_idx, MAVISO_COL_RIESGO + 1).value
+                subramo = ws.cell(row_idx, MAVISO_COL_SUBRAMO + 1).value
+                poliza = ws.cell(row_idx, MAVISO_COL_POLIZA + 1).value
+                
+                # Si RIESGO está vacío y SUBRAMO tiene valor
+                if (riesgo is None or str(riesgo).strip() == "") and subramo:
+                    # Copiar SUBRAMO a RIESGO
+                    ws.cell(row_idx, MAVISO_COL_RIESGO + 1).value = subramo
+                    llenados += 1
+                    
+                    if llenados <= 10:  # Mostrar solo los primeros 10
+                        self.log(f"✅ Póliza {poliza}: RIESGO ← '{subramo}'", "success")
+            
+            if llenados > 10:
+                self.log(f"... y {llenados - 10} más actualizados", "success")
+            
+            if llenados == 0:
+                self.log("ℹ️ No se encontraron riesgos vacíos para llenar", "info")
+            
+            # Guardar cambios
+            wb.save(self.ruta_maviso)
+            
+            self.log("", "info")
+            self.log("="*60, "success")
+            self.log(f"✅ Riesgos llenados: {llenados}", "success")
+            self.log(f"💾 Archivo actualizado: {os.path.basename(self.ruta_maviso)}", "success")
+            self.log("="*60, "success")
+            
+            # Abrir archivo
+            if os.name == 'nt':
+                os.startfile(self.ruta_maviso)
+            
+            # Recomparar para actualizar estadísticas (si es necesario)
+            if llenados > 0:
+                self.log("", "info")
+                self.log("🔄 Actualizando comparación...", "info")
+                self.recomparar_automaticamente()
+            
+        except Exception as e:
+            self.log(f"❌ Error al llenar riesgos: {str(e)}", "error")
+            QMessageBox.critical(self, "Error", f"Error al llenar riesgos:\n{str(e)}")
     
     def primas_mensuales_a_cero(self):
         """Pone las primas en 0 para todas las pólizas MENSUALES"""

@@ -99,6 +99,16 @@ QPushButton#btnPrimary:hover {
                                 stop:0 #60a5fa, stop:1 #3b82f6);
 }
 
+QPushButton#btnSecondary {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #6b7280, stop:1 #4b5563);
+}
+
+QPushButton#btnSecondary:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #9ca3af, stop:1 #6b7280);
+}
+
 QPushButton#btnDanger {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                 stop:0 #ef4444, stop:1 #dc2626);
@@ -198,11 +208,58 @@ class APIThread(QThread):
     progreso = pyqtSignal(str, str)  # mensaje, tipo
     terminado = pyqtSignal(bool)
     
-    def __init__(self):
+    def __init__(self, limpiar_puerto=False):
         super().__init__()
+        self.limpiar_puerto = limpiar_puerto
+    
+    def _matar_proceso_puerto(self, puerto=8000):
+        """Mata cualquier proceso usando el puerto especificado"""
+        try:
+            if os.name == 'nt':  # Windows
+                self.progreso.emit(f"🧹 Liberando puerto {puerto}...", "info")
+                resultado = subprocess.run(
+                    ["netstat", "-ano"],
+                    capture_output=True,
+                    text=True,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+                
+                pids_matados = []
+                for linea in resultado.stdout.split('\n'):
+                    if f":{puerto}" in linea and "LISTENING" in linea:
+                        partes = linea.split()
+                        if partes:
+                            pid = partes[-1]
+                            if pid.isdigit() and pid not in pids_matados:
+                                subprocess.run(
+                                    ["taskkill", "/F", "/PID", pid],
+                                    capture_output=True,
+                                    creationflags=subprocess.CREATE_NO_WINDOW
+                                )
+                                pids_matados.append(pid)
+                                self.progreso.emit(f"   ✓ Proceso PID {pid} terminado", "success")
+                
+                if pids_matados:
+                    time.sleep(2)  # Esperar a que se libere completamente
+                    self.progreso.emit(f"✅ Puerto {puerto} liberado", "success")
+                    return True
+                else:
+                    self.progreso.emit(f"✓ Puerto {puerto} ya estaba disponible", "info")
+                    return True
+            else:
+                # Linux/Mac
+                subprocess.run(["lsof", "-ti", f":{puerto}"], capture_output=True)
+                return True
+        except Exception as e:
+            self.progreso.emit(f"⚠️ Error al limpiar puerto: {str(e)}", "warning")
+            return False
     
     def run(self):
         try:
+            # Si se solicitó limpiar puerto, hacerlo primero
+            if self.limpiar_puerto:
+                self._matar_proceso_puerto(8000)
+            
             # Verificar si ya está corriendo
             try:
                 response = requests.get("http://localhost:8000/health", timeout=2)
@@ -246,6 +303,7 @@ class APIThread(QThread):
                     self.progreso.emit(f"   Esperando... ({i+1}/10)", "info")
             
             self.progreso.emit("❌ No se pudo iniciar la API", "error")
+            self.progreso.emit("💡 Intente usar el botón 'REINICIAR API' para limpiar el puerto", "warning")
             self.terminado.emit(False)
             
         except Exception as e:
@@ -444,13 +502,25 @@ class CalculadorDVGUI(QMainWindow):
         self.lbl_api_status.setObjectName("statusLabel")
         self.lbl_api_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.btn_iniciar_api = QPushButton("🚀 INICIAR API DIAN")
+        # Botones API en layout horizontal
+        layout_btns_api = QHBoxLayout()
+        
+        self.btn_iniciar_api = QPushButton("🚀 INICIAR API")
         self.btn_iniciar_api.setObjectName("btnPrimary")
         self.btn_iniciar_api.clicked.connect(self.iniciar_api)
         self.btn_iniciar_api.setMinimumHeight(55)
         
+        self.btn_reiniciar_api = QPushButton("🔄 REINICIAR")
+        self.btn_reiniciar_api.setObjectName("btnSecondary")
+        self.btn_reiniciar_api.clicked.connect(self.reiniciar_api)
+        self.btn_reiniciar_api.setMinimumHeight(55)
+        self.btn_reiniciar_api.setToolTip("Limpia el puerto 8000 y reinicia la API")
+        
+        layout_btns_api.addWidget(self.btn_iniciar_api, 2)
+        layout_btns_api.addWidget(self.btn_reiniciar_api, 1)
+        
         layout_api.addWidget(self.lbl_api_status)
-        layout_api.addWidget(self.btn_iniciar_api)
+        layout_api.addLayout(layout_btns_api)
         
         grupo_api.setLayout(layout_api)
         layout.addWidget(grupo_api)
@@ -619,13 +689,29 @@ class CalculadorDVGUI(QMainWindow):
     def iniciar_api(self):
         """Inicia la API DIAN en background"""
         self.btn_iniciar_api.setEnabled(False)
+        self.btn_reiniciar_api.setEnabled(False)
         self.lbl_api_status.setText("⏳ Iniciando API...")
         self.log("", "info")
         self.log("═" * 50, "info")
         self.log("🚀 INICIANDO API DIAN", "info")
         self.log("═" * 50, "info")
         
-        self.api_thread = APIThread()
+        self.api_thread = APIThread(limpiar_puerto=False)
+        self.api_thread.progreso.connect(self.log)
+        self.api_thread.terminado.connect(self.api_iniciada_callback)
+        self.api_thread.start()
+    
+    def reiniciar_api(self):
+        """Reinicia la API limpiando primero el puerto 8000"""
+        self.btn_iniciar_api.setEnabled(False)
+        self.btn_reiniciar_api.setEnabled(False)
+        self.lbl_api_status.setText("🔄 Reiniciando API...")
+        self.log("", "info")
+        self.log("═" * 50, "info")
+        self.log("🔄 REINICIANDO API DIAN (limpiando puerto 8000)", "info")
+        self.log("═" * 50, "info")
+        
+        self.api_thread = APIThread(limpiar_puerto=True)
         self.api_thread.progreso.connect(self.log)
         self.api_thread.terminado.connect(self.api_iniciada_callback)
         self.api_thread.start()
@@ -638,14 +724,15 @@ class CalculadorDVGUI(QMainWindow):
             self.lbl_api_status.setObjectName("statusOk")
             self.lbl_api_status.setStyleSheet("color: #10b981; font-weight: 700; font-size: 12pt;")
             self.btn_iniciar_api.setText("✅ API INICIADA")
+            self.btn_reiniciar_api.setEnabled(True)
             self.btn_seleccionar.setEnabled(True)
             self.log("", "success")
             self.log("🎉 API lista para calcular dígitos de verificación", "success")
         else:
             self.btn_iniciar_api.setEnabled(True)
+            self.btn_reiniciar_api.setEnabled(True)
             self.lbl_api_status.setText("❌ Error al iniciar API")
             self.log("", "error")
-            self.log("💡 Intente iniciar manualmente: cd backend; python -m uvicorn app:app --port 8000", "warning")
     
     def seleccionar_archivo(self):
         """Abre diálogo para seleccionar archivo"""

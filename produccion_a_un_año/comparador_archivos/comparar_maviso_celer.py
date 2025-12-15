@@ -140,6 +140,32 @@ class ComparadorMavisoCeler:
             return False
         return norm1 == norm2
     
+    def _comparar_modalidad(self, modalidad_celer, modalidad_maviso) -> bool:
+        """
+        Compara modalidades considerando equivalencias:
+        - CELER "UNICA" = MAVISO "ANUAL" (son equivalentes)
+        - MENSUAL = MENSUAL
+        - ANUAL = ANUAL
+        """
+        # Normalizar valores
+        celer_norm = str(modalidad_celer).strip().upper() if not pd.isna(modalidad_celer) else None
+        maviso_norm = str(modalidad_maviso).strip().upper() if not pd.isna(modalidad_maviso) else None
+        
+        # Si ambos están vacíos, son iguales
+        if celer_norm is None and maviso_norm is None:
+            return True
+        
+        # Si uno está vacío y el otro no, son diferentes
+        if celer_norm is None or maviso_norm is None:
+            return False
+        
+        # Regla especial: CELER "UNICA" equivale a MAVISO "ANUAL"
+        if celer_norm == "UNICA" and maviso_norm == "ANUAL":
+            return True
+        
+        # Comparación normal
+        return celer_norm == maviso_norm
+    
     def _comparar_prima(self, prima_maviso, prima_celer) -> bool:
         """
         Compara primas considerando que:
@@ -239,8 +265,8 @@ class ComparadorMavisoCeler:
                         'celer': self._normalizar_valor(datos_celer['fecha_fin'])
                     })
                 
-                # Modalidad (MENSUAL/ANUAL)
-                if not self._comparar_valores(datos_celer['modalidad'], datos_maviso['modalidad']):
+                # Modalidad (MENSUAL/ANUAL/UNICA) - usa comparación especial
+                if not self._comparar_modalidad(datos_celer['modalidad'], datos_maviso['modalidad']):
                     errores.append({
                         'campo': 'Modalidad',
                         'maviso': self._normalizar_valor(datos_maviso['modalidad']),
