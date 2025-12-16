@@ -23,12 +23,11 @@ class LlenadorThread(QThread):
     log_signal = pyqtSignal(str, str)  # mensaje, tipo
     finished_signal = pyqtSignal(bool, str, dict)  # éxito, mensaje, estadísticas
     
-    def __init__(self, archivo_nits, columna_nits, archivo_celer, archivo_plantilla, archivo_salida):
+    def __init__(self, archivo_nits, columna_nits, archivo_celer, archivo_salida):
         super().__init__()
         self.archivo_nits = archivo_nits
         self.columna_nits = columna_nits
         self.archivo_celer = archivo_celer
-        self.archivo_plantilla = archivo_plantilla
         self.archivo_salida = archivo_salida
     
     def separar_nombre_apellidos(self, nombre_completo):
@@ -151,12 +150,23 @@ class LlenadorThread(QThread):
             
             self.log_signal.emit(f"✅ Registros CELER: {len(df_celer)}", "success")
             
-            # 3. Leer plantilla
-            self.log_signal.emit("📂 Preparando plantilla...", "info")
-            df_plantilla = pd.read_excel(self.archivo_plantilla, nrows=0)
-            columnas_plantilla = list(df_plantilla.columns)
+            # 3. Definir columnas de SoftSeguros (formato estándar)
+            self.log_signal.emit("📋 Preparando estructura SoftSeguros...", "info")
+            columnas_plantilla = [
+                'NOMBRES', 'APELLIDOS', 'SOBRENOMBRE (ALIAS)', 'NÚMERO DE DOCUMENTO',
+                'TIPO DE DOCUMENTO', 'GÉNERO', 'ESTADO CIVIL', 'FECHA DE NACIMIENTO',
+                'TELÉFONO MÓVIL', 'TIPO TELÉFONO MÓVIL', 'TELÉFONO PRINCIPAL',
+                'TIPO DE TELÉFONO PRINCIPAL', 'TELÉFONO SECUNDARIO', 'TIPO DE TELÉFONO SECUNDARIO',
+                'EMAIL', 'TIPO EMAIL', 'EMAIL SECUNDARIO', 'TIPO EMAIL SECUNDARIO',
+                'DIRECCIÓN PRINCIPAL', 'TIPO DIRECCIÓN', 'DIRECCIÓN SECUNDARIA',
+                'TIPO DIRECCIÓN SECUNDARIA', 'PAÍS', 'ESTADO', 'CIUDAD', 'OCUPACIÓN',
+                'INGRESO MENSUAL', 'PATRIMONIO', 'CASA PROPIA', 'NÚMERO DE CASAS',
+                'HIJOS', 'NÚMERO DE HIJOS', 'VEHÍCULOS', 'NÚMERO DE VEHÍCULOS',
+                'PAGINA WEB', 'REDES SOCIALES', 'NOMBRE DE CONTACTO', 'CATEGORÍAS',
+                'OBSERVACIONES', 'CARGADO POR'
+            ]
             
-            self.log_signal.emit(f"✅ Columnas plantilla: {len(columnas_plantilla)}", "success")
+            self.log_signal.emit(f"✅ Estructura definida: {len(columnas_plantilla)} campos", "success")
             
             # 4. Buscar y mapear
             self.log_signal.emit("", "info")
@@ -241,6 +251,16 @@ class LlenadorThread(QThread):
                 
                 self.log_signal.emit(f"✅ Plantilla guardada: {os.path.basename(self.archivo_salida)}", "success")
             
+            # Mostrar TODOS los no encontrados en los logs
+            if no_encontrados:
+                self.log_signal.emit("", "warning")
+                self.log_signal.emit("="*60, "warning")
+                self.log_signal.emit(f"⚠️ NITs NO ENCONTRADOS EN CELER ({len(no_encontrados)}):", "warning")
+                self.log_signal.emit("="*60, "warning")
+                for nit in no_encontrados:
+                    self.log_signal.emit(f"  • {nit}", "warning")
+                self.log_signal.emit("="*60, "warning")
+            
             # Estadísticas
             estadisticas = {
                 'total': len(nits_buscar),
@@ -265,7 +285,6 @@ class MainWindow(QMainWindow):
         self.archivo_nits = None
         self.columna_nits = None
         self.archivo_celer = None
-        self.archivo_plantilla = None
         self.archivo_salida = None
         
         # Setup UI
@@ -330,19 +349,6 @@ class MainWindow(QMainWindow):
         layout_celer.addWidget(self.lbl_ruta_celer, 1)
         layout_celer.addWidget(btn_celer)
         layout_archivos.addLayout(layout_celer)
-        
-        # Archivo Plantilla
-        layout_plantilla = QHBoxLayout()
-        lbl_plantilla = QLabel("Plantilla:")
-        lbl_plantilla.setMinimumWidth(150)
-        self.lbl_ruta_plantilla = QLabel("No seleccionado")
-        self.lbl_ruta_plantilla.setObjectName("archivo")
-        btn_plantilla = QPushButton("📂 Seleccionar")
-        btn_plantilla.clicked.connect(self.seleccionar_plantilla)
-        layout_plantilla.addWidget(lbl_plantilla)
-        layout_plantilla.addWidget(self.lbl_ruta_plantilla, 1)
-        layout_plantilla.addWidget(btn_plantilla)
-        layout_archivos.addLayout(layout_plantilla)
         
         layout.addWidget(grupo_archivos)
         
@@ -577,18 +583,6 @@ class MainWindow(QMainWindow):
             self.lbl_ruta_celer.setText(archivo)
             self.verificar_archivos()
     
-    def seleccionar_plantilla(self):
-        archivo, _ = QFileDialog.getOpenFileName(
-            self,
-            "Seleccionar Plantilla SoftSeguros",
-            "",
-            "Excel Files (*.xlsx *.xls)"
-        )
-        if archivo:
-            self.archivo_plantilla = archivo
-            self.lbl_ruta_plantilla.setText(archivo)
-            self.verificar_archivos()
-    
     def columna_seleccionada(self, columna):
         """Actualiza la columna seleccionada"""
         if columna:
@@ -596,7 +590,7 @@ class MainWindow(QMainWindow):
             self.log(f"📋 Columna seleccionada: {columna}", "info")
     
     def verificar_archivos(self):
-        if self.archivo_nits and self.columna_nits and self.archivo_celer and self.archivo_plantilla:
+        if self.archivo_nits and self.columna_nits and self.archivo_celer:
             self.btn_ejecutar.setEnabled(True)
         else:
             self.btn_ejecutar.setEnabled(False)
@@ -604,7 +598,7 @@ class MainWindow(QMainWindow):
     def ejecutar_llenado(self):
         # Generar nombre de archivo de salida
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        carpeta_salida = os.path.join(os.path.dirname(self.archivo_plantilla), "output")
+        carpeta_salida = os.path.join(os.path.dirname(__file__), "conciliador_clientes", "plantilla", "output")
         os.makedirs(carpeta_salida, exist_ok=True)
         self.archivo_salida = os.path.join(carpeta_salida, f"PLANTILLA_LLENA_{timestamp}.xlsx")
         
@@ -621,7 +615,6 @@ class MainWindow(QMainWindow):
             self.archivo_nits,
             self.columna_nits,
             self.archivo_celer,
-            self.archivo_plantilla,
             self.archivo_salida
         )
         self.worker.log_signal.connect(self.log)
