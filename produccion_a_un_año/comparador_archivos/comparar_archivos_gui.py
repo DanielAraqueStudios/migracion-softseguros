@@ -18,7 +18,8 @@ from datetime import datetime
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QTextEdit, QFileDialog, QGroupBox,
-    QProgressBar, QFrame, QMessageBox, QTabWidget
+    QProgressBar, QFrame, QMessageBox, QTabWidget, QSpinBox,
+    QComboBox, QCheckBox, QScrollArea
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QPalette
@@ -1900,6 +1901,482 @@ class TabMavisoVsCeler(QWidget):
             QMessageBox.critical(self, "Error", f"Error al colocar NITs completos:\n{str(e)}")
 
 
+# ==================================================================================
+# Thread para Copiar Datos
+# ==================================================================================
+
+class CopiadorDatosThread(QThread):
+    """Thread para copiar datos entre archivos"""
+    log_signal = pyqtSignal(str, str)
+    finished_signal = pyqtSignal(bool, str, dict)
+    
+    def __init__(self, archivo_base, skiprows_base, col_poliza_base,
+                 archivo_destino, skiprows_destino, col_poliza_destino,
+                 mapeos, archivo_salida):
+        super().__init__()
+        self.archivo_base = archivo_base
+        self.skiprows_base = skiprows_base
+        self.col_poliza_base = col_poliza_base
+        self.archivo_destino = archivo_destino
+        self.skiprows_destino = skiprows_destino
+        self.col_poliza_destino = col_poliza_destino
+        self.mapeos = mapeos  # [(col_base, col_destino), ...]
+        self.archivo_salida = archivo_salida
+    
+    def run(self):
+        try:
+            from openpyxl import load_workbook
+            
+            # Leer archivo BASE
+            self.log_signal.emit("📂 Leyendo archivo BASE...", "info")
+            df_base = pd.read_excel(self.archivo_base, skiprows=self.skiprows_base, dtype=str)
+            self.log_signal.emit(f"✅ BASE: {len(df_base)} registros", "success")
+            
+            # Leer archivo DESTINO con openpyxl para preservar formato
+            self.log_signal.emit("📂 Leyendo archivo DESTINO...", "info")
+            wb_destino = load_workbook(self.archivo_destino)
+            ws_destino = wb_destino.active
+            
+            # Leer también con pandas para búsqueda
+            df_destino = pd.read_excel(self.archivo_destino, skiprows=self.skiprows_destino, dtype=str)
+            self.log_signal.emit(f"✅ DESTINO: {len(df_destino)} registros", "success")
+            
+            # Crear diccionarios para búsqueda rápida
+            polizas_base = df_base[self.col_poliza_base].astype(str).str.strip().str.upper()
+            df_base['_poliza_norm'] = polizas_base
+            
+            copiados = 0
+            no_encontrados = []
+            
+            self.log_signal.emit("", "info")
+            self.log_signal.emit("🔄 Copiando datos...", "info")
+            self.log_signal.emit("="*60, "info")
+            
+            # Recorrer archivo DESTINO
+            for idx_destino in range(self.skiprows_destino + 1, ws_destino.max_row + 1):
+                # Obtener número de póliza del DESTINO
+                col_letra_destino = self.obtener_letra_columna(self.col_poliza_destino)
+                poliza_destino = ws_destino[f'{col_letra_destino}{idx_destino}'].value
+                
+                if not poliza_destino:
+                    continue
+                
+                poliza_norm = str(poliza_destino).strip().upper()
+                
+                # Buscar en BASE
+                mascara = df_base['_poliza_norm'] == poliza_norm
+                
+                if not mascara.any():
+                    no_encontrados.append(poliza_destino)
+                    if len(no_encontrados) <= 10:
+                        self.log_signal.emit(f"⚠️ Póliza {poliza_destino}: No encontrada en BASE", "warning")
+                    continue
+                
+                # Obtener fila de BASE
+                fila_base = df_base[mascara].iloc[0]
+                
+                # Copiar datos según mapeos
+                for col_base_idx, col_destino_idx in self.mapeos:
+                    valor = fila_base.iloc[col_base_idx]
+                    col_letra = self.obtener_letra_columna(col_destino_idx)
+                    ws_destino[f'{col_letra}{idx_destino}'].value = valor
+                
+                copiados += 1
+                if copiados <= 10 or copiados % 50 == 0:
+                    self.log_signal.emit(f"✅ [{copiados}] Póliza {poliza_destino}: Datos copiados", "success")
+            
+            # Guardar
+            self.log_signal.emit("", "info")
+            self.log_signal.emit("💾 Guardando archivo...", "info")
+            wb_destino.save(self.archivo_salida)
+            self.log_signal.emit(f"✅ Guardado: {os.path.basename(self.archivo_salida)}", "success")
+            
+            estadisticas = {
+                'total': ws_destino.max_row - self.skiprows_destino,
+                'copiados': copiados,
+                'no_encontrados': len(no_encontrados)
+            }
+            
+            if no_encontrados:
+                if len(no_encontrados) > 10:
+                    self.log_signal.emit(f"⚠️ ... y {len(no_encontrados) - 10} pólizas más no encontradas", "warning")
+            
+            self.finished_signal.emit(True, "Copia completada", estadisticas)
+            
+        except Exception as e:
+            self.log_signal.emit(f"❌ Error: {str(e)}", "error")
+            self.finished_signal.emit(False, str(e), {})
+    
+    def obtener_letra_columna(self, indice):
+        """Convierte índice numérico a letra de columna Excel"""
+        letra = ""
+        indice += 1  # Excel es 1-based
+        while indice > 0:
+            indice -= 1
+            letra = chr(indice % 26 + 65) + letra
+            indice //= 26
+        return letra
+
+
+# ==================================================================================
+# Pestaña: Copiar Datos Entre Archivos
+# ==================================================================================
+
+class TabCopiarDatos(QWidget):
+    """Pestaña para copiar datos entre archivos Excel"""
+    
+    def __init__(self):
+        super().__init__()
+        self.archivo_base = None
+        self.archivo_destino = None
+        self.columnas_base = []
+        self.columnas_destino = []
+        self.mapeos_widgets = []  # [(checkbox, combo_destino), ...]
+        self.init_ui()
+    
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setSpacing(10)
+        
+        # Título
+        titulo = QLabel("📋 Copiar Datos Entre Archivos Excel")
+        titulo.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(titulo)
+        
+        # Grupo: Archivo BASE
+        grupo_base = QGroupBox("📂 Archivo BASE (Fuente de datos)")
+        layout_base = QVBoxLayout(grupo_base)
+        
+        layout_base_file = QHBoxLayout()
+        self.lbl_base = QLabel("No seleccionado")
+        self.lbl_base.setObjectName("archivo")
+        btn_base = QPushButton("📁 Seleccionar Archivo BASE")
+        btn_base.clicked.connect(self.seleccionar_base)
+        layout_base_file.addWidget(self.lbl_base, 1)
+        layout_base_file.addWidget(btn_base)
+        layout_base.addLayout(layout_base_file)
+        
+        layout_base_config = QHBoxLayout()
+        lbl_skiprows_base = QLabel("Filas a saltar:")
+        self.spin_skiprows_base = QSpinBox()
+        self.spin_skiprows_base.setRange(0, 100)
+        self.spin_skiprows_base.setValue(3)
+        
+        lbl_poliza_base = QLabel("Columna Póliza:")
+        self.combo_poliza_base = QComboBox()
+        self.combo_poliza_base.setEnabled(False)
+        
+        layout_base_config.addWidget(lbl_skiprows_base)
+        layout_base_config.addWidget(self.spin_skiprows_base)
+        layout_base_config.addWidget(lbl_poliza_base)
+        layout_base_config.addWidget(self.combo_poliza_base, 1)
+        layout_base.addLayout(layout_base_config)
+        
+        layout.addWidget(grupo_base)
+        
+        # Grupo: Archivo DESTINO
+        grupo_destino = QGroupBox("📂 Archivo DESTINO (Donde se copiarán los datos)")
+        layout_destino = QVBoxLayout(grupo_destino)
+        
+        layout_destino_file = QHBoxLayout()
+        self.lbl_destino = QLabel("No seleccionado")
+        self.lbl_destino.setObjectName("archivo")
+        btn_destino = QPushButton("📁 Seleccionar Archivo DESTINO")
+        btn_destino.clicked.connect(self.seleccionar_destino)
+        layout_destino_file.addWidget(self.lbl_destino, 1)
+        layout_destino_file.addWidget(btn_destino)
+        layout_destino.addLayout(layout_destino_file)
+        
+        layout_destino_config = QHBoxLayout()
+        lbl_skiprows_destino = QLabel("Filas a saltar:")
+        self.spin_skiprows_destino = QSpinBox()
+        self.spin_skiprows_destino.setRange(0, 100)
+        self.spin_skiprows_destino.setValue(0)
+        
+        lbl_poliza_destino = QLabel("Columna Póliza:")
+        self.combo_poliza_destino = QComboBox()
+        self.combo_poliza_destino.setEnabled(False)
+        
+        layout_destino_config.addWidget(lbl_skiprows_destino)
+        layout_destino_config.addWidget(self.spin_skiprows_destino)
+        layout_destino_config.addWidget(lbl_poliza_destino)
+        layout_destino_config.addWidget(self.combo_poliza_destino, 1)
+        layout_destino.addLayout(layout_destino_config)
+        
+        layout.addWidget(grupo_destino)
+        
+        # Grupo: Mapeo de Columnas
+        grupo_mapeo = QGroupBox("🔗 Mapeo de Columnas (Selecciona qué copiar)")
+        layout_mapeo = QVBoxLayout(grupo_mapeo)
+        
+        # Scroll area para mapeos
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setMinimumHeight(200)
+        self.scroll_widget = QWidget()
+        self.scroll_layout = QVBoxLayout(self.scroll_widget)
+        scroll.setWidget(self.scroll_widget)
+        layout_mapeo.addWidget(scroll)
+        
+        self.btn_generar_mapeos = QPushButton("⚙️ Generar Lista de Mapeos")
+        self.btn_generar_mapeos.clicked.connect(self.generar_mapeos)
+        self.btn_generar_mapeos.setEnabled(False)
+        layout_mapeo.addWidget(self.btn_generar_mapeos)
+        
+        layout.addWidget(grupo_mapeo)
+        
+        # Botón Copiar
+        layout_btn = QHBoxLayout()
+        layout_btn.addStretch()
+        self.btn_copiar = QPushButton("🚀 COPIAR DATOS")
+        self.btn_copiar.setObjectName("btnComparar")
+        self.btn_copiar.clicked.connect(self.copiar_datos)
+        self.btn_copiar.setEnabled(False)
+        self.btn_copiar.setMinimumHeight(45)
+        layout_btn.addWidget(self.btn_copiar)
+        layout_btn.addStretch()
+        layout.addLayout(layout_btn)
+        
+        # Grupo: Estadísticas
+        grupo_stats = QGroupBox("📊 Estadísticas")
+        layout_stats = QHBoxLayout(grupo_stats)
+        
+        self.stats_widgets = {}
+        stats_config = [
+            ('total', 'Total', '#4ec9b0'),
+            ('copiados', 'Copiados', '#6a9955'),
+            ('no_encontrados', 'No Encontrados', '#f44747')
+        ]
+        
+        for key, label, color in stats_config:
+            container = QWidget()
+            container_layout = QVBoxLayout(container)
+            container_layout.setContentsMargins(10, 5, 10, 5)
+            
+            lbl = QLabel(label)
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lbl.setStyleSheet(f"color: {color}; font-weight: bold;")
+            
+            valor = QLabel("0")
+            valor.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            valor.setStyleSheet(f"color: {color}; font-size: 20px; font-weight: bold;")
+            self.stats_widgets[key] = valor
+            
+            container_layout.addWidget(lbl)
+            container_layout.addWidget(valor)
+            layout_stats.addWidget(container)
+        
+        layout.addWidget(grupo_stats)
+        
+        # Grupo: Logs
+        grupo_logs = QGroupBox("📝 Logs")
+        layout_logs = QVBoxLayout(grupo_logs)
+        
+        self.txt_logs = QTextEdit()
+        self.txt_logs.setReadOnly(True)
+        self.txt_logs.setMinimumHeight(150)
+        layout_logs.addWidget(self.txt_logs)
+        
+        layout_btns_log = QHBoxLayout()
+        btn_limpiar = QPushButton("🗑️ Limpiar")
+        btn_limpiar.clicked.connect(self.limpiar_logs)
+        
+        self.btn_abrir = QPushButton("📂 Abrir Archivo")
+        self.btn_abrir.setObjectName("btnAbrir")
+        self.btn_abrir.clicked.connect(self.abrir_archivo)
+        self.btn_abrir.setEnabled(False)
+        
+        layout_btns_log.addWidget(btn_limpiar)
+        layout_btns_log.addStretch()
+        layout_btns_log.addWidget(self.btn_abrir)
+        layout_logs.addLayout(layout_btns_log)
+        
+        layout.addWidget(grupo_logs)
+    
+    def seleccionar_base(self):
+        archivo, _ = QFileDialog.getOpenFileName(
+            self,
+            "Seleccionar Archivo BASE",
+            "",
+            "Excel Files (*.xlsx *.xls)"
+        )
+        if archivo:
+            try:
+                self.archivo_base = archivo
+                self.lbl_base.setText(archivo)
+                
+                # Leer columnas
+                skiprows = self.spin_skiprows_base.value()
+                df = pd.read_excel(archivo, skiprows=skiprows, nrows=0)
+                self.columnas_base = list(df.columns)
+                
+                self.combo_poliza_base.clear()
+                self.combo_poliza_base.addItems(self.columnas_base)
+                self.combo_poliza_base.setEnabled(True)
+                
+                self.log(f"✅ BASE cargado: {len(self.columnas_base)} columnas", "success")
+                self.verificar_archivos()
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al leer archivo:\n{str(e)}")
+                self.archivo_base = None
+    
+    def seleccionar_destino(self):
+        archivo, _ = QFileDialog.getOpenFileName(
+            self,
+            "Seleccionar Archivo DESTINO",
+            "",
+            "Excel Files (*.xlsx *.xls)"
+        )
+        if archivo:
+            try:
+                self.archivo_destino = archivo
+                self.lbl_destino.setText(archivo)
+                
+                # Leer columnas
+                skiprows = self.spin_skiprows_destino.value()
+                df = pd.read_excel(archivo, skiprows=skiprows, nrows=0)
+                self.columnas_destino = list(df.columns)
+                
+                self.combo_poliza_destino.clear()
+                self.combo_poliza_destino.addItems(self.columnas_destino)
+                self.combo_poliza_destino.setEnabled(True)
+                
+                self.log(f"✅ DESTINO cargado: {len(self.columnas_destino)} columnas", "success")
+                self.verificar_archivos()
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al leer archivo:\n{str(e)}")
+                self.archivo_destino = None
+    
+    def verificar_archivos(self):
+        if self.archivo_base and self.archivo_destino:
+            self.btn_generar_mapeos.setEnabled(True)
+    
+    def generar_mapeos(self):
+        """Genera la lista de checkboxes y dropdowns para mapeo"""
+        # Limpiar mapeos anteriores
+        for i in reversed(range(self.scroll_layout.count())):
+            self.scroll_layout.itemAt(i).widget().setParent(None)
+        
+        self.mapeos_widgets = []
+        
+        # Crear un mapeo por cada columna BASE
+        for idx, col_base in enumerate(self.columnas_base):
+            layout_fila = QHBoxLayout()
+            
+            # Checkbox
+            checkbox = QCheckBox(f"{col_base}")
+            checkbox.setChecked(False)
+            
+            # Label flecha
+            lbl_flecha = QLabel("→")
+            lbl_flecha.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            
+            # ComboBox destino
+            combo_destino = QComboBox()
+            combo_destino.addItems(self.columnas_destino)
+            combo_destino.setEnabled(False)
+            
+            # Conectar checkbox
+            checkbox.stateChanged.connect(lambda state, c=combo_destino: c.setEnabled(state == 2))
+            
+            layout_fila.addWidget(checkbox, 2)
+            layout_fila.addWidget(lbl_flecha)
+            layout_fila.addWidget(combo_destino, 2)
+            
+            widget_fila = QWidget()
+            widget_fila.setLayout(layout_fila)
+            self.scroll_layout.addWidget(widget_fila)
+            
+            self.mapeos_widgets.append((checkbox, combo_destino, idx))
+        
+        self.scroll_layout.addStretch()
+        self.btn_copiar.setEnabled(True)
+        self.log("✅ Lista de mapeos generada. Selecciona las columnas a copiar", "success")
+    
+    def copiar_datos(self):
+        # Obtener mapeos seleccionados
+        mapeos = []
+        for checkbox, combo, idx_base in self.mapeos_widgets:
+            if checkbox.isChecked():
+                col_destino_nombre = combo.currentText()
+                idx_destino = self.columnas_destino.index(col_destino_nombre)
+                mapeos.append((idx_base, idx_destino))
+        
+        if not mapeos:
+            QMessageBox.warning(self, "Advertencia", "Debes seleccionar al menos una columna para copiar")
+            return
+        
+        # Generar archivo de salida
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        carpeta_salida = os.path.join(os.path.dirname(self.archivo_destino), "output")
+        os.makedirs(carpeta_salida, exist_ok=True)
+        archivo_salida = os.path.join(carpeta_salida, f"DESTINO_con_datos_copiados_{timestamp}.xlsx")
+        
+        self.btn_copiar.setEnabled(False)
+        self.limpiar_logs()
+        
+        self.log("", "info")
+        self.log("="*60, "info")
+        self.log("🚀 INICIANDO COPIA DE DATOS", "info")
+        self.log(f"📊 Columnas a copiar: {len(mapeos)}", "info")
+        self.log("="*60, "info")
+        
+        # Iniciar thread
+        self.worker = CopiadorDatosThread(
+            self.archivo_base,
+            self.spin_skiprows_base.value(),
+            self.combo_poliza_base.currentText(),
+            self.archivo_destino,
+            self.spin_skiprows_destino.value(),
+            self.combo_poliza_destino.currentText(),
+            mapeos,
+            archivo_salida
+        )
+        self.archivo_salida = archivo_salida
+        self.worker.log_signal.connect(self.log)
+        self.worker.finished_signal.connect(self.copia_completada)
+        self.worker.start()
+    
+    def copia_completada(self, exito, mensaje, estadisticas):
+        if exito:
+            self.log("", "info")
+            self.log("="*60, "success")
+            self.log("✅ COPIA COMPLETADA", "success")
+            self.log("="*60, "success")
+            
+            for key, valor in estadisticas.items():
+                if key in self.stats_widgets:
+                    self.stats_widgets[key].setText(str(valor))
+            
+            self.btn_abrir.setEnabled(True)
+        else:
+            self.log(f"❌ Error: {mensaje}", "error")
+        
+        self.btn_copiar.setEnabled(True)
+    
+    def abrir_archivo(self):
+        if hasattr(self, 'archivo_salida') and os.path.exists(self.archivo_salida):
+            if os.name == 'nt':
+                os.startfile(self.archivo_salida)
+            self.log(f"📂 Abriendo: {os.path.basename(self.archivo_salida)}", "info")
+    
+    def limpiar_logs(self):
+        self.txt_logs.clear()
+    
+    def log(self, mensaje: str, tipo: str = "info"):
+        colores = {
+            "info": "#d4d4d4",
+            "success": "#6a9955",
+            "warning": "#dcdcaa",
+            "error": "#f44747"
+        }
+        color = colores.get(tipo, "#d4d4d4")
+        self.txt_logs.append(f'<span style="color: {color};">{mensaje}</span>')
+
+
 class ComparadorGUI(QMainWindow):
     """Ventana principal con pestañas"""
     
@@ -1932,6 +2409,10 @@ class ComparadorGUI(QMainWindow):
         # Pestaña 3: Validar Mensuales sin Prima
         self.tab_validar = TabValidarMensuales()
         self.tabs.addTab(self.tab_validar, "⚠️ Validar Mensuales sin Prima")
+        
+        # Pestaña 4: Copiar Datos
+        self.tab_copiar = TabCopiarDatos()
+        self.tabs.addTab(self.tab_copiar, "📋 Copiar Datos")
         
         layout.addWidget(self.tabs)
 
