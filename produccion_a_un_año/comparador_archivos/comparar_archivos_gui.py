@@ -1912,7 +1912,6 @@ class CopiarUnidadesThread(QThread):
     
     def __init__(self, archivo_maviso, archivo_celer, archivo_destino, col_destino_idx, archivo_salida):
         super().__init__()
-        self.archivo_maviso = archivo_maviso
         self.archivo_celer = archivo_celer
         self.archivo_destino = archivo_destino
         self.col_destino_idx = col_destino_idx  # Índice de columna donde pegar
@@ -1924,15 +1923,9 @@ class CopiarUnidadesThread(QThread):
             from openpyxl.styles import PatternFill
             
             # Constantes
-            MAVISO_COL_POLIZA = 0  # Columna A
             CELER_COL_POLIZA = 20  # Columna U (skiprows ya aplicado)
             CELER_COL_UNIDAD = 55  # Columna BD (columna 55, índice 0-based)
-            DESTINO_COL_POLIZA = 1  # Columna B (índice 0-based)
-            
-            # Leer MAVISO
-            self.log_signal.emit("📂 Leyendo archivo MAVISO...", "info")
-            df_maviso = pd.read_excel(self.archivo_maviso, header=0, dtype=str)
-            self.log_signal.emit(f"✅ MAVISO: {len(df_maviso)} registros", "success")
+            DESTINO_COL_POLIZA = 2  # Columna B (índice 1-based en openpyxl)
             
             # Leer CELER
             self.log_signal.emit("📂 Leyendo archivo CELER...", "info")
@@ -1954,74 +1947,52 @@ class CopiarUnidadesThread(QThread):
             wb_destino = load_workbook(self.archivo_destino)
             ws_destino = wb_destino.active
             
-            # También con pandas para búsqueda
-            df_destino = pd.read_excel(self.archivo_destino, dtype=str)
+            total_filas = ws_destino.max_row
+            self.log_signal.emit(f"✅ DESTINO: {total_filas} filas", "success")
             
             copiados = 0
             no_en_celer = []
-            no_en_destino = []
             rojo_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
             
             self.log_signal.emit("", "info")
-            self.log_signal.emit("🔄 Procesando pólizas de MAVISO...", "info")
+            self.log_signal.emit("🔄 Procesando pólizas del archivo DESTINO...", "info")
             self.log_signal.emit("="*60, "info")
             
-            # Procesar cada póliza del MAVISO
-            for idx_maviso, row_maviso in df_maviso.iterrows():
-                poliza = str(row_maviso.iloc[MAVISO_COL_POLIZA]).strip().upper()
+            # Procesar cada fila del archivo DESTINO (empezando desde fila 2, asumiendo fila 1 es encabezado)
+            for row_idx in range(2, ws_destino.max_row + 1):
+                poliza_destino = ws_destino.cell(row_idx, DESTINO_COL_POLIZA).value
+                
+                if not poliza_destino:
+                    continue
+                
+                poliza = str(poliza_destino).strip().upper()
                 
                 if not poliza or poliza == 'NAN':
                     continue
                 
                 # Buscar unidad en CELER
-                if poliza not in dict_unidades:
-                    no_en_celer.append(poliza)
-                    if len(no_en_celer) <= 10:
-                        self.log_signal.emit(f"⚠️ Póliza {poliza}: NO encontrada en CELER", "warning")
-                    continue
-                
-                unidad = dict_unidades[poliza]
-                
-                # Buscar póliza en DESTINO (columna B)
-                encontrado_en_destino = False
-                for row_idx in range(1, ws_destino.max_row + 1):
-                    poliza_destino = ws_destino.cell(row_idx, DESTINO_COL_POLIZA + 1).value
+                if poliza in dict_unidades:
+                    unidad = dict_unidades[poliza]
                     
-                    if poliza_destino:
-                        poliza_destino_norm = str(poliza_destino).strip().upper()
-                        
-                        if poliza_destino_norm == poliza:
-                            # Pegar unidad en la columna seleccionada
-                            col_letra = self.obtener_letra_columna(self.col_destino_idx)
-                            ws_destino[f'{col_letra}{row_idx}'].value = unidad
-                            
-                            # Si NO estaba en CELER, marcar fila en rojo
-                            if poliza in no_en_celer:
-                                for col_idx in range(1, ws_destino.max_column + 1):
-                                    ws_destino.cell(row_idx, col_idx).fill = rojo_fill
-                            
-                            copiados += 1
-                            encontrado_en_destino = True
-                            
-                            if copiados <= 10 or copiados % 50 == 0:
-                                self.log_signal.emit(f"✅ [{copiados}] Póliza {poliza}: '{unidad}'", "success")
-                            
-                            break
-                
-                if not encontrado_en_destino:
-                    no_en_destino.append(poliza)
-            
-            # Marcar en rojo las pólizas que NO estaban en CELER
-            self.log_signal.emit("", "info")
-            self.log_signal.emit("🔴 Marcando filas sin coincidencia en CELER...", "warning")
-            
-            for row_idx in range(1, ws_destino.max_row + 1):
-                poliza_destino = ws_destino.cell(row_idx, DESTINO_COL_POLIZA + 1).value
-                if poliza_destino:
-                    poliza_norm = str(poliza_destino).strip().upper()
-                    if poliza_norm in no_en_celer:
-                        for col_idx in range(1, ws_destino.max_column + 1):
-                            ws_destino.cell(row_idx, col_idx).fill = rojo_fill
+                    # Pegar unidad en la columna seleccionada
+                    col_letra = self.obtener_letra_columna(self.col_destino_idx)
+                    ws_destino[f'{col_letra}{row_idx}'].value = unidad
+                    
+                    copiados += 1
+                    
+                    if copiados <= 10 or copiados % 50 == 0:
+                        self.log_signal.emit(f"✅ [{copiados}] Póliza {poliza}: '{unidad}'", "success")
+                else:
+                    # NO encontrada en CELER - marcar fila en rojo
+                    no_en_celer.append(poliza)
+                    
+                    for col_idx in range(1, ws_destino.max_column + 1):
+                        ws_destino.cell(row_idx, col_idx).fill = rojo_fill
+                    
+                    if len(no_en_celer) <= 10:
+                        self.log_signal.emit(f"⚠️ Póliza {poliza}: NO encontrada en CELER (marcada en ROJO)", "warning")
+                    if len(no_en_celer) <= 10:
+                        self.log_signal.emit(f"⚠️ Póliza {poliza}: NO encontrada en CELER (marcada en ROJO)", "warning")
             
             # Guardar
             self.log_signal.emit("", "info")
@@ -2035,7 +2006,6 @@ class CopiarUnidadesThread(QThread):
             self.log_signal.emit("📊 RESUMEN:", "info")
             self.log_signal.emit(f"   ✅ Copiados: {copiados}", "success")
             self.log_signal.emit(f"   ⚠️ No en CELER: {len(no_en_celer)} (marcados en ROJO)", "warning")
-            self.log_signal.emit(f"   ℹ️ No en DESTINO: {len(no_en_destino)}", "info")
             self.log_signal.emit("="*60, "info")
             
             # Mostrar las que NO estaban en CELER
@@ -2048,10 +2018,10 @@ class CopiarUnidadesThread(QThread):
                     self.log_signal.emit(f"   ... y {len(no_en_celer) - 20} más", "warning")
             
             estadisticas = {
-                'total_maviso': len(df_maviso),
+                'total_maviso': total_filas - 1,  # Restar encabezado
                 'copiados': copiados,
                 'no_en_celer': len(no_en_celer),
-                'no_en_destino': len(no_en_destino)
+                'no_en_destino': 0  # Ya no aplica
             }
             
             self.finished_signal.emit(True, "Copia completada", estadisticas)

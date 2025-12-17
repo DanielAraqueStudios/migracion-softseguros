@@ -269,11 +269,14 @@ Interfaz gráfica profesional para comparar MAVISO vs CELER, detectar discrepanc
 **🆕 Copiar Unidades desde CELER**
 - Nueva pestaña dedicada para copiar la columna **Unidad** desde el archivo CELER hacia otro archivo Excel destino, emparejando por número de póliza.
 - Solo requiere seleccionar el archivo CELER y el archivo DESTINO (no requiere archivo MAVISO para esta función).
-- Permite elegir la columna de póliza en el archivo destino.
-- Copia el valor de la columna **Unidad** (CELER, columna BD) a la columna seleccionada en el archivo destino, según coincidencia de número de póliza.
-- Si la póliza no se encuentra en CELER, la celda correspondiente se marca en rojo en el archivo de salida.
-- Genera un archivo Excel de salida con los cambios y un log de la operación.
-- Proceso asíncrono, con barra de progreso y estadísticas.
+- Permite elegir la columna de destino donde pegar las unidades.
+- Busca automáticamente las pólizas en la **columna B** del archivo destino.
+- Lee las unidades desde la **columna BD (índice 55)** del archivo CELER (con skiprows=3).
+- Empata las pólizas desde la **columna U (índice 20)** de CELER con la columna B del destino.
+- Copia el valor de la columna **Unidad** a la columna seleccionada en el archivo destino, según coincidencia de número de póliza.
+- Si la póliza no se encuentra en CELER, toda la fila se marca en **rojo** en el archivo de salida.
+- Genera un archivo Excel de salida con timestamp y un log detallado de la operación.
+- Proceso asíncrono con barra de progreso y estadísticas en tiempo real.
 
 **Ejecutar**:
 ```powershell
