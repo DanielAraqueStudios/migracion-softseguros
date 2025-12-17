@@ -203,10 +203,11 @@ elif forma_pago_celer == "ANUAL":
 
 ## 🚀 Herramientas Principales
 
+
 ### 1. 🎨 Comparador de Archivos (GUI)
 **Archivo**: `comparador_archivos/comparar_archivos_gui.py`
 
-Interfaz gráfica profesional para comparar MAVISO vs CELER, detectar discrepancias y aplicar correcciones automáticas.
+Interfaz gráfica profesional para comparar MAVISO vs CELER, detectar discrepancias, aplicar correcciones automáticas y realizar operaciones avanzadas sobre los archivos de pólizas.
 
 #### Funcionalidades:
 
@@ -264,6 +265,15 @@ Interfaz gráfica profesional para comparar MAVISO vs CELER, detectar discrepanc
 - Genera Excel con pestañas: Coincidencias, Discrepancias, Solo Maviso, Solo CELER
 - Abre automáticamente el reporte
 - Timestamp en nombre de archivo
+
+**🆕 Copiar Unidades desde CELER**
+- Nueva pestaña dedicada para copiar la columna **Unidad** desde el archivo CELER hacia otro archivo Excel destino, emparejando por número de póliza.
+- Solo requiere seleccionar el archivo CELER y el archivo DESTINO (no requiere archivo MAVISO para esta función).
+- Permite elegir la columna de póliza en el archivo destino.
+- Copia el valor de la columna **Unidad** (CELER, columna BD) a la columna seleccionada en el archivo destino, según coincidencia de número de póliza.
+- Si la póliza no se encuentra en CELER, la celda correspondiente se marca en rojo en el archivo de salida.
+- Genera un archivo Excel de salida con los cambios y un log de la operación.
+- Proceso asíncrono, con barra de progreso y estadísticas.
 
 **Ejecutar**:
 ```powershell
@@ -595,6 +605,7 @@ taskkill /F /PID <PID>
 
 ## 📝 Notas Técnicas
 
+
 ### Normalización de Pólizas
 Todas las pólizas se normalizan para comparación:
 ```python
@@ -610,6 +621,7 @@ poliza_normalizada = str(poliza).strip().upper()
 - `ComparadorThread`: Ejecuta comparación asíncrona
 - `CalculadorThread`: Procesa cálculo de DV
 - `APIThread`: Inicia servidor FastAPI
+- `CopiarUnidadesThread`: Copia la columna Unidad de CELER a destino de forma asíncrona
 
 ### Auto-Recomparación
 Después de cada corrección se ejecuta automáticamente:

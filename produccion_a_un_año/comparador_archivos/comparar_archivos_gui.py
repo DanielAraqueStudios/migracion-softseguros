@@ -1902,6 +1902,178 @@ class TabMavisoVsCeler(QWidget):
 
 
 # ==================================================================================
+# Thread para Copiar Unidades desde CELER
+# ==================================================================================
+
+class CopiarUnidadesThread(QThread):
+    """Thread para copiar columna Unidad desde CELER a otro archivo"""
+    log_signal = pyqtSignal(str, str)
+    finished_signal = pyqtSignal(bool, str, dict)
+    
+    def __init__(self, archivo_maviso, archivo_celer, archivo_destino, col_destino_idx, archivo_salida):
+        super().__init__()
+        self.archivo_maviso = archivo_maviso
+        self.archivo_celer = archivo_celer
+        self.archivo_destino = archivo_destino
+        self.col_destino_idx = col_destino_idx  # Índice de columna donde pegar
+        self.archivo_salida = archivo_salida
+    
+    def run(self):
+        try:
+            from openpyxl import load_workbook
+            from openpyxl.styles import PatternFill
+            
+            # Constantes
+            MAVISO_COL_POLIZA = 0  # Columna A
+            CELER_COL_POLIZA = 20  # Columna U (skiprows ya aplicado)
+            CELER_COL_UNIDAD = 55  # Columna BD (columna 55, índice 0-based)
+            DESTINO_COL_POLIZA = 1  # Columna B (índice 0-based)
+            
+            # Leer MAVISO
+            self.log_signal.emit("📂 Leyendo archivo MAVISO...", "info")
+            df_maviso = pd.read_excel(self.archivo_maviso, header=0, dtype=str)
+            self.log_signal.emit(f"✅ MAVISO: {len(df_maviso)} registros", "success")
+            
+            # Leer CELER
+            self.log_signal.emit("📂 Leyendo archivo CELER...", "info")
+            df_celer = pd.read_excel(self.archivo_celer, skiprows=3, dtype=str)
+            self.log_signal.emit(f"✅ CELER: {len(df_celer)} registros", "success")
+            
+            # Crear diccionario póliza -> unidad desde CELER
+            dict_unidades = {}
+            for idx, row in df_celer.iterrows():
+                poliza_celer = str(row.iloc[CELER_COL_POLIZA]).strip().upper()
+                unidad = row.iloc[CELER_COL_UNIDAD]
+                if poliza_celer and poliza_celer != 'NAN':
+                    dict_unidades[poliza_celer] = unidad
+            
+            self.log_signal.emit(f"✅ Unidades en CELER: {len(dict_unidades)}", "success")
+            
+            # Cargar archivo DESTINO con openpyxl
+            self.log_signal.emit("📂 Leyendo archivo DESTINO...", "info")
+            wb_destino = load_workbook(self.archivo_destino)
+            ws_destino = wb_destino.active
+            
+            # También con pandas para búsqueda
+            df_destino = pd.read_excel(self.archivo_destino, dtype=str)
+            
+            copiados = 0
+            no_en_celer = []
+            no_en_destino = []
+            rojo_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+            
+            self.log_signal.emit("", "info")
+            self.log_signal.emit("🔄 Procesando pólizas de MAVISO...", "info")
+            self.log_signal.emit("="*60, "info")
+            
+            # Procesar cada póliza del MAVISO
+            for idx_maviso, row_maviso in df_maviso.iterrows():
+                poliza = str(row_maviso.iloc[MAVISO_COL_POLIZA]).strip().upper()
+                
+                if not poliza or poliza == 'NAN':
+                    continue
+                
+                # Buscar unidad en CELER
+                if poliza not in dict_unidades:
+                    no_en_celer.append(poliza)
+                    if len(no_en_celer) <= 10:
+                        self.log_signal.emit(f"⚠️ Póliza {poliza}: NO encontrada en CELER", "warning")
+                    continue
+                
+                unidad = dict_unidades[poliza]
+                
+                # Buscar póliza en DESTINO (columna B)
+                encontrado_en_destino = False
+                for row_idx in range(1, ws_destino.max_row + 1):
+                    poliza_destino = ws_destino.cell(row_idx, DESTINO_COL_POLIZA + 1).value
+                    
+                    if poliza_destino:
+                        poliza_destino_norm = str(poliza_destino).strip().upper()
+                        
+                        if poliza_destino_norm == poliza:
+                            # Pegar unidad en la columna seleccionada
+                            col_letra = self.obtener_letra_columna(self.col_destino_idx)
+                            ws_destino[f'{col_letra}{row_idx}'].value = unidad
+                            
+                            # Si NO estaba en CELER, marcar fila en rojo
+                            if poliza in no_en_celer:
+                                for col_idx in range(1, ws_destino.max_column + 1):
+                                    ws_destino.cell(row_idx, col_idx).fill = rojo_fill
+                            
+                            copiados += 1
+                            encontrado_en_destino = True
+                            
+                            if copiados <= 10 or copiados % 50 == 0:
+                                self.log_signal.emit(f"✅ [{copiados}] Póliza {poliza}: '{unidad}'", "success")
+                            
+                            break
+                
+                if not encontrado_en_destino:
+                    no_en_destino.append(poliza)
+            
+            # Marcar en rojo las pólizas que NO estaban en CELER
+            self.log_signal.emit("", "info")
+            self.log_signal.emit("🔴 Marcando filas sin coincidencia en CELER...", "warning")
+            
+            for row_idx in range(1, ws_destino.max_row + 1):
+                poliza_destino = ws_destino.cell(row_idx, DESTINO_COL_POLIZA + 1).value
+                if poliza_destino:
+                    poliza_norm = str(poliza_destino).strip().upper()
+                    if poliza_norm in no_en_celer:
+                        for col_idx in range(1, ws_destino.max_column + 1):
+                            ws_destino.cell(row_idx, col_idx).fill = rojo_fill
+            
+            # Guardar
+            self.log_signal.emit("", "info")
+            self.log_signal.emit("💾 Guardando archivo...", "info")
+            wb_destino.save(self.archivo_salida)
+            self.log_signal.emit(f"✅ Guardado: {os.path.basename(self.archivo_salida)}", "success")
+            
+            # Logs finales
+            self.log_signal.emit("", "info")
+            self.log_signal.emit("="*60, "info")
+            self.log_signal.emit("📊 RESUMEN:", "info")
+            self.log_signal.emit(f"   ✅ Copiados: {copiados}", "success")
+            self.log_signal.emit(f"   ⚠️ No en CELER: {len(no_en_celer)} (marcados en ROJO)", "warning")
+            self.log_signal.emit(f"   ℹ️ No en DESTINO: {len(no_en_destino)}", "info")
+            self.log_signal.emit("="*60, "info")
+            
+            # Mostrar las que NO estaban en CELER
+            if no_en_celer:
+                self.log_signal.emit("", "warning")
+                self.log_signal.emit("🔴 PÓLIZAS NO ENCONTRADAS EN CELER:", "warning")
+                for poliza in no_en_celer[:20]:  # Mostrar máximo 20
+                    self.log_signal.emit(f"   • {poliza}", "warning")
+                if len(no_en_celer) > 20:
+                    self.log_signal.emit(f"   ... y {len(no_en_celer) - 20} más", "warning")
+            
+            estadisticas = {
+                'total_maviso': len(df_maviso),
+                'copiados': copiados,
+                'no_en_celer': len(no_en_celer),
+                'no_en_destino': len(no_en_destino)
+            }
+            
+            self.finished_signal.emit(True, "Copia completada", estadisticas)
+            
+        except Exception as e:
+            self.log_signal.emit(f"❌ Error: {str(e)}", "error")
+            import traceback
+            traceback.print_exc()
+            self.finished_signal.emit(False, str(e), {})
+    
+    def obtener_letra_columna(self, indice):
+        """Convierte índice numérico a letra de columna Excel"""
+        letra = ""
+        indice += 1  # Excel es 1-based
+        while indice > 0:
+            indice -= 1
+            letra = chr(indice % 26 + 65) + letra
+            indice //= 26
+        return letra
+
+
+# ==================================================================================
 # Thread para Copiar Datos
 # ==================================================================================
 
@@ -2377,6 +2549,281 @@ class TabCopiarDatos(QWidget):
         self.txt_logs.append(f'<span style="color: {color};">{mensaje}</span>')
 
 
+# ==================================================================================
+# Pestaña: Copiar Unidades desde CELER
+# ==================================================================================
+
+class TabCopiarUnidades(QWidget):
+    """Pestaña para copiar columna Unidad desde CELER a otro archivo"""
+    
+    def __init__(self):
+        super().__init__()
+        # self.archivo_maviso = None
+        self.archivo_celer = None
+        self.archivo_destino = None
+        self.carpeta_default = r"C:\Users\danie\Documents\EMPRESA\SEGUROS UNIÓN\AUTOMATIZACIONES\migraciones\migracion-softseguros\produccion_a_un_año\llenar de sotseguros"
+        self.init_ui()
+    
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setSpacing(10)
+        
+        # Título
+        titulo = QLabel("📋 Copiar Unidades desde CELER")
+        titulo.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(titulo)
+        
+        subtitulo = QLabel("Busca pólizas en MAVISO, obtiene UNIDAD de CELER y la copia a otro archivo")
+        subtitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        subtitulo.setStyleSheet("color: #888888; font-size: 11px;")
+        layout.addWidget(subtitulo)
+        
+        # Solo archivo CELER
+        grupo_celer = QGroupBox("📂 Archivo CELER (Fuente de UNIDAD)")
+        layout_celer = QHBoxLayout(grupo_celer)
+        lbl_celer = QLabel("Archivo CELER:")
+        lbl_celer.setMinimumWidth(120)
+        self.lbl_celer = QLabel("No seleccionado")
+        self.lbl_celer.setObjectName("archivo")
+        btn_celer = QPushButton("📂 Seleccionar")
+        btn_celer.clicked.connect(self.seleccionar_celer)
+        layout_celer.addWidget(lbl_celer)
+        layout_celer.addWidget(self.lbl_celer, 1)
+        layout_celer.addWidget(btn_celer)
+        layout.addWidget(grupo_celer)
+        
+        # Grupo: Archivo destino
+        grupo_destino = QGroupBox("📄 Archivo Destino (donde se copiará UNIDAD)")
+        layout_destino = QVBoxLayout(grupo_destino)
+        
+        layout_destino_file = QHBoxLayout()
+        lbl_destino = QLabel("Archivo:")
+        lbl_destino.setMinimumWidth(120)
+        self.lbl_destino = QLabel("No seleccionado")
+        self.lbl_destino.setObjectName("archivo")
+        btn_destino = QPushButton("📂 Seleccionar")
+        btn_destino.clicked.connect(self.seleccionar_destino)
+        layout_destino_file.addWidget(lbl_destino)
+        layout_destino_file.addWidget(self.lbl_destino, 1)
+        layout_destino_file.addWidget(btn_destino)
+        layout_destino.addLayout(layout_destino_file)
+        
+        # Selector de columna destino
+        layout_col_destino = QHBoxLayout()
+        lbl_col = QLabel("Columna destino:")
+        lbl_col.setMinimumWidth(120)
+        self.combo_col_destino = QComboBox()
+        self.combo_col_destino.setEnabled(False)
+        layout_col_destino.addWidget(lbl_col)
+        layout_col_destino.addWidget(self.combo_col_destino, 1)
+        layout_destino.addLayout(layout_col_destino)
+        
+        layout.addWidget(grupo_destino)
+        
+        # Botón Copiar
+        layout_btn = QHBoxLayout()
+        layout_btn.addStretch()
+        self.btn_copiar = QPushButton("🚀 COPIAR UNIDADES")
+        self.btn_copiar.setObjectName("btnComparar")
+        self.btn_copiar.clicked.connect(self.copiar_unidades)
+        self.btn_copiar.setEnabled(False)
+        self.btn_copiar.setMinimumHeight(45)
+        layout_btn.addWidget(self.btn_copiar)
+        layout_btn.addStretch()
+        layout.addLayout(layout_btn)
+        
+        # Grupo: Estadísticas
+        grupo_stats = QGroupBox("📊 Estadísticas")
+        layout_stats = QHBoxLayout(grupo_stats)
+        
+        self.stats_widgets = {}
+        stats_config = [
+            ('total_maviso', 'Total Maviso', '#4ec9b0'),
+            ('copiados', 'Copiados', '#6a9955'),
+            ('no_en_celer', 'No en CELER', '#f44747'),
+            ('no_en_destino', 'No en Destino', '#dcdcaa')
+        ]
+        
+        for key, label, color in stats_config:
+            container = QWidget()
+            container_layout = QVBoxLayout(container)
+            container_layout.setContentsMargins(10, 5, 10, 5)
+            
+            lbl = QLabel(label)
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lbl.setStyleSheet(f"color: {color}; font-weight: bold;")
+            
+            valor = QLabel("0")
+            valor.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            valor.setStyleSheet(f"color: {color}; font-size: 20px; font-weight: bold;")
+            self.stats_widgets[key] = valor
+            
+            container_layout.addWidget(lbl)
+            container_layout.addWidget(valor)
+            layout_stats.addWidget(container)
+        
+        layout.addWidget(grupo_stats)
+        
+        # Grupo: Logs
+        grupo_logs = QGroupBox("📝 Logs")
+        layout_logs = QVBoxLayout(grupo_logs)
+        
+        self.txt_logs = QTextEdit()
+        self.txt_logs.setReadOnly(True)
+        self.txt_logs.setMinimumHeight(200)
+        layout_logs.addWidget(self.txt_logs)
+        
+        layout_btns_log = QHBoxLayout()
+        btn_limpiar = QPushButton("🗑️ Limpiar")
+        btn_limpiar.clicked.connect(self.limpiar_logs)
+        
+        self.btn_abrir = QPushButton("📂 Abrir Archivo")
+        self.btn_abrir.setObjectName("btnAbrir")
+        self.btn_abrir.clicked.connect(self.abrir_archivo)
+        self.btn_abrir.setEnabled(False)
+        
+        layout_btns_log.addWidget(btn_limpiar)
+        layout_btns_log.addStretch()
+        layout_btns_log.addWidget(self.btn_abrir)
+        layout_logs.addLayout(layout_btns_log)
+        
+        layout.addWidget(grupo_logs)
+    
+
+    
+    def seleccionar_celer(self):
+        archivo, _ = QFileDialog.getOpenFileName(
+            self,
+            "Seleccionar Archivo CELER",
+            "",
+            "Excel Files (*.xlsx *.xls)"
+        )
+        if archivo:
+            self.archivo_celer = archivo
+            self.lbl_celer.setText(archivo)
+            self.log(f"✅ CELER cargado: {os.path.basename(archivo)}", "success")
+            self.verificar_archivos()
+    
+    def seleccionar_destino(self):
+        archivo, _ = QFileDialog.getOpenFileName(
+            self,
+            "Seleccionar Archivo DESTINO",
+            self.carpeta_default,
+            "Excel Files (*.xlsx *.xls)"
+        )
+        if archivo:
+            try:
+                self.archivo_destino = archivo
+                self.lbl_destino.setText(archivo)
+                
+                # Leer columnas
+                df = pd.read_excel(archivo, nrows=0)
+                columnas = list(df.columns)
+                
+                self.combo_col_destino.clear()
+                self.combo_col_destino.addItems(columnas)
+                self.combo_col_destino.setEnabled(True)
+                
+                self.log(f"✅ DESTINO cargado: {len(columnas)} columnas", "success")
+                self.verificar_archivos()
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al leer archivo:\n{str(e)}")
+                self.archivo_destino = None
+    
+    def verificar_archivos(self):
+        if self.archivo_celer and self.archivo_destino:
+            self.btn_copiar.setEnabled(True)
+    
+    def copiar_unidades(self):
+        col_destino_nombre = self.combo_col_destino.currentText()
+        col_destino_idx = self.combo_col_destino.currentIndex()
+        
+        # Confirmar operación
+        respuesta = QMessageBox.question(
+            self,
+            "Confirmar Operación",
+            f"Se copiará la columna UNIDAD desde CELER a la columna '{col_destino_nombre}' del archivo destino.\n\n"
+            f"🔍 CELER: {os.path.basename(self.archivo_celer)}\n"
+            f"📄 DESTINO: {os.path.basename(self.archivo_destino)}\n\n"
+            f"⚠️ Las pólizas que NO se encuentren en CELER se marcarán en ROJO.\n\n"
+            f"¿Desea continuar?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if respuesta != QMessageBox.StandardButton.Yes:
+            return
+        
+        # Generar archivo de salida
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        carpeta_salida = os.path.join(os.path.dirname(self.archivo_destino), "output")
+        os.makedirs(carpeta_salida, exist_ok=True)
+        nombre_base = os.path.splitext(os.path.basename(self.archivo_destino))[0]
+        archivo_salida = os.path.join(carpeta_salida, f"{nombre_base}_con_unidades_{timestamp}.xlsx")
+        
+        self.btn_copiar.setEnabled(False)
+        self.limpiar_logs()
+        
+        self.log("", "info")
+        self.log("="*60, "info")
+        self.log("📋 COPIANDO COLUMNA UNIDAD DESDE CELER", "info")
+        self.log("="*60, "info")
+        self.log(f"📂 CELER: {os.path.basename(self.archivo_celer)}", "info")
+        self.log(f"📂 DESTINO: {os.path.basename(self.archivo_destino)}", "info")
+        self.log(f"📝 Columna destino: {col_destino_nombre}", "info")
+        self.log("="*60, "info")
+        
+        # Iniciar thread
+        self.worker = CopiarUnidadesThread(
+            None,  # archivo_maviso eliminado
+            self.archivo_celer,
+            self.archivo_destino,
+            col_destino_idx,
+            archivo_salida
+        )
+        self.archivo_salida = archivo_salida
+        self.worker.log_signal.connect(self.log)
+        self.worker.finished_signal.connect(self.copia_completada)
+        self.worker.start()
+    
+    def copia_completada(self, exito, mensaje, estadisticas):
+        if exito:
+            self.log("", "info")
+            self.log("="*60, "success")
+            self.log("✅ COPIA COMPLETADA EXITOSAMENTE", "success")
+            self.log("="*60, "success")
+            
+            for key, valor in estadisticas.items():
+                if key in self.stats_widgets:
+                    self.stats_widgets[key].setText(str(valor))
+            
+            self.btn_abrir.setEnabled(True)
+        else:
+            self.log(f"❌ Error: {mensaje}", "error")
+        
+        self.btn_copiar.setEnabled(True)
+    
+    def abrir_archivo(self):
+        if hasattr(self, 'archivo_salida') and os.path.exists(self.archivo_salida):
+            if os.name == 'nt':
+                os.startfile(self.archivo_salida)
+            self.log(f"📂 Abriendo: {os.path.basename(self.archivo_salida)}", "info")
+    
+    def limpiar_logs(self):
+        self.txt_logs.clear()
+    
+    def log(self, mensaje: str, tipo: str = "info"):
+        colores = {
+            "info": "#d4d4d4",
+            "success": "#6a9955",
+            "warning": "#dcdcaa",
+            "error": "#f44747"
+        }
+        color = colores.get(tipo, "#d4d4d4")
+        self.txt_logs.append(f'<span style="color: {color};">{mensaje}</span>')
+
+
 class ComparadorGUI(QMainWindow):
     """Ventana principal con pestañas"""
     
@@ -2413,6 +2860,10 @@ class ComparadorGUI(QMainWindow):
         # Pestaña 4: Copiar Datos
         self.tab_copiar = TabCopiarDatos()
         self.tabs.addTab(self.tab_copiar, "📋 Copiar Datos")
+        
+        # Pestaña 5: Copiar Unidades
+        self.tab_unidades = TabCopiarUnidades()
+        self.tabs.addTab(self.tab_unidades, "🏢 Copiar Unidades")
         
         layout.addWidget(self.tabs)
 
@@ -2678,45 +3129,6 @@ class TabValidarMensuales(QWidget):
         )
 
 
-# ==================================================================================
-# Ventana Principal
-# ==================================================================================
-
-class ComparadorGUI(QMainWindow):
-    """Ventana principal con pestañas"""
-    
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Comparador de Archivos - SoftSeguros")
-        self.setMinimumSize(1000, 800)
-        
-        # Aplicar estilos
-        self.setStyleSheet(DARK_STYLE)
-        
-        # Widget central
-        central = QWidget()
-        self.setCentralWidget(central)
-        layout = QVBoxLayout(central)
-        layout.setContentsMargins(10, 10, 10, 10)
-        
-        # Crear pestañas
-        self.tabs = QTabWidget()
-        
-        # Pestaña 1: Maviso vs Maviso
-        self.tab_maviso = TabMavisoVsMaviso()
-        self.tabs.addTab(self.tab_maviso, "📊 Maviso Manual vs Generado")
-        
-        # Pestaña 2: Maviso vs CELER
-        self.tab_celer = TabMavisoVsCeler()
-        self.tabs.addTab(self.tab_celer, "🔄 Maviso vs CELER")
-        
-        # Pestaña 3: Validar Mensuales sin Prima
-        self.tab_validar = TabValidarMensuales()
-        self.tabs.addTab(self.tab_validar, "⚠️ Validar Mensuales sin Prima")
-        
-        layout.addWidget(self.tabs)
-
-
 def main():
     app = QApplication(sys.argv)
     
@@ -2732,3 +3144,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
