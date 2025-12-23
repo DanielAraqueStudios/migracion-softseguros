@@ -475,6 +475,132 @@ Si el puerto 8000 está ocupado:
 
 ---
 
+## 🏢 Mapeo de Aseguradoras y Ramos/Subramos
+
+### Resumen de Cobertura
+- **Total Pólizas CELER**: 3,164
+- **Aseguradoras CELER**: 26
+- **Ramos únicos CELER**: 44
+- **Cobertura de mapeo**: 100% ✅ (todos los ramos están mapeados)
+
+### Lógica de Aseguradoras con Versión Generales/Vida
+
+Algunas aseguradoras tienen dos versiones en MAVISO: una para seguros **Generales** y otra para seguros de **Vida**. El sistema determina automáticamente cuál usar según el tipo de ramo:
+
+**Ramos que van a compañía de VIDA:**
+- VIDA INDIVIDUAL, VIDA COLECTIVO, VIDA GRUPO COLECTIVO
+- ACCIDENTES PERSONALES, ACCIDENTES DE PASAJEROS, ACCIDENTES JUVENILES, ACCIDENTES ESCOLARES
+- SALUD FAMILIAR, SALUD PARA TODOS, SALUD COLECTIVA
+- PLAN COMPLEMENTARIO, PLAN COMPLEMENTARIO COLECTIVO, PLAN COMPLEMENTARIO FAMILIAR
+- RENTA EDUCATIVA, MAS VIDA, ARL, SEGURO EXEQUIAL, SEGUROS EXEQUIALES
+
+**Aseguradoras con doble versión (Generales/Vida):**
+
+| CELER | MAVISO Generales | MAVISO Vida |
+|-------|------------------|-------------|
+| SURAMERICANA S.A. | SEGUROS GENERALES SURAMERICANA S.A | SEGUROS DE VIDA SURAMERICANA S.A |
+| ALLIANZ SEGUROS S.A | ALLIANZ SEGUROS S.A | ALLIANZ SEGUROS DE VIDA S.A |
+| LIBERTY SEGUROS S A* | ALLIANZ SEGUROS S.A | ALLIANZ SEGUROS DE VIDA S.A |
+| AXA COLPATRIA SEGUROS S.A. | AXA COLPATRIA SEGUROS S.A | AXA COLPATRIA SEGUROS DE VIDA S.A |
+| SEGUROS DEL ESTADO S A | SEGUROS DEL ESTADO S.A | SEGUROS DE VIDA DEL ESTADO |
+
+> *LIBERTY y ALLIANZ son la misma compañía en MAVISO
+
+### Mapeo Completo de Ramos CELER → Subramos MAVISO
+
+#### 🟦 Seguros Generales
+
+| Ramo CELER | Subramo MAVISO | Aseguradoras que lo usan |
+|------------|----------------|--------------------------|
+| AUTOMOVILES | AUTOS INDIVIDUAL | Todas las principales |
+| SOAT | SOAT | Solidaria, Seg. Estado, AXA |
+| CUMPLIMIENTO | CUMPLIMIENTO | Solidaria, Mundial, Suramericana, Seg. Estado |
+| MULTIRIESGO RESIDENCIAL | HOGAR | Allianz, Suramericana, HDI |
+| MULTIRIESGO EMPRESARIAL | MULTIRRIESGO EMPRESARIAL | Todas las principales |
+| MI PYME | MI PYME | Allianz |
+| RESPONSABILIDAD CIVIL | RC DERIVADA DE CUMPLIMIENTO | Solidaria, Mundial, Suramericana |
+| RC SERVIDORES PUBLICOS | RC PREDIOS LABORES Y OPERACIONES | La Previsora |
+| RC CLINICAS Y HOSPITALES | RC CLINICAS Y HOSPITALES | Suramericana |
+| TRANSPORTES DE MERCANCIAS | TRANSPORTES DE MERCANCIAS | Allianz, Solidaria, Suramericana |
+| TRANSPORTE DE VALORES | TRANSPORTE DE VALORES | Solidaria, Suramericana |
+| TODO RIESGO DAÑOS MATERIALES | TODO RIESGO DAÑOS MATERIALES | Solidaria |
+| MANEJO | MANEJO ENTIDADES FINANCIERAS | Solidaria, Suramericana, Seg. Estado |
+| MANEJO ENTIDADES FINANCIERAS | MANEJO ENTIDADES FINANCIERAS | Solidaria |
+| MAQUINARIA Y EQUIPO | MAQUINARIA Y EQUIPO | Solidaria, SBS |
+| MULTIRIESGO COPROPIEDADES | COPROPIEDADES | Solidaria, SBS, Seg. Estado |
+| INCENDIO | MULTIRRIESGO EMPRESARIAL | Suramericana, SBS |
+| ARRENDAMIENTO | ARRENDAMIENTO | Mundial |
+| PROTECCION DIGITAL | PROTECCION DIGITAL | Suramericana |
+| AERONAVES CASCO | AERONAVES CASCO | Zurich |
+
+#### 🟩 Seguros de Vida
+
+| Ramo CELER | Subramo MAVISO | Aseguradoras que lo usan |
+|------------|----------------|--------------------------|
+| VIDA INDIVIDUAL | VIDA ACTUAL | Allianz, Suramericana, HDI |
+| VIDA COLECTIVO | VIDA GRUPO CONTRIBUTIVA | Allianz, Suramericana, La Previsora |
+| VIDA GRUPO COLECTIVO | VIDA GRUPO CONTRIBUTIVO | Solidaria, Suramericana, Colmena |
+| ACCIDENTES PERSONALES | ACCIDENTES PERSONALES | Todas las principales |
+| ACCIDENTES DE PASAJEROS | ACCIDENTES PERSONALES | Solidaria |
+| ACCIDENTES JUVENILES | ACCIDENTES JUVENILES | Solidaria, Suramericana |
+| ACCIDENTES ESCOLARES | ACCIDENTES ESCOLARES | Positiva |
+| SALUD FAMILIAR | SALUD CLASICO | Allianz, Suramericana, Bolívar |
+| SALUD PARA TODOS | SALUD PARA TODOS | Suramericana |
+| SALUD COLECTIVA | SALUD COLECTIVA CLASICO | Suramericana |
+| PLAN COMPLEMENTARIO | PLAN COMPLEMENTARIO | Suramericana |
+| PLAN COMPLEMENTARIO COLECTIVO | PLAN COMPLEMENTARIO COLECTIVO | Suramericana |
+| PLAN COMPLEMENTARIO FAMILIAR | PLAN COMPLEMENTARIO | Suramericana |
+| ARL | ARL | Suramericana, Bolívar, AXA, Colmena |
+| RENTA EDUCATIVA | RENTA EDUCATIVA | Suramericana |
+| MAS VIDA | MAS VIDA | AXA Colpatria |
+| SEGURO EXEQUIAL | SEGUROS EXEQUIALES | Colmena, Funer San Vicente |
+| SEGUROS EXEQUIALES | SEGUROS EXEQUIALES | Funer San Vicente |
+
+#### 🟪 Medicina Prepagada y Asistencias
+
+| Ramo CELER | Subramo MAVISO | Aseguradoras que lo usan |
+|------------|----------------|--------------------------|
+| MEDICINA PREPAGADA FAMILIAR | MEDICINA PREPAGADA FAMILIAR | Coomeva, CEM |
+| MEDICINA PREPAGADA COLECTIV | MEDICINA PREPAGADA COLECTIV | Coomeva, Colsanitas, Medisanitas |
+| EMERGENCIAS MÉDICAS | EMERGENCIAS MÉDICAS | Coomeva, Magenta, Emermedica |
+| AREA PROTEGIDA | CEM | CEM |
+| TELEMEDICINA | EMERGENCIAS MÉDICAS | Magenta |
+| ASIST CARD | ASSIST CARD | Assist Card |
+
+### Principales Aseguradoras por Volumen
+
+1. **ASEGURADORA SOLIDARIA DE COLOMBIA** (1,001 pólizas)
+   - Principal ramo: SOAT (464), Cumplimiento (146), Todo Riesgo (135)
+
+2. **ALLIANZ SEGUROS S.A / LIBERTY** (656 pólizas combinadas)
+   - Principal ramo: Automóviles (303), Multiriesgo Residencial (200)
+
+3. **SURAMERICANA S.A.** (592 pólizas)
+   - Ramos diversos: Automóviles (108), Vida Individual (104), Salud Familiar (96)
+
+4. **COMPAÑÍA MUNDIAL DE SEGUROS** (251 pólizas)
+   - Principal ramo: Cumplimiento (160), RC (53)
+
+5. **SBS SEGUROS COLOMBIA S.A** (170 pólizas)
+   - Principal ramo: Automóviles (153)
+
+### Notas Importantes
+
+1. **LIBERTY = ALLIANZ**: Son la misma compañía, todos los mapeos de LIBERTY usan las reglas de ALLIANZ.
+
+2. **Aseguradoras con nombre idéntico**: Las siguientes mantienen el mismo nombre en CELER y MAVISO:
+   - ASEGURADORA SOLIDARIA DE COLOMBIA
+   - POSITIVA COMPANIA DE SEGUROS S.A
+   - SBS SEGUROS COLOMBIA S.A
+   - ZURICH COLOMBIA SEGUROS S.A
+   - LA PREVISORA S A COMPAÑÍA DE SEGUROS
+
+3. **100% de cobertura**: Todos los 44 ramos únicos de CELER tienen su correspondiente subramo en MAVISO.
+
+4. **Documentación detallada**: Consultar `COMPARACION_RAMOS_SUBRAMOS.md` para el mapeo completo con ejemplos y casos especiales por aseguradora.
+
+---
+
 ## 🗂️ Estructura de Archivos
 
 ### Archivos de Entrada
@@ -643,12 +769,14 @@ Después de cada corrección se ejecuta automáticamente:
 
 ---
 
-Actualizado: 15/12/2025
+Actualizado: 23/12/2025
+- ✅ 100% de cobertura en mapeo de ramos y subramos confirmada
+- ✅ Documentación completa de equivalencias CELER → MAVISO
+- ✅ Todas las aseguradoras con mapeos verificados
 - ✅ Copia formato y estilos de Maviso original (colores, fuentes, bordes)
 - ✅ Aplica mapeo de columnas según especificación
 - ✅ Lógica condicional para FORMA PAGO (MENSUAL→Fraccionado, ANUAL→Contado)
 - ✅ Genera archivo en `output/` con timestamp
+- ✅ Nueva funcionalidad: Copiar Unidades desde CELER a archivo destino
 
 ---
-
-Actualizado: 05/12/2025
