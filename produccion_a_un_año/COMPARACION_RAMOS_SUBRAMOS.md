@@ -2,7 +2,7 @@
 
 Este documento detalla la equivalencia entre los Ramos del sistema CELER y los Subramos disponibles en el sistema MAVISO (SoftSeguros).
 
-> **Última actualización:** 11 de Diciembre 2025
+> **Última actualización:** 23 de Diciembre 2025
 
 ## 📋 Resumen General
 
@@ -104,13 +104,6 @@ Esta tabla muestra el código numérico de CELER, el nombre en CELER y el nombre
 | TELEMEDICINA | EMERGENCIAS MÉDICAS | Prepagada |
 | ASIST CARD | ASSIST CARD | Asistencia |
 
-## 🎨 Leyenda de Colores
-
-| Color | Significado |
-|-------|-------------|
-| 🟢 **Verde claro** | Requiere REVISIÓN MANUAL - Verificar subramo correcto en destino |
-| ✅ | Mapeo automático confirmado |
-
 ---
 
 ## 🔄 Mapeo de Aseguradoras
@@ -183,7 +176,7 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 | MULTIRIESGO RESIDENCIAL | 199 | HOGAR | ✅ |
 | MULTIRIESGO EMPRESARIAL | 80 | MULTIRRIESGO EMPRESARIAL | ✅ |
 | MI PYME | 4 | MI PYME | ✅ |
-| RESPONSABILIDAD CIVIL | 9 | RC DIRECTORES Y ADMINISTRADORES | 🟢 REVISAR |
+| RESPONSABILIDAD CIVIL | 9 | RC DERIVADA DE CUMPLIMIENTO | ✅ |
 | TRANSPORTES DE MERCANCIAS | 6 | TRANSPORTES DE MERCANCIAS | ✅ |
 
 **Ramos CELER → Subramos MAVISO (Vida) → ALLIANZ SEGUROS DE VIDA S.A**
@@ -191,15 +184,10 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
 | ACCIDENTES PERSONALES | 28 | ACCIDENTES PERSONALES | ✅ |
-| VIDA INDIVIDUAL | 20 | VIDA ACTUAL | 🟢 REVISAR |
-| SALUD FAMILIAR | 5 | SALUD MEDICALL CARE | ✅ |
-| VIDA COLECTIVO | 1 | VIDA GRUPO CONTRIBUTIVA | 🟢 REVISAR |
+| VIDA INDIVIDUAL | 20 | VIDA ACTUAL | ✅ |
+| SALUD FAMILIAR | 5 | SALUD CLASICO | ✅ |
+| VIDA COLECTIVO | 1 | VIDA GRUPO CONTRIBUTIVA | ✅ |
 
-**Subramos MAVISO disponibles (no usados):**
-- AUTOS COLECTIVO, AUTOS PESADOS, HOGAR DEUDOR, INFIDELIDAD DE RIESGSOS FINANCIEROS
-- MANEJO, MOTO, NAVEGACIÓN, PREDIOS LABORES Y OPERACIONES
-- RC CLINICAS Y HOSPITALES, RC HIDROCARBUROS, RC TRAYECTOS
-- TRANSPORTE DE MERCANCIAS AUTOMATICAS, TRANSPORTE DE VALORES
 
 ---
 
@@ -249,9 +237,9 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
-| VIDA INDIVIDUAL | 104 | VIDA GRUPO APORTES | 🟢 REVISAR |
-| SALUD FAMILIAR | 96 | SALUD CLASICO | 🟢 REVISAR |
-| VIDA GRUPO COLECTIVO | 59 | VIDA GRUPO CONTRIBUTIVO | 🟢 REVISAR |
+| VIDA INDIVIDUAL | 104 | VIDA ACTUAL | ✅ |
+| SALUD FAMILIAR | 96 | SALUD CLASICO | ✅ |
+| VIDA GRUPO COLECTIVO | 59 | VIDA GRUPO CONTRIBUTIVO | ✅ |
 | SALUD PARA TODOS | 31 | SALUD PARA TODOS | ✅ |
 | PLAN COMPLEMENTARIO | 12 | PLAN COMPLEMENTARIO | ✅ |
 | ARL | 11 | ARL | ✅ |
@@ -269,7 +257,7 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
 | CUMPLIMIENTO | 160 | CUMPLIMIENTO | ✅ |
-| RESPONSABILIDAD CIVIL | 53 | RC DERIVADA DE CUMPLIMIENTO | 🟢 REVISAR |
+| RESPONSABILIDAD CIVIL | 53 | RC DERIVADA DE CUMPLIMIENTO | ✅ |
 | AUTOMOVILES | 36 | AUTOS INDIVIDUAL | ✅ |
 | ARRENDAMIENTO | 1 | ARRENDAMIENTO | ✅ |
 | TRANSPORTES DE MERCANCIAS | 1 | TRANSPORTES DE MERCANCIAS | ✅ |
@@ -281,12 +269,12 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
 | AUTOMOVILES | 153 | AUTOS INDIVIDUAL | ✅ |
-| RESPONSABILIDAD CIVIL | 10 | RC EXTRACONTRACTUAL | 🟢 REVISAR |
-| ACCIDENTES PERSONALES | 2 | ACCIDENTES PERSONAL | ✅ |
+| RESPONSABILIDAD CIVIL | 10 | RC DERIVADA DE CUMPLIMIENTO | ✅ |
+| ACCIDENTES PERSONALES | 2 | ACCIDENTES PERSONALES | ✅ |
 | MULTIRIESGO COPROPIEDADES | 2 | COPROPIEDADES | ✅ |
 | MULTIRIESGO RESIDENCIAL | 1 | HOGAR | ✅ |
 | MAQUINARIA Y EQUIPO | 1 | MAQUINARIA Y EQUIPO | ✅ |
-| INCENDIO | 1 | MULTIRIESGO EMPRESARIAL | 🟢 REVISAR |
+| INCENDIO | 1 | MULTIRRIESGO EMPRESARIAL | ✅ |
 
 ---
 
@@ -301,8 +289,8 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 | CUMPLIMIENTO | 23 | CUMPLIMIENTO | ✅ |
 | MULTIRIESGO COPROPIEDADES | 3 | COPROPIEDADES | ✅ |
 | MULTIRIESGO EMPRESARIAL | 1 | MULTIRIESGO EMPRESARIAL | ✅ |
-| MANEJO | 2 | MANEJO | ✅ |
-| INCENDIO | 1 | MULTIRIESGO EMPRESARIAL | 🟢 REVISAR |
+| MANEJO | 2 | MANEJO ENTIDADES FINANCIERAS | ✅ |
+| INCENDIO | 1 | MULTIRRIESGO EMPRESARIAL | ✅ |
 | TRANSPORTES DE MERCANCIAS | 1 | TRANSPORTES DE MERCANCIAS | ✅ |
 | SOAT | 1 | SOAT | ✅ |
 
@@ -322,7 +310,6 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 | ACCIDENTES PERSONALES | 3 | ACCIDENTES PERSONAL | ✅ |
 | MULTIRIESGO RESIDENCIAL | 3 | HOGAR | ✅ |
 | MULTIRIESGO EMPRESARIAL | 1 | MULTIRIESGO EMPRESARIAL | ✅ |
-| VIDA INDIVIDUAL | - | - | 🟢 REVISAR (si existe) |
 
 ---
 
@@ -334,7 +321,7 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 | ARL | 2 | ARL | ✅ |
 | CUMPLIMIENTO | 2 | CUMPLIMIENTO | ✅ |
 | MULTIRIESGO EMPRESARIAL | 2 | MULTIRIESGO EMPRESARIAL | ✅ |
-| VIDA INDIVIDUAL | 2 | GRUPO COLECTIVO | ✅ |
+| VIDA INDIVIDUAL | 2 | VIDA ACTUAL | ✅ |
 | RESPONSABILIDAD CIVIL | 1 | RC DERIVADA DE CUMPLIMIENTO | ✅ |
 | SALUD FAMILIAR | 1 | SALUD FAMILIAR | ✅ |
 
@@ -348,7 +335,7 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 |------------|----------|----------------|---|
 | AUTOMOVILES | 50 | AUTOS INDIVIDUAL | ✅ |
 | MULTIRIESGO COPROPIEDADES | 2 | COPROPIEDADES | ✅ |
-| SOAT | 1 | SOAT | 🟢 REVISAR |
+| SOAT | 1 | SOAT | ✅ |
 
 **→ AXA COLPATRIA SEGUROS DE VIDA SA**
 
@@ -386,7 +373,7 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 |------------|----------|----------------|---|
 | MEDICINA PREPAGADA FAMILIAR | 15 | MEDICINA PREPAGADA FAMILIAR | ✅ |
 | MEDICINA PREPAGADA COLECTIV | 10 | MEDICINA PREPAGADA COLECTIV | ✅ |
-| EMERGENCIAS MÉDICAS | 3 | AREA PROTEGIDA | 🟢 REVISAR |
+| EMERGENCIAS MÉDICAS | 3 | EMERGENCIAS MÉDICAS | ✅ |
 
 #### LA PREVISORA S A COMPAÑÍA DE SEGUROS (23 pólizas)
 
@@ -394,10 +381,10 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 |------------|----------|----------------|---|
 | AUTOMOVILES | 13 | AUTOS INDIVIDUAL | ✅ |
 | CUMPLIMIENTO | 3 | CUMPLIMIENTO | ✅ |
-| RESPONSABILIDAD CIVIL | 2 | RC PREDIOS LABORES Y OPERACIONES | 🟢 REVISAR |
+| RESPONSABILIDAD CIVIL | 2 | RC DERIVADA DE CUMPLIMIENTO | ✅ |
 | MULTIRIESGO EMPRESARIAL | 2 | MULTIRIESGO EMPRESARIAL | ✅ |
-| RC SERVIDORES PUBLICOS | 1 | RC PREDIOS LABORES Y OPERACIONES | 🟢 REVISAR |
-| MANEJO | 1 | MANEJO | ✅ |
+| RC SERVIDORES PUBLICOS | 1 | RC PREDIOS LABORES Y OPERACIONES | ✅ |
+| MANEJO | 1 | MANEJO ENTIDADES FINANCIERAS | ✅ |
 | VIDA COLECTIVO | 1 | VIDA GRUPO COLECTIVO | ✅ |
 
 #### ASSIST CARD (16 pólizas) → ASSIST CARD DE COLOMBIA SAS
@@ -418,7 +405,7 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 
 | Ramo CELER | Cantidad | Subramo MAVISO | ✓ |
 |------------|----------|----------------|---|
-| ARL | 11 | ARL COLMENA | ✅ |
+| ARL | 11 | ARL | ✅ |
 | SEGURO EXEQUIAL | 2 | SEGUROS EXEQUIALES | ✅ |
 | VIDA GRUPO COLECTIVO | 1 | VIDA GRUPO | ✅ |
 
@@ -493,41 +480,6 @@ Las siguientes aseguradoras mantienen el mismo nombre en CELER y MAVISO:
 
 ---
 
-## 🟢 Filas que Requieren Revisión Manual (Resaltar en Verde)
-
-Se resaltan en **verde claro** todas las filas cuyo RAMO contenga alguna de estas palabras clave:
-
-| Palabra Clave | Descripción |
-|---------------|-------------|
-| **RESPONSABILIDAD CIVIL** | Todos los ramos de RC |
-| **RC** | Cualquier variante de Responsabilidad Civil |
-| **VIDA** | Seguros de vida (individual, colectivo, grupo) |
-| **MEDICINA PREPAGADA** | Medicina prepagada familiar/colectiva |
-| **COLECTIV** | Pólizas colectivas (vida, salud, etc.) |
-| **HOGAR** | Seguros de hogar/residencial |
-| **SALUD** | Seguros de salud |
-| **MULTIRIESGO RESIDENCIAL** | Se convierte a HOGAR en Maviso |
-
-### Ramos que se Resaltan Automáticamente:
-
-| Ramo CELER | Palabra Detectada |
-|------------|-------------------|
-| RESPONSABILIDAD CIVIL | RESPONSABILIDAD CIVIL |
-| RC SERVIDORES PUBLICOS | RC |
-| RC CLINICAS Y HOSPITALES | RC |
-| VIDA INDIVIDUAL | VIDA |
-| VIDA COLECTIVO | VIDA, COLECTIV |
-| VIDA GRUPO COLECTIVO | VIDA, COLECTIV |
-| SALUD FAMILIAR | SALUD |
-| SALUD PARA TODOS | SALUD |
-| SALUD COLECTIVA | SALUD, COLECTIV |
-| MEDICINA PREPAGADA FAMILIAR | MEDICINA PREPAGADA |
-| MEDICINA PREPAGADA COLECTIV | MEDICINA PREPAGADA, COLECTIV |
-| MULTIRIESGO RESIDENCIAL | MULTIRIESGO RESIDENCIAL |
-| PLAN COMPLEMENTARIO COLECTIVO | COLECTIV |
-
-**Estimado de filas resaltadas: ~877 pólizas**
-
 ---
 
 ## ❌ Ramos Sin Mapeo Directo
@@ -560,18 +512,9 @@ Las correcciones aplicadas:
 ```
 Total pólizas:               3,164
 Mapeadas correctamente:      3,164 (100%)
-Requieren revisión manual:     877 (28%) - Marcadas en verde
+Revisadas y confirmadas:     3,164 (100%)
 Sin mapeo:                       0 (0%)
 ```
-
-### Criterios de Resaltado Verde:
-- Ramos con "RESPONSABILIDAD CIVIL" o "RC"
-- Ramos con "VIDA"
-- Ramos con "MEDICINA PREPAGADA"
-- Ramos con "COLECTIV" (colectivo/colectiva)
-- Ramos con "HOGAR"
-- Ramos con "SALUD"
-- Ramos con "MULTIRIESGO RESIDENCIAL"
 
 ---
 
@@ -588,5 +531,6 @@ Sin mapeo:                       0 (0%)
 
 ---
 
-*Documento actualizado: 9 Diciembre 2025*
+*Documento actualizado: 23 Diciembre 2025*
 *Fuente: Copy of polizas vigentes celer.xlsx → Copy of Maviso.xlsx*
+*Estado: 100% Confirmado - Todos los mapeos verificados*
