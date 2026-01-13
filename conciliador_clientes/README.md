@@ -554,6 +554,417 @@ python -m json.tool clientes_activos/diferencias_tomador_asegurado.json
 
 ---
 
+## 🏗️ PROCESO COMPLETO: LLENADO DE PLANTILLA SOFTSEGUROS
+
+Esta sección documenta el proceso completo de llenado de la plantilla de SoftSeguros con datos desde múltiples fuentes (CELER + Clientes Activos).
+
+### 📊 Objetivo del Proceso
+
+Llenar la plantilla oficial de SoftSeguros (`PLANTILLA DE SOTSEGUROS.xlsx`) con datos de clientes desde 2 fuentes:
+1. **InformedePersonas CELER.xlsx** → Personas naturales (datos completos)
+2. **CLIENTES ACTIVOS.xlsx** → Empresas/NITs (datos corporativos)
+
+### 🗂️ Estructura Completa de Archivos
+
+```
+migracion-softseguros/
+│
+├── conciliador_clientes/
+│   │
+│   ├── clientes_activos/                    # FUENTE 2: Datos empresas
+│   │   ├── CLIENTES ACTIVOS.xlsx           # ← Excel principal con empresas
+│   │   └── diferencias_tomador_asegurado.json
+│   │
+│   ├── data_celer/                          # FUENTE 1: Datos personas
+│   │   ├── InformedePersonas CELER.xlsx    # ← Excel principal con personas
+│   │   └── informe_comparado_con_json.xlsx
+│   │
+│   ├── plantilla/                           # DESTINO: Plantillas llenas
+│   │   ├── PLANTILLA DE SOTSEGUROS.xlsx    # ← Template vacío (estructura)
+│   │   ├── PLANTILLA_LLENA_*.xlsx          # Personas (desde Celer)
+│   │   ├── PLANTILLA_EMPRESAS_*.xlsx       # Empresas (desde Clientes)
+│   │   ├── PLANTILLA_COINCIDEN.xlsx        # Coincidencias (proceso conciliación)
+│   │   └── PAra enviar definitivo.xlsx     # Archivo final unificado
+│   │
+│   ├── ERRORES/                             # NITs problemáticos
+│   │   ├── errores_sin_dv_*.xlsx           # NITs sin dígito verificación
+│   │   ├── nits_no_encontrados_*.xlsx      # No encontrados en Celer
+│   │   └── nits_sin_datos_*.xlsx           # No en ninguna fuente
+│   │
+│   └── [scripts comparación .py]           # Scripts etapas 1-3
+│
+├── llenar_plantilla_softseguros.py         # PROGRAMA PRINCIPAL 1
+└── llenar_plantilla_empresas.py            # PROGRAMA PRINCIPAL 2
+```
+
+### 🔄 Flujo de Llenado (3 Pasos)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ PASO 1: Identificar NITs sin Dígito de Verificación                │
+└─────────────────────────────────────────────────────────────────────┘
+
+📂 Entrada: CLIENTES ACTIVOS.xlsx
+    ↓
+🔧 Proceso: Detectar NITs sin DV (7-10 dígitos sin guión)
+    ↓
+📤 Salida: ERRORES/errores_sin_dv_20251202_102025.xlsx
+
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ PASO 2: Buscar Personas Naturales en CELER                         │
+│ Script: llenar_plantilla_softseguros.py                            │
+└─────────────────────────────────────────────────────────────────────┘
+
+📂 ENTRADAS:
+   • ERRORES/errores_sin_dv_*.xlsx           (Lista de NITs a buscar)
+   • data_celer/InformedePersonas CELER.xlsx (Base datos personas)
+   • plantilla/PLANTILLA DE SOTSEGUROS.xlsx  (Estructura columnas)
+
+🔧 PROCESO:
+   [1] Leer lista NITs → limpiar (solo números)
+   
+   [2] Leer InformedePersonas CELER.xlsx
+       • 35 columnas con datos completos
+       • Crear columna _id_limpia para búsqueda
+   
+   [3] Por cada NIT:
+       ✅ SI ENCUENTRA en Celer:
+          ├─ Separar Nombre → NOMBRES + APELLIDOS
+          │  "PÉREZ GÓMEZ JUAN CARLOS"
+          │  → APELLIDOS: "PÉREZ GÓMEZ" (primeras 2 palabras)
+          │  → NOMBRES: "JUAN CARLOS" (resto)
+          │
+          ├─ Mapear Tipo_Doc:
+          │  CC/CEDULA → "Cédula de ciudadanía"
+          │  NIT → "NIT"
+          │  CE → "Cédula de extranjería"
+          │
+          ├─ Mapear Género:
+          │  M → "Masculino"
+          │  F → "Femenino"
+          │
+          ├─ Mapear Estado_civil:
+          │  S → "Soltero(a)"
+          │  C → "Casado(a)"
+          │  U → "Unión libre"
+          │
+          ├─ Extraer contactos con prioridad:
+          │  Teléfono: Celular_Personal > Tel_Personal > Tel_Laboral
+          │  Email: Mail_Personal > Mail_Laboral
+          │  Dirección: Direccion_Personal > Direccion_Laboral
+          │
+          └─ Completar 44 campos de plantilla SoftSeguros
+       
+       ❌ SI NO ENCUENTRA:
+          → Agregar a lista "no_encontrados"
+
+📤 SALIDAS:
+   ✅ plantilla/PLANTILLA_LLENA_20251202_103414.xlsx
+      (Personas encontradas con datos completos)
+   
+   ⚠️  ERRORES/nits_no_encontrados_20251202_103414.xlsx
+      (NITs no encontrados en Celer → posibles empresas)
+
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ PASO 3: Buscar Empresas en CLIENTES ACTIVOS                        │
+│ Script: llenar_plantilla_empresas.py                               │
+└─────────────────────────────────────────────────────────────────────┘
+
+📂 ENTRADAS:
+   • ERRORES/nits_no_encontrados_*.xlsx      (Del paso anterior)
+   • clientes_activos/CLIENTES ACTIVOS.xlsx  (Base datos empresas)
+   • plantilla/PLANTILLA DE SOTSEGUROS.xlsx  (Estructura columnas)
+
+🔧 PROCESO:
+   [1] Leer NITs no encontrados en Celer (son empresas)
+   
+   [2] Leer CLIENTES ACTIVOS.xlsx
+       • Lee desde fila 4 (header=3)
+       • Crear columna _id_limpia para búsqueda
+   
+   [3] Por cada NIT:
+       ✅ SI ENCUENTRA en Clientes Activos:
+          ├─ NOMBRES = campo "Tomador" (nombre completo empresa)
+          ├─ APELLIDOS = "" (empresas no tienen apellidos)
+          ├─ TIPO DE DOCUMENTO = "NIT" (forzado)
+          ├─ GÉNERO = "" (vacío)
+          ├─ ESTADO CIVIL = "" (vacío)
+          ├─ Teléfonos: Celular_Lab, Telefono_Lab
+          ├─ Email: Mail_Lab
+          ├─ Dirección: Direccion_Lab
+          ├─ Ciudad: Ciudad_Lab
+          └─ Marca: "CARGADO POR: Migración Automática - Empresas"
+       
+       ❌ SI NO ENCUENTRA:
+          → Agregar a "nits_sin_datos" (requieren revisión manual)
+
+📤 SALIDAS:
+   ✅ plantilla/PLANTILLA_EMPRESAS_20251202_104937.xlsx
+      (Empresas encontradas)
+   
+   ⚠️  ERRORES/nits_sin_datos_*.xlsx
+      (NITs sin datos en ninguna fuente → revisión manual)
+```
+
+### 📋 Estructura de PLANTILLA DE SOTSEGUROS (44 columnas)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ SECCIÓN 1: IDENTIFICACIÓN (7 campos)                           │
+└─────────────────────────────────────────────────────────────────┘
+1.  NOMBRES
+2.  APELLIDOS
+3.  SOBRENOMBRE (ALIAS)
+4.  NÚMERO DE DOCUMENTO
+5.  TIPO DE DOCUMENTO
+6.  GÉNERO
+7.  ESTADO CIVIL
+
+┌─────────────────────────────────────────────────────────────────┐
+│ SECCIÓN 2: CONTACTOS (12 campos)                               │
+└─────────────────────────────────────────────────────────────────┘
+8.  FECHA DE NACIMIENTO
+9.  TELÉFONO MÓVIL
+10. TIPO TELÉFONO MÓVIL (Personal/Laboral)
+11. TELÉFONO PRINCIPAL
+12. TIPO DE TELÉFONO PRINCIPAL
+13. TELÉFONO SECUNDARIO
+14. TIPO DE TELÉFONO SECUNDARIO
+15. EMAIL
+16. TIPO EMAIL (Personal/Laboral)
+17. EMAIL SECUNDARIO
+18. TIPO EMAIL SECUNDARIO
+
+┌─────────────────────────────────────────────────────────────────┐
+│ SECCIÓN 3: DIRECCIONES (7 campos)                              │
+└─────────────────────────────────────────────────────────────────┘
+19. DIRECCIÓN PRINCIPAL
+20. TIPO DIRECCIÓN (Personal/Laboral)
+21. DIRECCIÓN SECUNDARIA
+22. TIPO DIRECCIÓN SECUNDARIA
+23. PAÍS
+24. ESTADO
+25. CIUDAD
+
+┌─────────────────────────────────────────────────────────────────┐
+│ SECCIÓN 4: INFORMACIÓN ADICIONAL (18 campos)                   │
+└─────────────────────────────────────────────────────────────────┘
+26. OCUPACIÓN
+27. INGRESO MENSUAL
+28. PATRIMONIO
+29. CASA PROPIA
+30. NÚMERO DE CASAS
+31. HIJOS
+32. NÚMERO DE HIJOS
+33. VEHÍCULOS
+34. NÚMERO DE VEHÍCULOS
+35. PAGINA WEB
+36. REDES SOCIALES
+37. NOMBRE DE CONTACTO
+38. CATEGORÍAS
+39. OBSERVACIONES
+40. CARGADO POR
+41-44. (Campos adicionales)
+```
+
+### 🔑 Diferencias Clave: Personas vs Empresas
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ PERSONA NATURAL (desde Celer)                                  │
+└─────────────────────────────────────────────────────────────────┘
+NOMBRES:          "JUAN CARLOS"
+APELLIDOS:        "PÉREZ GÓMEZ"
+TIPO DOCUMENTO:   "Cédula de ciudadanía"
+GÉNERO:           "Masculino"
+ESTADO CIVIL:     "Casado(a)"
+TELÉFONO:         Celular_Personal
+EMAIL:            Mail_Personal
+DIRECCIÓN:        Direccion_Personal
+CARGADO POR:      "Migración Automática"
+
+┌─────────────────────────────────────────────────────────────────┐
+│ EMPRESA (desde Clientes Activos)                               │
+└─────────────────────────────────────────────────────────────────┘
+NOMBRES:          "SEGUROS BOLÍVAR S.A."
+APELLIDOS:        "" (vacío)
+TIPO DOCUMENTO:   "NIT"
+GÉNERO:           "" (vacío)
+ESTADO CIVIL:     "" (vacío)
+TELÉFONO:         Celular_Lab o Telefono_Lab
+EMAIL:            Mail_Lab
+DIRECCIÓN:        Direccion_Lab
+CARGADO POR:      "Migración Automática - Empresas"
+```
+
+### 🛠️ Scripts Principales de Llenado
+
+#### 📄 `llenar_plantilla_softseguros.py`
+**Propósito:** Llenar plantilla con personas naturales desde Celer
+
+**Funciones clave:**
+```python
+separar_nombre_apellidos(nombre_completo)
+  • Separa "APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2"
+  • Detecta formato con coma: "APELLIDOS, NOMBRES"
+  • Primeras 2 palabras = apellidos, resto = nombres
+
+mapear_tipo_documento(tipo_celer)
+  • CC/CEDULA → "Cédula de ciudadanía"
+  • NIT → "NIT"
+  • CE → "Cédula de extranjería"
+
+mapear_genero(genero_celer)
+  • M/MASCULINO → "Masculino"
+  • F/FEMENINO → "Femenino"
+
+mapear_estado_civil(estado_celer)
+  • S/SOLTERO → "Soltero(a)"
+  • C/CASADO → "Casado(a)"
+  • U/UNION LIBRE → "Unión libre"
+
+limpiar_identificacion(valor)
+  • Elimina guiones, puntos, espacios
+  • Deja solo números para comparación
+```
+
+**Ejemplo de mapeo completo:**
+```python
+# Registro en Celer:
+{
+  "Nombre": "PÉREZ GÓMEZ JUAN CARLOS",
+  "Identificacion": "1234567890",
+  "Tipo_Doc": "CC",
+  "Genero": "M",
+  "Estado_civil": "C",
+  "Celular_Personal": "3001234567",
+  "Mail_Personal": "juan@email.com",
+  "Direccion_Personal": "CALLE 100 # 20-30"
+}
+
+# Se transforma a:
+{
+  "NOMBRES": "JUAN CARLOS",
+  "APELLIDOS": "PÉREZ GÓMEZ",
+  "NÚMERO DE DOCUMENTO": "1234567890",
+  "TIPO DE DOCUMENTO": "Cédula de ciudadanía",
+  "GÉNERO": "Masculino",
+  "ESTADO CIVIL": "Casado(a)",
+  "TELÉFONO MÓVIL": "3001234567",
+  "TIPO TELÉFONO MÓVIL": "Personal",
+  "EMAIL": "juan@email.com",
+  "TIPO EMAIL": "Personal",
+  "DIRECCIÓN PRINCIPAL": "CALLE 100 # 20-30",
+  "TIPO DIRECCIÓN": "Personal",
+  "PAÍS": "Colombia",
+  "CARGADO POR": "Migración Automática"
+}
+```
+
+#### 📄 `llenar_plantilla_empresas.py`
+**Propósito:** Llenar plantilla con empresas desde Clientes Activos
+
+**Características especiales:**
+- Lee desde fila 4: `pd.read_excel(archivo, header=3)`
+- Evita duplicados: `nits_ya_agregados = set()`
+- Nombre completo va en campo NOMBRES
+- APELLIDOS queda vacío
+- Solo usa datos laborales (Lab)
+
+**Ejemplo de mapeo empresa:**
+```python
+# Registro en Clientes Activos:
+{
+  "Tomador": "SEGUROS BOLÍVAR S.A.",
+  "Identificacion": "860002503-4",
+  "Telefono_Lab": "6012345678",
+  "Mail_Lab": "info@bolivar.com",
+  "Direccion_Lab": "AV. CARACAS # 100-20",
+  "Ciudad_Lab": "BOGOTÁ"
+}
+
+# Se transforma a:
+{
+  "NOMBRES": "SEGUROS BOLÍVAR S.A.",
+  "APELLIDOS": "",
+  "NÚMERO DE DOCUMENTO": "860002503-4",
+  "TIPO DE DOCUMENTO": "NIT",
+  "GÉNERO": "",
+  "ESTADO CIVIL": "",
+  "TELÉFONO PRINCIPAL": "6012345678",
+  "TIPO DE TELÉFONO PRINCIPAL": "Laboral",
+  "EMAIL": "info@bolivar.com",
+  "TIPO EMAIL": "Laboral",
+  "DIRECCIÓN PRINCIPAL": "AV. CARACAS # 100-20",
+  "TIPO DIRECCIÓN": "Laboral",
+  "CIUDAD": "BOGOTÁ",
+  "PAÍS": "Colombia",
+  "CARGADO POR": "Migración Automática - Empresas"
+}
+```
+
+### 📊 Scripts de Comparación y Análisis
+
+#### `comparar_identificaciones_informe_json.py`
+- Cruza identificaciones entre JSON de diferencias e InformedePersonas
+- Genera: `informe_comparado_con_json.xlsx`
+- Agrega columna `Coincide_JSON` (True/False)
+
+#### `mostrar_columnas_informe.py`
+- Vista previa de estructura de archivos
+- Muestra primeras 10 filas sin encabezado
+
+#### `mostrar_columnas_informe_personas.py`
+- Lista todas las columnas de InformedePersonas CELER
+- Útil para verificar nombres exactos de campos
+
+#### `leer_estructura_plantilla.py`
+- Analiza estructura de PLANTILLA DE SOTSEGUROS
+- Muestra columnas y tipos de datos esperados
+
+### 🎯 Resultado Final
+
+```
+PLANTILLA_LLENA_*.xlsx (Personas desde Celer)
+           +
+PLANTILLA_EMPRESAS_*.xlsx (Empresas desde Clientes)
+           ↓
+    Unir manualmente
+           ↓
+PAra enviar definitivo.xlsx
+           ↓
+    Subir a SoftSeguros
+```
+
+### ⚠️ Consideraciones Importantes
+
+**Limpieza de identificaciones:**
+- Todos los NITs se limpian antes de comparar (solo números)
+- Esto permite encontrar coincidencias con diferentes formatos:
+  - `900123456`
+  - `900123456-4`
+  - `900.123.456-4`
+
+**Prioridad de datos de contacto:**
+```
+Teléfonos: Personal > Laboral
+Emails: Personal > Laboral
+Direcciones: Personal > Laboral
+```
+
+**Evitar duplicados:**
+- `llenar_plantilla_empresas.py` usa `set()` para rastrear NITs ya agregados
+- Si un NIT aparece múltiples veces, solo se agrega una vez
+
+**Timestamp en archivos:**
+- Todos los archivos generados incluyen timestamp: `YYYYMMDD_HHMMSS`
+- Permite rastrear diferentes ejecuciones del proceso
+- Ejemplo: `PLANTILLA_LLENA_20251202_103414.xlsx`
+
+---
+
 ## 📚 Referencias
 
 - **Algoritmo DV NIT**: Resolución DIAN 12487 de 2018
@@ -563,5 +974,5 @@ python -m json.tool clientes_activos/diferencias_tomador_asegurado.json
 ---
 
 **Última actualización:** Enero 2026  
-**Versión:** 2.0  
+**Versión:** 2.1  
 **Autor:** Equipo Migración SoftSeguros
