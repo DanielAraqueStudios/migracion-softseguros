@@ -18,6 +18,17 @@ def limpiar_identificacion(valor):
     return re.sub(r'\D', '', str(valor))
 
 
+def limpiar_nit_sin_dv(valor):
+    """Limpia NIT y remueve dígito de verificación si existe"""
+    if pd.isna(valor):
+        return ""
+    limpio = re.sub(r'\D', '', str(valor))
+    # Si tiene más de 9 dígitos, quitar último (posible DV)
+    if len(limpio) > 9:
+        return limpio[:-1]
+    return limpio
+
+
 def main():
     print("=" * 70)
     print("  LLENAR PLANTILLA SOFTSEGUROS - EMPRESAS (CLIENTES ACTIVOS)")
@@ -26,7 +37,8 @@ def main():
     # Rutas de archivos
     base_path = "c:/Users/danie/Documents/EMPRESA/SEGUROS UNIÓN/AUTOMATIZACIONES/migraciones/migracion-softseguros"
     
-    archivo_no_encontrados = f"{base_path}/conciliador_clientes/ERRORES/nits_no_encontrados_20251202_103414.xlsx"
+    # Usar archivo más reciente de NITs no encontrados
+    archivo_no_encontrados = f"{base_path}/conciliador_clientes/ERRORES/nits_no_encontrados_20260114_121927.xlsx"
     archivo_clientes = f"{base_path}/conciliador_clientes/clientes_activos/CLIENTES ACTIVOS.xlsx"
     archivo_plantilla = f"{base_path}/conciliador_clientes/plantilla/PLANTILLA DE SOTSEGUROS.xlsx"
     
@@ -48,8 +60,15 @@ def main():
     df_clientes = pd.read_excel(archivo_clientes, header=3, dtype=str)
     print(f"  [OK] Registros en Clientes Activos: {len(df_clientes)}")
     
-    # Crear columna de identificación limpia
+    # Crear columnas de identificación limpia (con y sin DV)
     df_clientes['_id_limpia'] = df_clientes['Identificacion'].apply(limpiar_identificacion)
+    df_clientes['_id_sin_dv'] = df_clientes['Identificacion'].apply(limpiar_nit_sin_dv)
+    
+    # Debug: mostrar ejemplos
+    print(f"\n[DEBUG] Ejemplos de limpieza en Clientes Activos:")
+    for idx, row in df_clientes.head(3).iterrows():
+        print(f"  Original: '{row['Identificacion']}' → Limpia: '{row['_id_limpia']}' → Sin DV: '{row['_id_sin_dv']}'")
+    print()
     
     # 3. Leer estructura de plantilla
     print("\n[3] PREPARANDO PLANTILLA SOFTSEGUROS")
@@ -68,11 +87,12 @@ def main():
     nits_ya_agregados = set()  # Para evitar duplicados
     
     for nit in nits_buscar:
-        # Buscar en Clientes Activos
-        match = df_clientes[df_clientes['_id_limpia'] == nit]
+        # Buscar en Clientes Activos (con y sin DV)
+        match = df_clientes[(df_clientes['_id_limpia'] == nit) | (df_clientes['_id_sin_dv'] == nit)]
         
         if len(match) == 0:
             no_encontrados.append(nit)
+            print(f"  [X] {nit}: No encontrado")
             continue
         
         # Evitar duplicados
@@ -85,6 +105,8 @@ def main():
         
         # Para empresas: el nombre va en NOMBRES, APELLIDOS queda vacío
         nombre_empresa = str(row.get('Tomador', '')).strip()
+        
+        print(f"  [OK] {nit}: {nombre_empresa}")
         
         # Obtener identificación con formato original (puede tener DV)
         identificacion = row.get('Identificacion', '')

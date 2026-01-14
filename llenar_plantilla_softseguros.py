@@ -120,6 +120,41 @@ def limpiar_identificacion(valor):
     return re.sub(r'\D', '', str(valor))
 
 
+def limpiar_nit_sin_dv(valor):
+    """Limpia NIT y remueve dígito de verificación si existe"""
+    if pd.isna(valor):
+        return ""
+    limpio = re.sub(r'\D', '', str(valor))
+    # Si tiene más de 9 dígitos, quitar último (posible DV)
+    if len(limpio) > 9:
+        return limpio[:-1]
+    return limpio
+
+
+def obtener_columna(df, posibles_nombres):
+    """
+    Busca y retorna el nombre de la primera columna que coincida con la lista de posibles nombres.
+    Retorna None si no encuentra ninguna.
+    """
+    for nombre in posibles_nombres:
+        if nombre in df.columns:
+            return nombre
+    return None
+
+
+def obtener_valor(row, posibles_nombres, default=''):
+    """
+    Obtiene el valor de una columna usando una lista de posibles nombres.
+    Retorna el primer valor no vacío encontrado o el valor default.
+    """
+    for nombre in posibles_nombres:
+        if nombre in row.index:
+            valor = row.get(nombre)
+            if pd.notna(valor) and str(valor).strip():
+                return valor
+    return default
+
+
 def main():
     print("=" * 70)
     print("  LLENAR PLANTILLA SOFTSEGUROS CON DATOS DE CELER")
@@ -150,11 +185,47 @@ def main():
     print("\n[2] LEYENDO DATOS DE CELER")
     print("-" * 50)
     
-    df_celer = pd.read_excel(archivo_celer, dtype=str)
+    # Leer con header correcto (fila 4 = índice 3, saltar primeras 3 filas)
+    df_celer = pd.read_excel(archivo_celer, header=3, dtype=str)
     print(f"  [OK] Registros en Celer: {len(df_celer)}")
     
-    # Crear columna de identificación limpia para búsqueda
-    df_celer['_id_limpia'] = df_celer['Identificacion'].apply(limpiar_identificacion)
+    # MOSTRAR COLUMNAS DISPONIBLES
+    print(f"\n  [DEBUG] Total de columnas: {len(df_celer.columns)}")
+    print(f"  [DEBUG] Columnas disponibles en Celer:")
+    for i, col in enumerate(df_celer.columns, 1):
+        print(f"    {i:2d}. {col}")
+    
+    # Detectar columna de identificación automáticamente
+    posibles_id = ['Identificacion', 'IDENTIFICACION', 'Identificación', 'NÚMERO DE DOCUMENTO', 
+                   'Numero_Documento', 'Documento', 'Cedula', 'NIT']
+    
+    col_identificacion = None
+    for nombre in posibles_id:
+        if nombre in df_celer.columns:
+            col_identificacion = nombre
+            break
+    
+    # Si no encuentra, usar columna índice 2 (columna C típicamente es ID)
+    if col_identificacion is None:
+        if len(df_celer.columns) > 2:
+            col_identificacion = df_celer.columns[2]
+            print(f"\n  [WARN] Columna 'Identificacion' no encontrada, usando columna índice 2: '{col_identificacion}'")
+        else:
+            print(f"\n  [ERROR] No se puede detectar columna de identificación")
+            return
+    else:
+        print(f"\n  [OK] Columna de identificación detectada: '{col_identificacion}'")
+    
+    # Crear columnas de identificación limpia para búsqueda (con y sin DV)
+    df_celer['_id_limpia'] = df_celer[col_identificacion].apply(limpiar_identificacion)
+    df_celer['_id_sin_dv'] = df_celer[col_identificacion].apply(limpiar_nit_sin_dv)
+    
+    print(f"  [INFO] Ejemplos de limpieza:")
+    for i in range(min(3, len(df_celer))):
+        orig = df_celer[col_identificacion].iloc[i]
+        limpia = df_celer['_id_limpia'].iloc[i]
+        sin_dv = df_celer['_id_sin_dv'].iloc[i]
+        print(f"    Original: '{orig}' → Limpia: '{limpia}' → Sin DV: '{sin_dv}'")
     
     # 3. Leer estructura de plantilla
     print("\n[3] PREPARANDO PLANTILLA SOFTSEGUROS")
@@ -172,8 +243,11 @@ def main():
     no_encontrados = []
     
     for nit in nits_buscar:
-        # Buscar en Celer
-        match = df_celer[df_celer['_id_limpia'] == nit]
+        # Buscar en Celer (intentar con identificación completa y sin DV)
+        match = df_celer[
+            (df_celer['_id_limpia'] == nit) | 
+            (df_celer['_id_sin_dv'] == nit)
+        ]
         
         if len(match) == 0:
             no_encontrados.append(nit)
@@ -183,36 +257,55 @@ def main():
         row = match.iloc[0]
         
         # Separar nombre en nombres y apellidos
-        nombres, apellidos = separar_nombre_apellidos(row.get('Nombre', ''))
+        nombres, apellidos = separar_nombre_apellidos(
+            obtener_valor(row, ['Nombre', 'NOMBRE', 'Nombre_Completo'])
+        )
+        
+        # Obtener valores con fallback de múltiples posibles nombres de columnas
+        identificacion = obtener_valor(row, [col_identificacion, 'Identificacion', 'IDENTIFICACION', 'Identificación'])
+        tipo_doc = obtener_valor(row, ['Tipo_Doc', 'TIPO_DOC', 'TipoDoc', 'Tipo_Documento'])
+        genero = obtener_valor(row, ['Genero', 'GENERO', 'Género', 'GÉNERO', 'Sexo'])
+        estado_civil = obtener_valor(row, ['Estado_civil', 'ESTADO_CIVIL', 'EstadoCivil'])
+        f_nacimiento = obtener_valor(row, ['F_Nacimiento', 'FECHA_NACIMIENTO', 'Fecha_Nacimiento'])
+        cel_personal = obtener_valor(row, ['Celular_Personal', 'CELULAR_PERSONAL', 'Cel_Pers'])
+        tel_personal = obtener_valor(row, ['Tel_Personal', 'TEL_PERSONAL', 'Telefono_Pers'])
+        tel_laboral = obtener_valor(row, ['Tel_Laboral', 'TEL_LABORAL', 'Telefono_Lab'])
+        mail_personal = obtener_valor(row, ['Mail_Personal', 'MAIL_PERSONAL', 'Email_Personal'])
+        mail_laboral = obtener_valor(row, ['Mail_Laboral', 'MAIL_LABORAL', 'Email_Laboral'])
+        dir_personal = obtener_valor(row, ['Direccion_Personal', 'DIRECCION_PERSONAL', 'Dir_Pers'])
+        dir_laboral = obtener_valor(row, ['Direccion_Laboral', 'DIRECCION_LABORAL', 'Dir_Lab'])
+        ciudad = obtener_valor(row, ['Ciudad_Personal', 'CIUDAD_PERSONAL', 'Ciudad'])
+        ocupacion = obtener_valor(row, ['Ocupacion', 'OCUPACION', 'Ocupación', 'Profesion'])
+        observaciones = obtener_valor(row, ['Observaciones', 'OBSERVACIONES', 'Obs'])
         
         # Crear registro para plantilla
         registro = {
             'NOMBRES': nombres,
             'APELLIDOS': apellidos,
             'SOBRENOMBRE (ALIAS)': '',
-            'NÚMERO DE DOCUMENTO': row.get('Identificacion', ''),
-            'TIPO DE DOCUMENTO': mapear_tipo_documento(row.get('Tipo_Doc', '')),
-            'GÉNERO': mapear_genero(row.get('Genero', '')),
-            'ESTADO CIVIL': mapear_estado_civil(row.get('Estado_civil', '')),
-            'FECHA DE NACIMIENTO': row.get('F_Nacimiento', ''),
-            'TELÉFONO MÓVIL': row.get('Celular_Personal', ''),
-            'TIPO TELÉFONO MÓVIL': 'Personal' if pd.notna(row.get('Celular_Personal')) and row.get('Celular_Personal') else '',
-            'TELÉFONO PRINCIPAL': row.get('Tel_Personal', ''),
-            'TIPO DE TELÉFONO PRINCIPAL': 'Personal' if pd.notna(row.get('Tel_Personal')) and row.get('Tel_Personal') else '',
-            'TELÉFONO SECUNDARIO': row.get('Tel_Laboral', ''),
-            'TIPO DE TELÉFONO SECUNDARIO': 'Laboral' if pd.notna(row.get('Tel_Laboral')) and row.get('Tel_Laboral') else '',
-            'EMAIL': row.get('Mail_Personal', ''),
-            'TIPO EMAIL': 'Personal' if pd.notna(row.get('Mail_Personal')) and row.get('Mail_Personal') else '',
-            'EMAIL SECUNDARIO': row.get('Mail_Laboral', ''),
-            'TIPO EMAIL SECUNDARIO': 'Laboral' if pd.notna(row.get('Mail_Laboral')) and row.get('Mail_Laboral') else '',
-            'DIRECCIÓN PRINCIPAL': row.get('Direccion_Personal', ''),
-            'TIPO DIRECCIÓN': 'Personal' if pd.notna(row.get('Direccion_Personal')) and row.get('Direccion_Personal') else '',
-            'DIRECCIÓN SECUNDARIA': row.get('Direccion_Laboral', ''),
-            'TIPO DIRECCIÓN SECUNDARIA': 'Laboral' if pd.notna(row.get('Direccion_Laboral')) and row.get('Direccion_Laboral') else '',
+            'NÚMERO DE DOCUMENTO': identificacion,
+            'TIPO DE DOCUMENTO': mapear_tipo_documento(tipo_doc),
+            'GÉNERO': mapear_genero(genero),
+            'ESTADO CIVIL': mapear_estado_civil(estado_civil),
+            'FECHA DE NACIMIENTO': f_nacimiento,
+            'TELÉFONO MÓVIL': cel_personal,
+            'TIPO TELÉFONO MÓVIL': 'Personal' if cel_personal else '',
+            'TELÉFONO PRINCIPAL': tel_personal,
+            'TIPO DE TELÉFONO PRINCIPAL': 'Personal' if tel_personal else '',
+            'TELÉFONO SECUNDARIO': tel_laboral,
+            'TIPO DE TELÉFONO SECUNDARIO': 'Laboral' if tel_laboral else '',
+            'EMAIL': mail_personal,
+            'TIPO EMAIL': 'Personal' if mail_personal else '',
+            'EMAIL SECUNDARIO': mail_laboral,
+            'TIPO EMAIL SECUNDARIO': 'Laboral' if mail_laboral else '',
+            'DIRECCIÓN PRINCIPAL': dir_personal,
+            'TIPO DIRECCIÓN': 'Personal' if dir_personal else '',
+            'DIRECCIÓN SECUNDARIA': dir_laboral,
+            'TIPO DIRECCIÓN SECUNDARIA': 'Laboral' if dir_laboral else '',
             'PAÍS': 'Colombia',
             'ESTADO': '',
-            'CIUDAD': row.get('Ciudad_Personal', ''),
-            'OCUPACIÓN': row.get('Ocupacion', ''),
+            'CIUDAD': ciudad,
+            'OCUPACIÓN': ocupacion,
             'INGRESO MENSUAL': '',
             'PATRIMONIO': '',
             'CASA PROPIA': '',
@@ -225,7 +318,7 @@ def main():
             'REDES SOCIALES': '',
             'NOMBRE DE CONTACTO': '',
             'CATEGORÍAS': '',
-            'OBSERVACIONES': row.get('Observaciones', ''),
+            'OBSERVACIONES': observaciones,
             'CARGADO POR': 'Migración Automática'
         }
         
